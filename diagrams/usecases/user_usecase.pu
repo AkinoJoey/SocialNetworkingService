@@ -1,0 +1,41 @@
+@startuml usecase
+left to right direction
+
+actor ユーザー as u 
+usecase Cron as c << System >>
+
+package "SNS System"{
+    (ログインする) as login
+    (トレンドの投稿を閲覧する) as lookTrend
+    (フォロワーの投稿を閲覧する) as lookFollower
+    (プロフィールを作成する) as profile
+    (ユーザーをフォローする) as follow
+    (ユーザーをアンフォローする) as unfollow
+    (投稿を作成する) as post
+    (投稿をスケジュールする) as schedule
+    (投稿を削除する) as delete
+    (投稿にいいねをする) as good
+    (投稿にしたいいねを取り消す) as ungood
+    (投稿に返信をする) as reply
+    (プライベートメッセージを送る) as private
+    (通知を見る) as notification
+}
+
+u --> login
+u --> lookTrend
+u --> lookFollower
+u --> profile
+u --> follow
+u --> unfollow
+u --> post
+u --> schedule
+u --> delete
+u --> good
+u --> ungood
+u --> reply
+u --> private
+u --> notification
+
+schedule --> c
+
+@enduml

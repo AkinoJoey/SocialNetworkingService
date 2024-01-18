@@ -1,0 +1,93 @@
+@startuml er
+
+Entity users{
+    + id: INT [PK]
+    --
+    name: String
+    password: String
+    email: String
+    email_verified: bool
+    created_at: Datetime
+}
+
+Entity profile{
+    + id: INT [PK]
+    --
+    # user_id: INT [FK]
+    age: INT
+    location: String
+    hobby: String
+    discription: String
+    profile_image_path: String
+    created_at: Datetime
+    updated_at: Datetime
+}
+
+Entity posts{
+    + id: INT [PK]
+    --
+    # user_id: INT [FK]
+    content: String
+    media_path: String
+    scheduled_at: Datetime
+    created_at: Datetime
+}
+
+Entity comments{
+    + id: INT [PK]
+    --
+    # user_id: INT [FK]
+    # post_id: INT [FK]
+    # parent_comment_id: INT [FK]
+    content: String
+    created_at: Datetime
+}
+
+Entity post_likes{
+    + user_id: INT [PK-FK]
+    + post_id: INT [PK-FK]
+    --
+    created_at: Datetime
+}
+
+Entity notifications{
+    + id: INT [PK]
+    --
+    # user_id: INT [FK]
+    notification_type: String
+    content: String
+    is_read: bool
+    created_at: Datetime
+}
+
+Entity follows{
+    + following_user_id: INT [PK-FK]
+    + follower_user_id: INT [PK-FK]
+    --
+    created_at: Datetime
+}
+
+Entity private_messages{
+    + id: INT [PK]
+    --
+    sender_user_id: INT [FK]
+    receiver_user_id INT [FK]
+    content: String
+    created_at: Datetime
+}
+
+
+users ||--o{ posts: writes
+users ||--o{ comments: comments
+posts ||--o{ comments: has
+posts ||--o{ post_likes: has
+comments ||--o{ comments: has
+users ||--o{ follows: following
+users ||--o{ follows: be followed
+users ||---o{ private_messages: writes
+users ||---o{ private_messages: receive
+users ||--o{ notifications: notices
+users ||--o{ post_likes: likes
+users ||--|| profile: has
+
+@enduml

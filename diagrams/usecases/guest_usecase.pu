@@ -1,0 +1,14 @@
+@startuml usecase
+left to right direction
+
+actor ゲスト as g
+
+package "SNS System"{
+    (ユーザー登録する) as register
+    (トレンドの投稿を閲覧する) as lookTrend
+}
+
+g --> register
+g --> lookTrend
+
+@enduml

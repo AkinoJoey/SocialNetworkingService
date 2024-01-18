@@ -1,0 +1,20 @@
+@startuml register
+
+actor ゲスト as g
+participant ブラウザ as b
+participant サーバー as s
+
+g --> b: メルアドとパスワードを入力
+b --> s: POSTリクエスト
+s --> s: ユーザー入力の検証
+s --> s: 署名付きURLを作成
+s --> g: 検証用メールを送信
+s --> b: 検証用メールを送信の表示
+g --> b: 検証用メールから署名付きURLを開く
+b --> s: 検証用メールのGETリクエスト
+s --> s: 署名の認証
+s --> b: 認証の成功
+b --> g: 認証成功の表示
+
+
+@enduml
