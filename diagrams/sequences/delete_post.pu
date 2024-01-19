@@ -1,0 +1,17 @@
+@startuml delete_post
+
+actor ユーザー as u
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+u --> b: 投稿削除をクリック
+b --> s: POSTリクエスト
+s --> s: セッション情報を確認
+s --> d: Postデータ、その返信も削除
+d --> s: 削除完了
+s --> b: ページをレンダリング
+b --> u: ページを表示
+
+
+@enduml

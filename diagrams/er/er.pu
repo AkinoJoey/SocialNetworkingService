@@ -16,7 +16,6 @@ Entity profile{
     # user_id: INT [FK]
     age: INT
     location: String
-    hobby: String
     discription: String
     profile_image_path: String
     created_at: Datetime
@@ -40,6 +39,7 @@ Entity comments{
     # post_id: INT [FK]
     # parent_comment_id: INT [FK]
     content: String
+    media_path: String
     created_at: Datetime
 }
 
@@ -73,6 +73,7 @@ Entity private_messages{
     sender_user_id: INT [FK]
     receiver_user_id INT [FK]
     content: String
+    media_path: String
     created_at: Datetime
 }
 

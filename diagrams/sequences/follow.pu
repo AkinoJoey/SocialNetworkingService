@@ -1,0 +1,17 @@
+@startuml follow
+
+actor ユーザー as u
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+u --> b: フォローボタンをクリック
+b --> s: POSTリクエスト
+s --> s: セッション情報を確認
+s --> d: ユーザーのフォロー情報を更新
+d --> s: 更新成功
+s --> b: ページをレンダリング
+b --> u: ページを表示
+
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml send_message
+
+actor 送信者 as u
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+u --> b: メッセージを送信
+b --> s: POSTリクエスト
+s --> s: セッション情報を確認
+s --> s: 入力データを検証
+s --> d: messageデータを作成
+d --> s: 作成完了
+s --> d: notificationデータを作成
+d --> s: 作成完了
+s --> b: ページをレンダリング
+b --> u: ページを表示
+
+
+@enduml

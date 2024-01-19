@@ -1,0 +1,21 @@
+@startuml receive_message
+
+actor 受信者 as u
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+u --> b: メッセージを開く
+b --> s: GETリクエスト
+s --> s: セッション情報を確認
+s --> d: messageデータを取得
+d --> s: データを返す
+s --> d: is_readをtrueに更新
+d --> s: 更新完了
+s --> b: メッセージをレンダリング
+b --> u: 新しいメッセージを表示
+
+
+
+
+@enduml

@@ -1,11 +1,11 @@
 @startuml top
 start
 :トップページにアクセス;
-if(ユーザー情報がある)then(yes)
+if(ユーザー情報はある？)then(yes)
     :フォロワーのタイムラインを表示;
 else(no)
     :トレンドのタイムラインを表示;
 endif
 
-end
+stop
 @enduml

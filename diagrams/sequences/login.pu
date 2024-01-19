@@ -1,0 +1,19 @@
+@startuml login
+
+actor ゲスト as g
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+g --> b: メルアドとパスワードを入力
+b --> s: POSTリクエスト
+s --> s: セッション情報を確認
+s --> s: ユーザー入力の検証
+s --> d: ユーザー情報の確認
+d --> s: ユーザー情報を返す
+s --> s: セッション情報の更新
+s --> b: 「ログイン成功」の表示
+b --> g: ログイン成功
+
+
+@enduml

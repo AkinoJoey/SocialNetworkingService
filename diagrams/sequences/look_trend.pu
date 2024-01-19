@@ -1,0 +1,18 @@
+@startuml look_trend
+
+actor ユーザー as u
+participant ブラウザ as b
+participant サーバー as s
+participant ミドルウェア as m
+database DB as d
+
+u --> b: トップページにアクセス
+b --> s: GETリクエスト
+s --> m: ユーザーがゲストかどうか確認
+m --> s: ゲストであることを確認
+s --> d: トレンドの情報を取得
+d --> s: トレンドのデータを返す
+s --> b: viewをレンダリング
+b --> u: トレンドを表示
+
+@enduml

@@ -1,0 +1,17 @@
+@startuml login_page
+start
+:ログインページにアクセス;
+split
+    repeat :アドレスとパスワードを入力;
+    :アドレスとパスワードを送信;
+    repeat while(アドレスとパスワードは正しい?)is(no)not(yes)
+    :ログイン;
+split again
+    :「ユーザーアカウントの作成」をクリック;
+    :ユーザーアカウント作成のページに移動;
+    stop
+endsplit
+
+stop
+
+@enduml

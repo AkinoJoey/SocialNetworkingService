@@ -1,0 +1,18 @@
+@startuml post
+
+actor ユーザー as u
+participant ブラウザ as b
+participant サーバー as s
+database DB as d
+
+u --> b: 投稿を作成
+b --> s: POSTリクエスト
+s --> s: セッション情報を確認
+s --> s: 入力データを検証
+s --> d: Postデータを作成
+d --> s: 作成完了
+s --> b: ページをレンダリング
+b --> u: ページを表示
+
+
+@enduml

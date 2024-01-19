@@ -1,0 +1,12 @@
+@startuml schedule
+
+actor Cron as c
+participant サーバー as s
+database DB as d
+
+c --> s: コマンドを実行
+s --> d: 投稿予定のPostデータのステータスを更新
+d --> s: 更新完了
+
+
+@enduml

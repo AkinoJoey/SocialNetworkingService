@@ -2,7 +2,7 @@
 left to right direction
 
 actor ユーザー as u 
-usecase Cron as c << System >>
+actor Cron as c << System >>
 
 package "SNS System"{
     (ログインする) as login
