@@ -7,51 +7,71 @@
 	</head>
 	<body>
 		<div class="container mx-auto flex h-screen items-center justify-center px-4">
-			<form class="mx-auto">
-				<div class="mb-5">
-					<label for="email" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-						>Eメール</label
-					>
-					<input
-						type="email"
-						id="email"
-						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:shadow-sm-light dark:focus:border-blue-500 dark:focus:ring-blue-500"
-						placeholder="name@showU.com"
-						required
-					/>
+			<div class="flex max-w-md flex-col rounded-md bg-gray-50 p-6 text-gray-800 sm:p-10">
+				<div class="mb-8 text-center">
+					<h1 class="my-3 text-4xl font-bold">アカウントを作成</h1>
 				</div>
-				<div class="mb-5">
-					<label for="password" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-						>パスワード</label
-					>
-					<input
-						type="password"
-						id="password"
-						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:shadow-sm-light dark:focus:border-blue-500 dark:focus:ring-blue-500"
-						required
-					/>
-				</div>
-				<div class="mb-5">
-					<label
-						for="repeat-password"
-						class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-						>パスワードの再入力</label
-					>
-					<input
-						type="password"
-						id="repeat-password"
-						class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:shadow-sm-light dark:focus:border-blue-500 dark:focus:ring-blue-500"
-						required
-					/>
-				</div>
-
-				<button
-					type="submit"
-					class="rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-				>
-					アカウントを作成
-				</button>
-			</form>
+				<form novalidate="" action="" class="space-y-12" data-bitwarden-watching="1">
+					<div class="space-y-4">
+						<div>
+							<label for="email" class="mb-2 block text-sm">Eメール</label>
+							<input
+								type="email"
+								name="email"
+								id="email"
+								placeholder="taro-yamada@example.com"
+								class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800"
+							/>
+						</div>
+						<div>
+							<div class="mb-2 flex justify-between">
+								<label for="password" class="text-sm">パスワード</label>
+							</div>
+							<input
+								type="password"
+								name="password"
+								id="password"
+								placeholder="*********"
+								class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800"
+							/>
+						</div>
+						<div>
+							<div class="mb-2 flex justify-between">
+								<label for="account-name" class="text-sm">アカウント名</label>
+							</div>
+							<input
+								type="text"
+								name="account-name"
+								id="account-name"
+								placeholder="taro-yamada"
+								class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800"
+							/>
+						</div>
+						<div>
+							<div class="mb-2 flex justify-between">
+								<label for="display-name" class="text-sm">表示名</label>
+							</div>
+							<input
+								type="text"
+								name="display-name"
+								id="display-name"
+								placeholder="山田 太郎"
+								class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800"
+							/>
+						</div>
+					</div>
+					<div class="space-y-2">
+						<div class="flex justify-center">
+							<button
+								type="button"
+								class="mb-2 me-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+							>
+								登録
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 
 		<script src="/node_modules/flowbite/dist/flowbite.min.css"></script>
