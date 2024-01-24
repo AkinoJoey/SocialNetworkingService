@@ -1,4 +1,6 @@
 {
 	"printWidth": 100,
-	"useTabs": true
+	"useTabs": true,
+	"plugins": ["prettier-plugin-tailwindcss"],
+	"tailwindConfig":"./tailwind.config.js"
 }
