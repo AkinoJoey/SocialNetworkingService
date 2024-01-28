@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once '../vendor/autoload.php';
 $DEBUG = true;
 
 date_default_timezone_set('Asia/Tokyo');
@@ -9,7 +9,7 @@ if (preg_match('/\.(?:png|jpg|jpeg|gif|js|css|html)$/', $_SERVER["REQUEST_URI"])
 }
 
 // ルーティングを読み込みます。
-$routes = include('../routing/routes.php');
+$routes = include('../src/routing/routes.php');
 
 // リクエストURIを解析してパスだけを取得します。
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
