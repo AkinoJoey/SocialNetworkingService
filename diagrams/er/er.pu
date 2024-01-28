@@ -3,7 +3,8 @@
 Entity users{
     + id: INT [PK]
     --
-    name: String
+    username: String
+    displayname: String
     password: String
     email: String
     email_verified: bool
@@ -16,7 +17,7 @@ Entity profile{
     # user_id: INT [FK]
     age: INT
     location: String
-    discription: String
+    about: String
     profile_image_path: String
     created_at: Datetime
     updated_at: Datetime
