@@ -10,11 +10,10 @@ class User implements Model
     use GenericModel;
 
     public function __construct(
-        private string $username,
-        private string $displayname,
+        private string $accountName,
         private string $email,
         private ?int $id = null,
-        private ?string $company = null,
+        private ?string $username = null,
         private bool $emailVerified = false,
         private ?DataTimeStamp $timeStamp = null,
     ) {
@@ -30,6 +29,16 @@ class User implements Model
         $this->id = $id;
     }
 
+    public function getAccountName(): ?string
+    {
+        return $this->accountName;
+    }
+
+    public function setAccountName(string $accountName): void
+    {
+        $this->accountName = $accountName;
+    }
+
     public function getUsername(): string
     {
         return $this->username;
@@ -40,16 +49,6 @@ class User implements Model
         $this->username = $username;
     }
 
-    public function getDisplayname(): string
-    {
-        return $this->displayname;
-    }
-
-    public function setDisplayname(string $displayname): void
-    {
-        $this->displayname = $displayname;
-    }
-
     public function getEmail(): string
     {
         return $this->email;
@@ -58,16 +57,6 @@ class User implements Model
     public function setEmail(string $email): void
     {
         $this->email = $email;
-    }
-
-    public function getCompany(): ?string
-    {
-        return $this->company;
-    }
-
-    public function setCompany(?string $company): void
-    {
-        $this->company = $company;
     }
 
     public function getTimeStamp(): ?DataTimeStamp
