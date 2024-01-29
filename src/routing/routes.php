@@ -23,60 +23,72 @@ return [
     })->setMiddleware(['guest']),
     'form/signup' => Route::create('form/signup', function (): HTTPRenderer {
         // TODO: エラーのtry-catch
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            $required_fields = [
+                'account_name' => ValueType::STRING,
+                'email' => ValueType::EMAIL,
+                'password' => ValueType::PASSWORD,
+                'confirm_password' => ValueType::PASSWORD,
+            ];
 
-        $required_fields = [
-            'account_name' => ValueType::STRING,
-            'email' => ValueType::EMAIL,
-            'password' => ValueType::PASSWORD,
-            'confirm_password' => ValueType::PASSWORD,
-        ];
+            $userDao = DAOFactory::getUserDAO();
 
-        $userDao = DAOFactory::getUserDAO();
+            // シンプルな検証
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
-        // シンプルな検証
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            if ($validatedData['confirm_password'] !== $validatedData['password']) {
+                FlashData::setFlashData('error', 'Invalid Password!');
+                return new RedirectRenderer('signup');
+            }
 
-        if ($validatedData['confirm_password'] !== $validatedData['password']) {
-            FlashData::setFlashData('error', 'Invalid Password!');
+            // Eメールは一意でなければならないので、Eメールがすでに使用されていないか確認します
+            if ($userDao->getByEmail($validatedData['email'])) {
+                FlashData::setFlashData('error', 'Email is already in use!');
+                return new RedirectRenderer('signup');
+            }
+
+            // 新しいUserオブジェクトを作成します
+            $user = new User(
+                accountName: $validatedData['account_name'],
+                email: $validatedData['email'],
+            );
+
+            // データベースにユーザーを作成しようとします
+            $success = $userDao->create($user, $validatedData['password']);
+
+            if (!$success) throw new Exception('Failed to create new user!');
+
+            // ユーザーログイン
+            Authenticate::loginAsUser($user);
+
+            // 期限を30分に設定
+            $lasts = 1 * 60 * 30;
+            $param = [
+                'id' => $user->getId(),
+                'user' => hash('sha256', $user->getEmail()),
+                'expiration' => time() + $lasts
+            ];
+
+            $signedUrl = Route::create('verify/email', function () {
+            })->getSignedURL($param);
+            Authenticate::sendVerificationEmail($user, $signedUrl);
+
+            FlashData::setFlashData('success', 'Account successfully created. Please check your email!');
+            return new RedirectRenderer('login');
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'Invalid Data.');
+            return new RedirectRenderer('signup');
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'An error occurred.');
             return new RedirectRenderer('signup');
         }
-
-        // Eメールは一意でなければならないので、Eメールがすでに使用されていないか確認します
-        if ($userDao->getByEmail($validatedData['email'])) {
-            FlashData::setFlashData('error', 'Email is already in use!');
-            return new RedirectRenderer('signup');
-        }
-
-        // 新しいUserオブジェクトを作成します
-        $user = new User(
-            accountName: $validatedData['account_name'],
-            email: $validatedData['email'],
-        );
-
-        // データベースにユーザーを作成しようとします
-        $success = $userDao->create($user, $validatedData['password']);
-
-        if (!$success) throw new Exception('Failed to create new user!');
-
-        // ユーザーログイン
-        Authenticate::loginAsUser($user);
-
-        // 期限を30分に設定
-        $lasts = 1 * 60 * 30;
-        $param = [
-            'id' => $user->getId(),
-            'user' => hash('sha256', $user->getEmail()),
-            'expiration' => time() + $lasts
-        ];
-
-        $signedUrl = Route::create('verify/email', function () {
-        })->getSignedURL($param);
-        Authenticate::sendVerificationEmail($user, $signedUrl);
-
-        FlashData::setFlashData('success', 'Account successfully created. Please check your email!');
-        return new RedirectRenderer('login');
+        
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
         $required_fields = [
