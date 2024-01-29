@@ -13,14 +13,25 @@ $routes = include('../src/routing/routes.php');
 
 // リクエストURIを解析してパスだけを取得します。
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$path = explode('/', $path)[1];
+$path = ltrim($path, '/');
 
 // ルーティングにパスが存在するかチェックする
 if (isset($routes[$path])) {
-    // コールバックを呼び出してrendererを作成します。
-    $renderer = $routes[$path]();
+    // ルートの取得
+    $route = $routes[$path];
 
     try {
+        if (!($route instanceof src\routing\Route)) throw new InvalidArgumentException("Invalid route type");
+
+        // 配列連結ミドルウェア
+        $middlewareRegister = include('../src/middleware/middleware_register.php');
+        $middlewares = array_merge($middlewareRegister['global'], array_map(fn ($routeAlias) => $middlewareRegister['aliases'][$routeAlias], $route->getMiddleware()));
+
+        $middlewareHandler = new src\middleware\MiddlewareHandler(array_map(fn ($middlewareClass) => new $middlewareClass(), $middlewares));
+
+        // チェーンの最後のcallableは、HTTPRendererを返す現在の$route callableとなります。
+        $renderer = $middlewareHandler->run($route->getCallback());
+        
         // ヘッダーを設定します。
         foreach ($renderer->getFields() as $name => $value) {
             // ヘッダーに対する単純な検証を実行します。
