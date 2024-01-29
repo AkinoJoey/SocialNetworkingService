@@ -30,8 +30,9 @@ class CodeGeneration extends AbstractCommand
         } elseif ($codeGenType === 'seeder') {
             $className = $this->getArgumentValue('name');
             $this->generateSeederFile($className);
+        }else{
+            $this->log(sprintf("error: %s type does not exist.", $codeGenType));
         }
-
         return 0;
     }
 
@@ -60,9 +61,9 @@ class CodeGeneration extends AbstractCommand
         return <<<MIGRATION
 <?php
 
-namespace Database\Migrations;
+namespace src\database\migrations;
 
-use Database\SchemaMigration;
+use src\database\SchemaMigration;
 
 class {$className} implements SchemaMigration
 {
@@ -94,7 +95,7 @@ MIGRATION;
 
         $seederContent = $this->getSeedContent($className);
 
-        $path = sprintf("%s/../../Database/Seeds/%s", __DIR__, $filename);
+        $path = sprintf("%s/../../database/Seeds/%s", __DIR__, $filename);
 
         file_put_contents($path, $seederContent);
         $this->log("Seeder file {$className} has been generated!");
