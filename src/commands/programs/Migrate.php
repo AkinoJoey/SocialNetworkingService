@@ -92,7 +92,7 @@ class Migrate extends AbstractCommand
         // ([^_]+): "_"以外のすべての文字を一致させます。()はグループをキャプチャするためのもので、[^abc]はabc以外を意味します。キャプチャグループは個別に一致させるために使用されます。
         // \.php: "."が"\"でエスケープされているので、これは終端が'.php'に一致しなければならないことを意味します。
         // 正規表現の練習やチートシートについては、https://regexr.com/ を参照してください。
-        if (preg_match('/([^_]+)\.php$/', $filename, $matches)) return sprintf("%s\%s", 'Database\Migrations', $matches[1]);
+        if (preg_match('/([^_]+)\.php$/', $filename, $matches)) return sprintf("%s\%s", 'src\database\migrations', $matches[1]);
         else throw new \Exception("Unexpected migration filename format: " . $filename);
     }
 
@@ -114,7 +114,7 @@ class Migrate extends AbstractCommand
 
     private function getAllMigrationFiles(string $order = 'asc'): array
     {
-        $directory = sprintf("%s/../../Database/Migrations", __DIR__);
+        $directory = sprintf("%s/../../database/migrations", __DIR__);
         $this->log($directory);
         // globはワイルドカード文字列を引数として渡すと、一致する"globbing pathnames"をすべて返すLinuxのシステムコールです。
         // これはワイルドカードに一致するすべてのファイルを意味します。詳細は https://man7.org/linux/man-pages/man7/glob.7.html を参照してください。
