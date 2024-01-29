@@ -4,11 +4,12 @@ Entity users{
     + id: INT [PK]
     --
     username: String
-    displayname: String
+    account_name: String
     password: String
     email: String
     email_verified: bool
     created_at: Datetime
+    updated_at: Datetime
 }
 
 Entity profile{
