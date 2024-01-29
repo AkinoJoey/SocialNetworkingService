@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+require './vendor/autoload.php';
+
+$commands = include "./src/commands/registry.php";
+
+// 第2引数は実行するコマンド
+$inputCommand = $argv[1];
+
+// PHPでインスタンス化できるコマンドのクラス名をすべて調べます。
+foreach ($commands as $commandClass) {
+    $alias = $commandClass::getAlias();
+
+    if ($inputCommand === $alias) {
+        if (in_array('--help', $argv)) {
+            fwrite(STDOUT, $commandClass::getHelp());
+            exit(0);
+        } else {
+            $command = new $commandClass();
+            $result = $command->execute();
+            exit($result);
+        }
+    }
+}
+
+fwrite(STDOUT, "Failed to run any commands\n");
