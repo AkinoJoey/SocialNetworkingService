@@ -3,6 +3,7 @@
 namespace src\response\render;
 
 use src\response\HTTPRenderer;
+use src\helpers\Authenticate;
 
 class HTMLRenderer implements HTTPRenderer
 {
@@ -42,7 +43,10 @@ class HTMLRenderer implements HTTPRenderer
     private function getHeader(): string
     {
         ob_start();
+        // TODO: guestの場合はサイドバーを表示しない
+        $user = Authenticate::getAuthenticatedUser();
         require $this->getViewPath('layout/sidebar');
+        require $this->getViewPath('components/message-boxes');
         return ob_get_clean();
     }
 
@@ -55,6 +59,6 @@ class HTMLRenderer implements HTTPRenderer
 
     private function getViewPath(string $path): string
     {
-        return sprintf("%s/%s/Views/%s.php", __DIR__, '../..', $path);
+        return sprintf("%s/%s/views/%s.php", __DIR__, '../..', $path);
     }
 }
