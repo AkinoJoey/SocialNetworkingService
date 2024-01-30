@@ -36,7 +36,7 @@ return [
 
             $userDao = DAOFactory::getUserDAO();
 
-            // シンプルな検証
+            // TODO: 厳格なバリデーションを作成
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
@@ -155,6 +155,8 @@ return [
         return new RedirectRenderer('login');
     })->setMiddleware(['auth']),
     'profile' => Route::create('profile', function (): HTTPRenderer {
-        return new HTMLRenderer('page/profile');
+        $user = Authenticate::getAuthenticatedUser();
+        error_log($user->getUsername());
+        return new HTMLRenderer('page/profile',['user'=>$user]);
     })->setMiddleware(['auth']),
 ];
