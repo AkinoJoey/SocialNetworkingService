@@ -66,6 +66,7 @@ class UserDAOImpl implements UserDAO
             accountName: $rawData['account_name'],
             email: $rawData['email'],
             id: $rawData['id'],
+            username: $rawData['username'],
             emailVerified: $rawData['email_verified'],
             timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at'])
         );
@@ -101,6 +102,7 @@ class UserDAOImpl implements UserDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
+        // TODO: usernameを追加する
         $query =
             <<<SQL
             UPDATE users
