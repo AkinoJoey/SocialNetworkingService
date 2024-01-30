@@ -10,6 +10,7 @@ use src\database\data_access\DAOFactory;
 use src\models\User;
 use src\helpers\Authenticate;
 use src\routing\Route;
+use src\exceptions\AuthenticationFailureException;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -23,7 +24,7 @@ return [
     })->setMiddleware(['guest']),
     'form/signup' => Route::create('form/signup', function (): HTTPRenderer {
         // TODO: エラーのtry-catch
-        try{
+        try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
@@ -39,13 +40,13 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
-                FlashData::setFlashData('error', 'Invalid Password!');
+                FlashData::setFlashData('error', 'パスワードが一致しません');
                 return new RedirectRenderer('signup');
             }
 
             // Eメールは一意でなければならないので、Eメールがすでに使用されていないか確認します
             if ($userDao->getByEmail($validatedData['email'])) {
-                FlashData::setFlashData('error', 'Email is already in use!');
+                FlashData::setFlashData('error', '既に登録済みのEメールです');
                 return new RedirectRenderer('signup');
             }
 
@@ -88,7 +89,6 @@ return [
             FlashData::setFlashData('error', 'An error occurred.');
             return new RedirectRenderer('signup');
         }
-        
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
         $required_fields = [
@@ -117,6 +117,43 @@ return [
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
     })->setMiddleware(['guest']),
+    'form/login' => Route::create('form/login', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+            $required_fields = [
+                'email' => ValueType::EMAIL,
+                'password' => ValueType::STRING,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+
+            Authenticate::authenticate($validatedData['email'], $validatedData['password']);
+
+            FlashData::setFlashData('success', 'ログインしました');
+            return new RedirectRenderer('');
+        } catch (AuthenticationFailureException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'Eメールもしくはパスワードが間違っています');
+            return new RedirectRenderer('login');
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', '無効なデータです');
+            return new RedirectRenderer('login');
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('login');
+        }
+    })->setMiddleware(['guest']),
+    'logout' => Route::create('logout', function (): HTTPRenderer {
+        Authenticate::logoutUser();
+        FlashData::setFlashData('success', 'Logged out.');
+        return new RedirectRenderer('login');
+    })->setMiddleware(['auth']),
     'profile' => Route::create('profile', function (): HTTPRenderer {
         return new HTMLRenderer('page/profile');
     })->setMiddleware(['auth']),
