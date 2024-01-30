@@ -1,14 +1,10 @@
-<?php
-use src\helpers\CrossSiteForgeryProtection;
-?>
-
-<div class="container mx-auto flex h-screen items-center justify-center px-4">
+<div class="container mx-auto flex items-center justify-center px-4 mb-16 mt-4 sm:my-0">
 	<div class="flex max-w-md flex-col rounded-md bg-gray-50 p-6 text-gray-800 sm:p-10">
-		<div class="mb-8 text-center">
+		<div class="text-center">
 			<h1 class="my-3 text-4xl font-bold">アカウントを作成</h1>
 		</div>
 		<form action="form/signup" method="POST" class="space-y-12">
-			<input type="hidden" name="csrf_token" value="<?= CrossSiteForgeryProtection::getToken() ?>">
+			<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
 			<div class="space-y-4">
 				<div>
 					<div class="mb-2 flex justify-between">
