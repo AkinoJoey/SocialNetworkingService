@@ -112,6 +112,21 @@ return [
         $userDao->update($user);
 
         FlashData::setFlashData('success', 'Eメールの確認に成功しました。');
+        return new RedirectRenderer('');
+    }),
+    'setup' => Route::create('setup', function() : HTTPRenderer {
+        return new HTMLRenderer('page/setup');
+    })->setMiddleware(['auth']),
+    'form/setup' => Route::create('form/setup', function() : HTTPRenderer {
+        $user = Authenticate::getAuthenticatedUser();
+        
+        // TODO: 厳格なバリデーション
+        
+
+        // Profileオブジェクトを作成
+        
+
+        
         return new RedirectRenderer('profile');
     }),
     'login' => Route::create('login', function (): HTTPRenderer {
