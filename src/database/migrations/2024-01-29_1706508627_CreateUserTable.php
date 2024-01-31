@@ -9,7 +9,7 @@ class CreateUserTable implements SchemaMigration
     public function up(): array
     {
         return [
-            "CREATE TABLE users (
+            "CREATE TABLE IF NOT EXISTS users (
                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
                 account_name VARCHAR(255) NOT NULL,
                 email VARCHAR(255) NOT NULL UNIQUE,
