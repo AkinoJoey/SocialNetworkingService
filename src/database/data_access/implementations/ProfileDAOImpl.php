@@ -55,7 +55,7 @@ class ProfileDAOImpl implements ProfileDAO
         return $this->rawDataToProfile($profileRaw);
     }
 
-    public function getByUserId(string $userId): ?Profile
+    public function getByUserId(int $userId): ?Profile
     {
         $profileRow = $this->getRowByUserId($userId);
         if($profileRow === null) return null;
@@ -63,11 +63,11 @@ class ProfileDAOImpl implements ProfileDAO
         return $this->rawDataToProfile($profileRow);
     }
 
-    private function getRowByUserId(string $userId): ?array
+    private function getRowByUserId(int $userId): ?array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "SELECT * FROM users WHERE user_id = ?";
+        $query = "SELECT * FROM profiles WHERE user_id = ?";
 
         $result = $mysqli->prepareAndFetchAll($query, 'i', [$userId])[0] ?? null;
 
@@ -99,10 +99,10 @@ class ProfileDAOImpl implements ProfileDAO
 
         $query =
             <<<SQL
-            UPDATE profile
+            UPDATE profiles
                 SET 
                     age = ?,
-                    locations = ?,
+                    location = ?,
                     description = ?,
                     profile_image_path = ?
                 WHERE id = ?
@@ -114,7 +114,6 @@ class ProfileDAOImpl implements ProfileDAO
             [
                 $profile->getAge(),
                 $profile->getLocation(),
-                $profile->getDescription(),
                 $profile->getDescription(),
                 $profile->getProfileImagePath(),
                 $profile->getId()
