@@ -11,6 +11,7 @@ use src\models\User;
 use src\helpers\Authenticate;
 use src\routing\Route;
 use src\exceptions\AuthenticationFailureException;
+use src\models\Profile;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -37,7 +38,7 @@ return [
             $userDao = DAOFactory::getUserDAO();
 
             // TODO: 厳格なバリデーションを作成
-            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
                 FlashData::setFlashData('error', 'パスワードが一致しません');
@@ -54,6 +55,8 @@ return [
             $user = new User(
                 accountName: $validatedData['account_name'],
                 email: $validatedData['email'],
+                // 初期値としてランダムな文字列を割り当てる
+                username:uniqid("")
             );
 
             // データベースにユーザーを作成しようとします
@@ -96,7 +99,7 @@ return [
             'user' => ValueType::STRING,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
 
         $user = Authenticate::getAuthenticatedUser();
 
@@ -112,21 +115,56 @@ return [
         $userDao->update($user);
 
         FlashData::setFlashData('success', 'Eメールの確認に成功しました。');
-        return new RedirectRenderer('');
+        return new RedirectRenderer('profile/edit');
     }),
-    'setup' => Route::create('setup', function() : HTTPRenderer {
-        return new HTMLRenderer('page/setup');
-    })->setMiddleware(['auth']),
-    'form/setup' => Route::create('form/setup', function() : HTTPRenderer {
+    'profile/edit' => Route::create('profile/edit', function() : HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
         
-        // TODO: 厳格なバリデーション
-        
+        $profileDao = DAOFactory::getProfileDAO();
+        $profile = $profileDao->getByUserId($user->getId());
 
+        return new HTMLRenderer('page/profile_form', ['user'=>$user, 'profile'=> $profile]);
+
+    })->setMiddleware(['auth']),
+    'form/profile/edit' => Route::create('form/profile/edit', function() : HTTPRenderer {
+        // TODO: エラーのtry-catch
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+        
+        // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
+        $nullableFields = [
+            'id' => ValueType::INT,
+            'username' => ValueType::STRING,
+            'age' => ValueType::INT,
+            'location' => ValueType::STRING,
+            'description' => ValueType::STRING
+        ];
+
+        $validatedData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+
+        $user = Authenticate::getAuthenticatedUser();
         // Profileオブジェクトを作成
-        
+        $profile = new Profile(
+            userId: $user->getId(),
+            id: $validatedData['id'],
+            age: $validatedData['age'],
+            location: $validatedData['location'],
+            description: $validatedData['description']
+        );
 
+        $profileDao = DAOFactory::getProfileDAO();
+        if(isset($validatedData['id'])) $success = $profileDao->update($profile);
+        else $success = $profileDao->create($profile);
+
+        if (!$success) throw new Exception('Database update failed!');
+
+        $userDao = DAOFactory::getUserDAO();
+
+        $user->setUsername($validatedData['username']);
         
+        $updatedSuccess = $userDao->update($user);
+
+        if (!$updatedSuccess) throw new Exception('Failed to update user!');
+
         return new RedirectRenderer('profile');
     }),
     'login' => Route::create('login', function (): HTTPRenderer {
@@ -134,6 +172,8 @@ return [
     })->setMiddleware(['guest']),
     'form/login' => Route::create('form/login', function (): HTTPRenderer {
         try {
+
+            // TODO: Eメール認証していないとログインできないようにする
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
@@ -141,7 +181,7 @@ return [
                 'password' => ValueType::STRING,
             ];
 
-            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
             Authenticate::authenticate($validatedData['email'], $validatedData['password']);
 
@@ -166,12 +206,14 @@ return [
     })->setMiddleware(['guest']),
     'logout' => Route::create('logout', function (): HTTPRenderer {
         Authenticate::logoutUser();
-        FlashData::setFlashData('success', 'Logged out.');
+        FlashData::setFlashData('success', 'ログアウトしました');
         return new RedirectRenderer('login');
     })->setMiddleware(['auth']),
     'profile' => Route::create('profile', function (): HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
-        error_log($user->getUsername());
-        return new HTMLRenderer('page/profile',['user'=>$user]);
+        $profileDao = DAOFactory::getProfileDAO();
+        $profile = $profileDao->getByUserId($user->getId());
+
+        return new HTMLRenderer('page/profile',['user'=>$user, 'profile'=>$profile]);
     })->setMiddleware(['auth']),
 ];
