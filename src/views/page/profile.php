@@ -11,16 +11,13 @@
 					<?= "@" . $user->getUsername() ?>
 				</h4>
 				<p class="dark:text-gray-400">
-					Sed non nibh iaculis, posuere diam vitae, consectetur neque.
-					Integer velit ligula, semper sed nisl in, cursus commodo elit.
-					Pellentesque sit amet mi luctus ligula euismod lobortis ultricies
-					et nibh.
+					<?= $profile->getDescription() ?>
 				</p>
 			</div>
 		</div>
 		<div class="align-center flex justify-center space-x-4 pt-4">
-			<button onclick="profile_edit.showModal()" class="btn btn-active">
-				プロフィールを編集
+			<button class="btn btn-active">
+				<a href="/profile/edit">プロフィールを編集</a>
 			</button>
 			<button class="btn btn-active">
 				<a href="/logout">ログアウト</a>
@@ -28,17 +25,6 @@
 		</div>
 	</div>
 </div>
-
-<!-- profile edit  -->
-<dialog id="profile_edit" class="modal">
-	<div class="modal-box">
-		<h3 class="font-bold text-lg">Hello!</h3>
-		<p class="py-4">Press ESC key or click outside to close</p>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
 
 <!-- post -->
 <div class="container mx-auto mb-14 flex flex-col items-center justify-center p-4">
