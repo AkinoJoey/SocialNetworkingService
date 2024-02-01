@@ -15,16 +15,17 @@ class UserDAOImpl implements UserDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO users (account_name ,email, password, email_verified) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO users (account_name ,email, password, email_verified, username) VALUES (?, ?, ?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'sssi',
+            'sssis',
             [
                 $user->getAccountName(),
                 $user->getEmail(),
                 password_hash($password, PASSWORD_DEFAULT), // store the hashed password
-                $user->getEmailVerified()
+                $user->getEmailVerified(),
+                $user->getUsername()
             ]
         );
 
@@ -110,17 +111,19 @@ class UserDAOImpl implements UserDAO
                     account_name = ?,
                     email = ?,
                     password = ?,
+                    username = ?,
                     email_verified = ?
                 WHERE id = ?
             SQL;
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'sssii',
+            'ssssii',
             [
                 $user->getAccountName(),
                 $user->getEmail(),
                 $this->getHashedPasswordById($user->getId()),
+                $user->getUsername(),
                 $user->getEmailVerified(),
                 $user->getId()
             ]
