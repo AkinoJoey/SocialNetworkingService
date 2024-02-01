@@ -4,7 +4,8 @@ namespace src\helpers;
 
 use src\types\ValueType;
 
-class ValidationHelper{
+class ValidationHelper
+{
     public static function integer($value, float $min = -INF, float $max = INF): int
     {
         // PHPには、データを検証する組み込み関数があります。詳細は https://www.php.net/manual/en/filter.filters.validate.php を参照ください。
@@ -28,13 +29,19 @@ class ValidationHelper{
     }
 
 
-    public static function validateFields(array $fields, array $data): array
+    public static function validateFields(array $fields, array $data, bool $required): array
     {
         $validatedData = [];
 
         foreach ($fields as $field => $type) {
             if (!isset($data[$field]) || ($data)[$field] === '') {
-                throw new \InvalidArgumentException("Missing field: $field");
+                if($required){
+                    throw new \InvalidArgumentException("Missing field: $field");
+                }else{
+                    // オブジェクト作成時のためにnullを入れておく
+                    $validatedData[$field] = null;
+                    continue;
+                }
             }
 
             $value = $data[$field];
