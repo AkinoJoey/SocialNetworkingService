@@ -12,8 +12,8 @@ class User implements Model
     public function __construct(
         private string $accountName,
         private string $email,
+        private string $username,
         private ?int $id = null,
-        private ?string $username = null,
         private bool $emailVerified = false,
         private ?DataTimeStamp $timeStamp = null,
     ) {
