@@ -216,4 +216,30 @@ return [
 
         return new HTMLRenderer('page/profile',['user'=>$user, 'profile'=>$profile]);
     })->setMiddleware(['auth']),
+    'form/post' => Route::create('form/post', function() : HTTPRenderer {
+        // TODO: try-catch文を書く
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        $required_fields = [
+            'content' => ValueType::STRING,
+        ];
+
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields,$_POST, true);
+
+        $nullableFields = [
+            'media_path' => ValueType::STRING,
+            'scheduled_at' => ValueType::DATE
+        ];
+
+        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+
+        $userDao = DAOFactory::getUserDAO();
+
+        // TODO: 厳格なバリデーションを作成
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        
+
+        return new RedirectRenderer('');
+    })
 ];
