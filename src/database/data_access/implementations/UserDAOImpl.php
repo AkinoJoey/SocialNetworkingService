@@ -61,6 +61,18 @@ class UserDAOImpl implements UserDAO
         return $result;
     }
 
+    private function getRawByUsername(string $username): ?array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT * FROM users WHERE username = ?";
+
+        $result = $mysqli->prepareAndFetchAll($query, 's', [$username])[0] ?? null;
+
+        if ($result === null) return null;
+        return $result;
+    }
+
     private function rawDataToUser(array $rawData): User
     {
         return new User(
@@ -84,6 +96,14 @@ class UserDAOImpl implements UserDAO
     public function getByEmail(string $email): ?User
     {
         $userRaw = $this->getRawByEmail($email);
+        if ($userRaw === null) return null;
+
+        return $this->rawDataToUser($userRaw);
+    }
+
+    public function getByUsername(string $username): ?User
+    {
+        $userRaw = $this->getRawByUsername($username);
         if ($userRaw === null) return null;
 
         return $this->rawDataToUser($userRaw);
