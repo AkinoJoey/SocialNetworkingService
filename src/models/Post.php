@@ -12,6 +12,7 @@ class Post implements Model
 
     public function __construct(
         private string $content,
+        private string $url,
         private int $userId,
         private ?int $id = null,
         private ?string $mediaPath = null,
@@ -48,6 +49,16 @@ class Post implements Model
     public function setContent(String $content): void
     {
         $this->content = $content;
+    }
+
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+
+    public function setUrl(String $url): void
+    {
+        $this->url = $url;
     }
 
     public function getMediaPath(): ?string
