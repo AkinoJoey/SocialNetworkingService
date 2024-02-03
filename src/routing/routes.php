@@ -11,11 +11,18 @@ use src\models\User;
 use src\helpers\Authenticate;
 use src\routing\Route;
 use src\exceptions\AuthenticationFailureException;
+use src\models\Post;
 use src\models\Profile;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
-        return new HTMLRenderer('page/top');
+        $user = Authenticate::getAuthenticatedUser();
+
+        // TODO: フォロワーのツイートを見られるようにする
+        $postDao = DAOFactory::getPostDAO();
+        $posts = $postDao->getTwentyPosts($user->getId(), 0);
+
+        return new HTMLRenderer('page/top', ['posts'=> $posts]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -210,11 +217,23 @@ return [
         return new RedirectRenderer('login');
     })->setMiddleware(['auth']),
     'profile' => Route::create('profile', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'username'=> ValueType::STRING
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET,true);
+
+        $userDao = DAOFactory::getUserDAO();
+        $user = $userDao->getByUsername($validatedData['username']);
+
         $profileDao = DAOFactory::getProfileDAO();
         $profile = $profileDao->getByUserId($user->getId());
 
-        return new HTMLRenderer('page/profile',['user'=>$user, 'profile'=>$profile]);
+        $postDao = DAOFactory::getPostDAO();
+        $posts = $postDao->getTwentyPosts($user->getId(), 0);
+
+        return new HTMLRenderer('page/profile',['user'=>$user, 'profile'=>$profile, 'posts'=>$posts]);
     })->setMiddleware(['auth']),
     'form/post' => Route::create('form/post', function() : HTTPRenderer {
         // TODO: try-catch文を書く
@@ -225,6 +244,7 @@ return [
             'content' => ValueType::STRING,
         ];
 
+        // TODO: 厳格なバリデーションを作成
         $validatedRequiredData = ValidationHelper::validateFields($required_fields,$_POST, true);
 
         $nullableFields = [
@@ -233,12 +253,27 @@ return [
         ];
 
         $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
 
-        $userDao = DAOFactory::getUserDAO();
+        // TODO: 画像アップロード時の振る舞いを追加
 
-        // TODO: 厳格なバリデーションを作成
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
-        
+        $user = Authenticate::getAuthenticatedUser();
+
+        $numberOfCharacters = 18;
+        $randomString = bin2hex(random_bytes($numberOfCharacters / 2)); 
+
+        $post = new Post(
+            content: $validatedData['content'],
+            url: $randomString,
+            userId: $user->getId(),
+            mediaPath: $validatedData['media_path'],
+            scheduledAt: $validatedData['scheduled_at']
+        );
+
+        $postDao = DAOFactory::getPostDAO();
+        $success = $postDao->create($post);
+
+        if (!$success) throw new Exception('Failed to create a post!');
 
         return new RedirectRenderer('');
     })
