@@ -15,13 +15,14 @@ class PostDAOImpl implements PostDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO posts (content, media_path, user_id, scheduled_at) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO posts (content, url ,media_path, user_id, scheduled_at) VALUES (?, ? ,?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'ssis',
+            'sssis',
             [
                 $post->getContent(),
+                $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getUserId(),
                 $post->getScheduledAt(),
@@ -80,6 +81,7 @@ class PostDAOImpl implements PostDAO
     {
         return new Post(
             content: $rawData['content'],
+            url: $rawData['url'],
             userId: $rawData['user_id'],
             id: $rawData['id'],
             mediaPath: $rawData['media_path'],
@@ -88,9 +90,31 @@ class PostDAOImpl implements PostDAO
         );
     }
 
+    private function rawDataToPosts(array $results): array
+    {
+        $posts = [];
+
+        foreach ($results as $result) {
+            $posts[] = $this->rawDataToPost($result);
+        }
+
+        return $posts;
+    }
+
     public function delete(int $id): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
         return $mysqli->prepareAndExecute("DELETE FROM posts WHERE id = ?", 'i', [$id]);
+    }
+
+    public function getTwentyPosts(int $userId, int $offset, int $limit = 20): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ?, ?";
+
+        $results = $mysqli->prepareAndFetchAll($query, 'iii', [$userId, $offset, $limit]);
+
+        return $results === null ? [] : $this->rawDataToPosts($results);
     }
 }
