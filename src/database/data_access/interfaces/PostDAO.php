@@ -11,4 +11,6 @@ interface PostDAO
     public function getByUserId(int $userId): ?Post;
     public function delete(int $id): bool;
     public function getTwentyPosts(int $userId, int $offset) : array;
+    public function getByUrl(string $url): ?Post;
+    // getAllReplies()
 }

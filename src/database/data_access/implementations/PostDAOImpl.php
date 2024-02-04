@@ -48,6 +48,19 @@ class PostDAOImpl implements PostDAO
         return $result;
     }
 
+    private function getRawByUrl(string $url): ?array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT * FROM posts WHERE url = ?";
+
+        $result = $mysqli->prepareAndFetchAll($query, 's', [$url])[0] ?? null;
+
+        if ($result === null) return null;
+
+        return $result;
+    }
+
     public function getById(int $id): ?Post
     {
         $postRaw = $this->getRawById($id);
@@ -64,6 +77,15 @@ class PostDAOImpl implements PostDAO
         return $this->rawDataToPost($postRow);
     }
 
+    public function getByUrl(string $url): ?Post
+    {
+        $postRow = $this->getRawByUrl($url);
+        if ($postRow === null) return null;
+
+        return $this->rawDataToPost($postRow);
+    }
+    
+
     private function getRowByUserId(int $userId): ?array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
@@ -78,7 +100,7 @@ class PostDAOImpl implements PostDAO
     }
 
     private function rawDataToPost(array $rawData): Post
-    {
+    {   
         return new Post(
             content: $rawData['content'],
             url: $rawData['url'],
@@ -117,4 +139,5 @@ class PostDAOImpl implements PostDAO
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
+
 }
