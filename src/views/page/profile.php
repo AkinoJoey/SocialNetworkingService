@@ -33,7 +33,7 @@
 			<div class="flex space-x-4">
 				<img alt="" src="https://source.unsplash.com/100x100/?portrait" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500" />
 				<div class="flex flex-col space-y-1">
-					<a rel="noopener noreferrer" href="#" class="text-sm font-semibold">Leroy Jenkins</a>
+					<a rel="noopener noreferrer" href="#" class="text-sm font-semibold"><?= $post->getPostedUser()->getAccountName() ?></a>
 					<span class="text-xs dark:text-gray-400">4 hours ago</span>
 				</div>
 			</div>
