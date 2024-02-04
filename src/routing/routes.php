@@ -22,7 +22,7 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['posts'=> $posts]);
+        return new HTMLRenderer('page/top', ['user'=>$user, 'posts'=> $posts]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -172,7 +172,7 @@ return [
 
         if (!$updatedSuccess) throw new Exception('Failed to update user!');
 
-        return new RedirectRenderer('profile');
+        return new RedirectRenderer(sprintf('profile?username=%s', $user->getUsername()));
     }),
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
@@ -276,5 +276,19 @@ return [
         if (!$success) throw new Exception('Failed to create a post!');
 
         return new RedirectRenderer('');
-    })
+    }),
+    'posts' =>Route::create('posts', function () : HTTPRenderer {
+        
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'url' => ValueType::STRING,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+
+        $postDao = DAOFactory::getPostDAO();
+        $post = $postDao->getByUrl($validatedData['url']);
+
+        return new HTMLRenderer('page/posts', ['post' => $post]);
+    })->setMiddleware([]),
 ];
