@@ -13,16 +13,24 @@ use src\routing\Route;
 use src\exceptions\AuthenticationFailureException;
 use src\models\Post;
 use src\models\Profile;
+use src\response\render\JSONRenderer;
+use src\models\Comment;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
+        // TODO: ゲスト用とユーザー用で振り分ける
         $user = Authenticate::getAuthenticatedUser();
+
+        // ゲストの場合
+        if ($user === null) {
+            return new HTMLRenderer('page/guest');
+        }
 
         // TODO: フォロワーのツイートを見られるようにする
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['user'=>$user, 'posts'=> $posts]);
+        return new HTMLRenderer('page/top', ['user' => $user, 'posts' => $posts]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -63,7 +71,7 @@ return [
                 accountName: $validatedData['account_name'],
                 email: $validatedData['email'],
                 // 初期値としてランダムな文字列を割り当てる
-                username:uniqid("")
+                username: uniqid("")
             );
 
             // データベースにユーザーを作成しようとします
@@ -124,19 +132,18 @@ return [
         FlashData::setFlashData('success', 'Eメールの確認に成功しました。');
         return new RedirectRenderer('profile/edit');
     }),
-    'profile/edit' => Route::create('profile/edit', function() : HTTPRenderer {
+    'profile/edit' => Route::create('profile/edit', function (): HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
-        
+
         $profileDao = DAOFactory::getProfileDAO();
         $profile = $profileDao->getByUserId($user->getId());
 
-        return new HTMLRenderer('page/profile_form', ['user'=>$user, 'profile'=> $profile]);
-
+        return new HTMLRenderer('page/profile_form', ['user' => $user, 'profile' => $profile]);
     })->setMiddleware(['auth']),
-    'form/profile/edit' => Route::create('form/profile/edit', function() : HTTPRenderer {
+    'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
         // TODO: エラーのtry-catch
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-        
+
         // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
         $nullableFields = [
             'id' => ValueType::INT,
@@ -159,7 +166,7 @@ return [
         );
 
         $profileDao = DAOFactory::getProfileDAO();
-        if(isset($validatedData['id'])) $success = $profileDao->update($profile);
+        if (isset($validatedData['id'])) $success = $profileDao->update($profile);
         else $success = $profileDao->create($profile);
 
         if (!$success) throw new Exception('Database update failed!');
@@ -167,7 +174,7 @@ return [
         $userDao = DAOFactory::getUserDAO();
 
         $user->setUsername($validatedData['username']);
-        
+
         $updatedSuccess = $userDao->update($user);
 
         if (!$updatedSuccess) throw new Exception('Failed to update user!');
@@ -219,10 +226,10 @@ return [
     'profile' => Route::create('profile', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'username'=> ValueType::STRING
+            'username' => ValueType::STRING
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET,true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
 
         $userDao = DAOFactory::getUserDAO();
         $user = $userDao->getByUsername($validatedData['username']);
@@ -233,9 +240,9 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
-        return new HTMLRenderer('page/profile',['user'=>$user, 'profile'=>$profile, 'posts'=>$posts]);
+        return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts]);
     })->setMiddleware(['auth']),
-    'form/post' => Route::create('form/post', function() : HTTPRenderer {
+    'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
@@ -245,7 +252,7 @@ return [
         ];
 
         // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields,$_POST, true);
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
         $nullableFields = [
             'media_path' => ValueType::STRING,
@@ -260,7 +267,7 @@ return [
         $user = Authenticate::getAuthenticatedUser();
 
         $numberOfCharacters = 18;
-        $randomString = bin2hex(random_bytes($numberOfCharacters / 2)); 
+        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
 
         $post = new Post(
             content: $validatedData['content'],
@@ -276,9 +283,9 @@ return [
         if (!$success) throw new Exception('Failed to create a post!');
 
         return new RedirectRenderer('');
-    }),
-    'posts' =>Route::create('posts', function () : HTTPRenderer {
-        
+    })->setMiddleware(['auth']),
+    'posts' => Route::create('posts', function (): HTTPRenderer {
+
         // TODO: 厳格なバリデーション
         $required_fields = [
             'url' => ValueType::STRING,
@@ -289,6 +296,70 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $post = $postDao->getByUrl($validatedData['url']);
 
-        return new HTMLRenderer('page/posts', ['post' => $post]);
-    })->setMiddleware([]),
+        $commentDao = DAOFactory::getCommentDAO();
+        $comments = $commentDao->getCommentsToPost($post->getId(), 0);
+
+        return new HTMLRenderer('page/posts', ['post' => $post, 'comments'=>$comments]);
+    })->setMiddleware(['auth']),
+    'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'content' => ValueType::STRING,
+            'post_id' => ValueType::INT
+        ];
+
+        // TODO: 厳格なバリデーションを作成
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+
+        $nullableFields = [
+            'media_path' => ValueType::STRING
+        ];
+
+        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
+
+        $postDao = DAOFactory::getPostDAO();
+
+        $currentPost = $postDao->getById($validatedData['post_id']);
+
+        $user = Authenticate::getAuthenticatedUser();
+
+        $numberOfCharacters = 18;
+        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
+
+        $comment = new Comment(
+            content: $validatedData['content'],
+            url: $randomString,
+            userId: $user->getId(),
+            postId: $validatedData['post_id'],
+            mediaPath: $validatedData['media_path'],
+        );
+
+        $commentDao = DAOFactory::getCommentDAO();
+        $success = $commentDao->create($comment);
+
+        if (!$success) throw new Exception('Failed to create a comment!');
+
+        return new RedirectRenderer(sprintf('posts?url=%s', $currentPost->getUrl()));
+
+    })->setMiddleware(['auth']),
+    'comments' => Route::create('comments', function() : HTTPRenderer {
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'url' => ValueType::STRING,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+
+        $commentDao = DAOFactory::getCommentDAO();
+        $parentComment = $commentDao->getByUrl($validatedData['url']);
+
+        $childComments = $commentDao->getChildComments($parentComment->getId(),0);
+
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'comments' => $childComments]);
+
+    })->setMiddleware(['auth'])
 ];
