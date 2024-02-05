@@ -29,9 +29,11 @@ Entity posts{
     --
     # user_id: INT [FK]
     content: String
+    url: String
     media_path: String
     scheduled_at: Datetime
     created_at: Datetime
+    updated_at: Datetime
 }
 
 Entity comments{
@@ -41,6 +43,7 @@ Entity comments{
     # post_id: INT [FK]
     # parent_comment_id: INT [FK]
     content: String
+    url: String
     media_path: String
     created_at: Datetime
 }
