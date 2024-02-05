@@ -8,6 +8,8 @@ use src\database\data_access\implementations\UserDAOImpl;
 use src\database\data_access\interfaces\PostDAO;
 use src\database\data_access\interfaces\ProfileDAO;
 use src\database\data_access\interfaces\UserDAO;
+use src\database\data_access\interfaces\CommentDAO;
+use src\database\data_access\implementations\CommentDAOImpl;
 
 class DAOFactory
 {
@@ -23,5 +25,10 @@ class DAOFactory
 
     public static function getPostDAO() : PostDAO {
         return new PostDAOImpl();
+    }
+
+    public static function getCommentDAO(): CommentDAO
+    {
+        return new CommentDAOImpl();
     }
 }
