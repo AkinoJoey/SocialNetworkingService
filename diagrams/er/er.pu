@@ -55,6 +55,13 @@ Entity post_likes{
     created_at: Datetime
 }
 
+Entity comment_likes{
+    + user_id: INT [PK-FK]
+    + comment_id: INT [PK-FK]
+    --
+    created_at: Datetime
+}
+
 Entity notifications{
     + id: INT [PK]
     --
@@ -87,6 +94,7 @@ users ||--o{ posts: writes
 users ||--o{ comments: comments
 posts ||--o{ comments: has
 posts ||--o{ post_likes: has
+comments ||--o{ comment_likes: has
 comments ||--o{ comments: has
 users ||--o{ follows: following
 users ||--o{ follows: be followed
@@ -94,6 +102,7 @@ users ||---o{ private_messages: writes
 users ||---o{ private_messages: receive
 users ||--o{ notifications: notices
 users ||--o{ post_likes: likes
+users ||--o{ comment_likes: likes
 users ||--|| profile: has
 
 @enduml
