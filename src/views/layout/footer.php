@@ -116,7 +116,7 @@
 		<?php endif; ?>
 
 		</div>
-		<script src="/bundle.js"></script>
+		<script src="/main.bundle.js"></script>
 		</body>
 
 		</html>
