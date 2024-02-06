@@ -10,6 +10,8 @@ use src\database\data_access\interfaces\ProfileDAO;
 use src\database\data_access\interfaces\UserDAO;
 use src\database\data_access\interfaces\CommentDAO;
 use src\database\data_access\implementations\CommentDAOImpl;
+use src\database\data_access\implementations\PostLikeDAOImpl;
+use src\database\data_access\interfaces\PostLikeDAO;
 
 class DAOFactory
 {
@@ -30,5 +32,9 @@ class DAOFactory
     public static function getCommentDAO(): CommentDAO
     {
         return new CommentDAOImpl();
+    }
+
+    public static function getPostLikeDAO() : PostLikeDAO {
+        return new PostLikeDAOImpl();
     }
 }
