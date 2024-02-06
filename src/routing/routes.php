@@ -30,7 +30,15 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['user' => $user, 'posts' => $posts]);
+        $userDao = DAOFactory::getUserDAO();
+
+        $users = [];
+        foreach ($posts as $post) {
+            $users[] = $userDao->getById($post);
+        }
+
+
+        return new HTMLRenderer('page/top', ['users' => $users, 'posts' => $posts]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -299,7 +307,16 @@ return [
         $commentDao = DAOFactory::getCommentDAO();
         $comments = $commentDao->getCommentsToPost($post->getId(), 0);
 
-        return new HTMLRenderer('page/posts', ['post' => $post, 'comments'=>$comments]);
+        $createFormAction = "/form/comment";
+        $deleteFormAction = '/form/delete-comment-to-post';
+
+        $postLikeDao = DAOFactory::getPostLikeDAO();
+        $NumberOfPostLike = $postLikeDao->getNumberOfLikes($post->getId());
+
+        $userDao = DAOFactory::getUserDAO();
+        $postedUser =  $userDao->getById($post->getUserId());
+
+        return new HTMLRenderer('page/posts', ['post' => $post, 'postedUser' => $postedUser, 'NumberOfPostLike' => $NumberOfPostLike, 'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -344,9 +361,8 @@ return [
         if (!$success) throw new Exception('Failed to create a comment!');
 
         return new RedirectRenderer(sprintf('posts?url=%s', $currentPost->getUrl()));
-
     })->setMiddleware(['auth']),
-    'comments' => Route::create('comments', function() : HTTPRenderer {
+    'comments' => Route::create('comments', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
         $required_fields = [
             'url' => ValueType::STRING,
@@ -357,9 +373,106 @@ return [
         $commentDao = DAOFactory::getCommentDAO();
         $parentComment = $commentDao->getByUrl($validatedData['url']);
 
-        $childComments = $commentDao->getChildComments($parentComment->getId(),0);
+        $childComments = $commentDao->getChildComments($parentComment->getId(), 0);
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'comments' => $childComments]);
+        $createFormAction = "/form/comment-to-comment";
+        $deleteFormAction = '/form/delete-comment-to-comment';
 
-    })->setMiddleware(['auth'])
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+    })->setMiddleware(['auth']),
+    'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'content' => ValueType::STRING,
+            'post_id' => ValueType::INT
+        ];
+        // TODO: 厳格なバリデーションを作成
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+
+        $nullableFields = [
+            'media_path' => ValueType::STRING
+        ];
+
+        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
+
+        $commentDao = DAOFactory::getCommentDAO();
+
+        $currentComment = $commentDao->getById($validatedData['post_id']);
+
+        $user = Authenticate::getAuthenticatedUser();
+
+        $numberOfCharacters = 18;
+        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
+
+        $comment = new Comment(
+            content: $validatedData['content'],
+            url: $randomString,
+            userId: $user->getId(),
+            parentCommentId: $validatedData['post_id'],
+            mediaPath: $validatedData['media_path'],
+        );
+
+        $success = $commentDao->create($comment);
+
+        if (!$success) throw new Exception('Failed to create a comment!');
+
+        return new RedirectRenderer(sprintf('comments?url=%s', $currentComment->getUrl()));
+    })->setMiddleware(['auth']),
+    'form/delete-comment-to-comment' => Route::create('form/delete-comment-to-comment', function (): HTTPRenderer {
+        // TODO: 投稿者だけが削除できるようにする
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'comment_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $commentDao = DAOFactory::getCommentDAO();
+        $targetComment = $commentDao->getById($validatedData['comment_id']);
+        $parentComment = $commentDao->getById($targetComment->getParentCommentId());
+
+        $success = $commentDao->delete($targetComment->getId());
+        if (!$success) throw new Exception('Failed to delete a comment!');
+
+        return new RedirectRenderer(sprintf('comments?url=%s', $parentComment->getUrl()));
+    })->setMiddleware(['auth']),
+    'form/delete-comment-to-post' => Route::create('form/delete-comment-to-post', function (): HTTPRenderer {
+        // TODO: 投稿者だけが削除できるようにする
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'comment_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $commentDao = DAOFactory::getCommentDAO();
+        $targetComment = $commentDao->getById($validatedData['comment_id']);
+
+        $postDao = DAOFactory::getPostDAO();
+        $parentPost = $postDao->getById($targetComment->getPostId());
+
+        $success = $commentDao->delete($targetComment->getId());
+        if (!$success) throw new Exception('Failed to delete a comment!');
+
+        return new RedirectRenderer(sprintf('posts?url=%s', $parentPost->getUrl()));
+    })->setMiddleware(['auth']),
+    'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+
+
+
+
+
+        return new JSONRenderer(['success' => true]);
+    })->setMiddleware(['auth']),
 ];
