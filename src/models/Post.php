@@ -91,11 +91,4 @@ class Post implements Model
     {
         $this->timeStamp = $timeStamp;
     }
-
-    public function getPostedUser() : User {
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getById($this->userId);
-
-        return $user;
-    }
 }
