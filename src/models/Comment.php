@@ -105,7 +105,8 @@ class Comment implements Model
         $this->createdAt = $createdAt;
     }
 
-    public function getPostedUser(): User
+    // TODO:修正
+    public function getCreatedUser(): User
     {
         $userDao = DAOFactory::getUserDAO();
         $user = $userDao->getById($this->userId);
