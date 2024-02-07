@@ -43,7 +43,7 @@ class HTMLRenderer implements HTTPRenderer
     private function getHeader(): string
     {
         ob_start();
-        // TODO: guestの場合はサイドバーを表示しない
+        // guestの場合はサイドバーを表示しない
         $user = Authenticate::getAuthenticatedUser();
         require $this->getViewPath('layout/sidebar');
         require $this->getViewPath('components/message-boxes');
@@ -53,6 +53,8 @@ class HTMLRenderer implements HTTPRenderer
     private function getFooter(): string
     {
         ob_start();
+        // guestの場合はボトムナビゲーションを表示しない
+        $user = Authenticate::getAuthenticatedUser();
         require $this->getViewPath('layout/footer');
         return ob_get_clean();
     }
