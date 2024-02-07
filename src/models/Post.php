@@ -3,10 +3,10 @@
 namespace src\models;
 
 use DateTime;
-use src\database\data_access\DAOFactory;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
 use src\models\User;
+use src\database\data_access\DAOFactory;
 class Post implements Model
 {
     use GenericModel;
@@ -90,5 +90,13 @@ class Post implements Model
     public function setTimeStamp(DataTimeStamp $timeStamp): void
     {
         $this->timeStamp = $timeStamp;
+    }
+
+    public function getCreatedUser(): User
+    {
+        $userDao = DAOFactory::getUserDAO();
+        $user = $userDao->getById($this->userId);
+
+        return $user;
     }
 }
