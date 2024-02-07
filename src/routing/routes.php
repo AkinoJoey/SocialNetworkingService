@@ -15,6 +15,7 @@ use src\models\Post;
 use src\models\Profile;
 use src\response\render\JSONRenderer;
 use src\models\Comment;
+use src\models\PostLike;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -34,9 +35,8 @@ return [
 
         $users = [];
         foreach ($posts as $post) {
-            $users[] = $userDao->getById($post);
+            $users[] = $userDao->getById($post->getUserId());
         }
-
 
         return new HTMLRenderer('page/top', ['users' => $users, 'posts' => $posts]);
     })->setMiddleware([]),
@@ -468,10 +468,23 @@ return [
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'post_id' => ValueType::INT,
+        ];
 
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
 
+        $postLike = new PostLike(
+            userId: $user->getId(),
+            postId: $validatedData['post_id'],
+        );
 
+        $postLikeDao = DAOFactory::getPostLikeDAO();
+        $success = $postLikeDao->create($postLike);
 
+        if (!$success) throw new Exception('Failed to create a post-like!');
 
         return new JSONRenderer(['success' => true]);
     })->setMiddleware(['auth']),
