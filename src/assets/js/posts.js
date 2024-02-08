@@ -1,33 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
     const likePostForm = document.getElementById("like_post_form");
-	let like = false;
 	let numberOfPostLikeSpan = document.getElementById("number_of_post_like");
 	let numberOfPostLike = Number(numberOfPostLikeSpan.textContent);
+	let goodBtn = document.getElementById('good_btn');
+	let  path = location.pathname;
 
 	likePostForm.addEventListener("submit", function (event) {
 		event.preventDefault();
 
-		const formData = new FormData(form);
+		const formData = new FormData(likePostForm);
 
-		if (like) {
-			deleteLikePost(formData);
+		// isLikeはViews/posts.phpで定義
+		if (isLike) {
+			let resource = (path === '/posts') ? "form/delete-like-post" : (path === '/comments') ? "form/delete-like-comment" : '';
+
+			deleteLikePost(resource, formData);
 
 		} else {
-			likePost(formData);
+			let resource = (path === '/posts') ? "form/like-post" : (path === '/comments') ? "form/like-comment" : '';
+
+			likePost(resource,formData);
 		}
 	});
 
-	function likePost(formData) {
-		fetch("form/like-post", {
+	function likePost(resource, formData) {
+		fetch(resource, {
 			method: "POST",
 			body: formData,
 		})
 			.then((response) => response.json()) 
 			.then((data) => {
 				if (data.status === "success") {
-					like = true;
+					isLike = true;
 					numberOfPostLike += 1;
 					numberOfPostLikeSpan.innerHTML = numberOfPostLike;
+					goodBtn.classList.add('fill-blue-700');
 				} else if (data.status === "error") {
 					// ユーザーにエラーメッセージを表示します
 					console.error(data.message);
@@ -39,17 +46,18 @@ document.addEventListener("DOMContentLoaded", function () {
 			});
 	}
 
-	function deleteLikePost(formData) {
-		fetch("form/like-post", {
+	function deleteLikePost(resource, formData) {
+		fetch(resource, {
 			method: "POST",
 			body: formData,
 		})
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.status === "success") {
-					like = false;
+					isLike = false;
 					numberOfPostLike -= 1;
 					numberOfPostLikeSpan.innerHTML = numberOfPostLike;
+					goodBtn.classList.remove('fill-blue-700');
 				} else if (data.status === "error") {
 					// ユーザーにエラーメッセージを表示します
 					console.error(data.message);
