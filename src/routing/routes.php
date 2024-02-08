@@ -16,6 +16,7 @@ use src\models\Profile;
 use src\response\render\JSONRenderer;
 use src\models\Comment;
 use src\models\PostLike;
+use src\models\CommentLike;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -310,13 +311,13 @@ return [
         $createFormAction = "/form/comment";
         $deleteFormAction = '/form/delete-comment-to-post';
 
+        $currentUser = Authenticate::getAuthenticatedUser();
+
         $postLikeDao = DAOFactory::getPostLikeDAO();
-        $NumberOfPostLike = $postLikeDao->getNumberOfLikes($post->getId());
+        $numberOfPostLike = $postLikeDao->getNumberOfLikes($post->getId());
+        $isLike = $postLikeDao->getByUserIdAndPostId($currentUser->getId(), $post->getId()) !== null ? true : false;
 
-        $userDao = DAOFactory::getUserDAO();
-        $postedUser =  $userDao->getById($post->getUserId());
-
-        return new HTMLRenderer('page/posts', ['post' => $post, 'postedUser' => $postedUser, 'NumberOfPostLike' => $NumberOfPostLike, 'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $post,'numberOfPostLike' => $numberOfPostLike, 'isLike'=>$isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -378,7 +379,13 @@ return [
         $createFormAction = "/form/comment-to-comment";
         $deleteFormAction = '/form/delete-comment-to-comment';
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        $currentUser = Authenticate::getAuthenticatedUser();
+
+        $commentLikeDao = DAOFactory::getCommentLikeDAO();
+        $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
+        $isLike = $commentLikeDao->getByUserIdAndPostId($currentUser->getId(), $parentComment->getId()) !== null ? true : false;
+        
+        return new HTMLRenderer('page/posts', ['post' => $parentComment,'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -486,6 +493,67 @@ return [
 
         if (!$success) throw new Exception('Failed to create a post-like!');
 
-        return new JSONRenderer(['success' => true]);
+        return new JSONRenderer(['status' => 'success']);
+    
+    })->setMiddleware(['auth']),
+    'form/delete-like-post' => Route::create('form/delete-like-post', function (): HTTPRenderer {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'post_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
+
+        $postLikeDao = DAOFactory::getPostLikeDAO();
+        $success = $postLikeDao->delete($user->getId(), $validatedData['post_id']);
+
+        if (!$success) throw new Exception('Failed to delete a post-like!');
+
+        return new JSONRenderer(['status' => 'success']);
+    })->setMiddleware(['auth']),
+    'form/like-comment' => Route::create('form/like-comment', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'post_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
+
+        $commentLike = new CommentLike(
+            userId: $user->getId(),
+            commentId: $validatedData['post_id'],
+        );
+
+        $commentLikeDao = DAOFactory::getCommentLikeDAO();
+        $success = $commentLikeDao->create($commentLike);
+
+        if (!$success) throw new Exception('Failed to create a comment-like!');
+
+        return new JSONRenderer(['status' => 'success']);
+    })->setMiddleware(['auth']),
+    'form/delete-like-comment' => Route::create('form/delete-like-comment', function (): HTTPRenderer {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'post_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
+
+        $commentLikeDao = DAOFactory::getCommentLikeDAO();
+        $success = $commentLikeDao->delete($user->getId(), $validatedData['post_id']);
+
+        if (!$success) throw new Exception('Failed to delete a comment-like!');
+
+        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
 ];
