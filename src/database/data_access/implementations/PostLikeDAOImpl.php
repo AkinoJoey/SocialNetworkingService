@@ -14,7 +14,7 @@ class PostLikeDAOImpl implements PostLikeDAO
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO postLikes (user_id, post_id) VALUES (?, ?)";
+        $query = "INSERT INTO post_likes (user_id, post_id) VALUES (?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
@@ -42,7 +42,7 @@ class PostLikeDAOImpl implements PostLikeDAO
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "SELECT * FROM post_likes WHERE user_id = ? AND post_id ";
+        $query = "SELECT * FROM post_likes WHERE user_id = ? AND post_id = ? ";
 
         $result = $mysqli->prepareAndFetchAll($query, 'ii', [$userId, $postId])[0] ?? null;
 
@@ -63,7 +63,7 @@ class PostLikeDAOImpl implements PostLikeDAO
     public function delete(int $userId, int $postId): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        return $mysqli->prepareAndExecute("DELETE FROM comments WHERE user_id = ? AND post_id = ?", 'ii', [$userId, $postId]);
+        return $mysqli->prepareAndExecute("DELETE FROM post_likes WHERE user_id = ? AND post_id = ?", 'ii', [$userId, $postId]);
     }
 
     public function getNumberOfLikes(int $postId): int
