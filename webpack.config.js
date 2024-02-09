@@ -3,7 +3,8 @@ const path = require("path");
 module.exports = {
 	entry: {
 		main: "./src/assets/js/index.js",
-		posts: "./src/assets/js/posts.js"
+		posts: "./src/assets/js/posts.js",
+		profile: "./src/assets/js/profile.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
