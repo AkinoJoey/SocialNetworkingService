@@ -30,6 +30,11 @@ return [
         }
 
         // TODO: フォロワーのツイートを見られるようにする
+        // ユーザーがフォローしているuser id list
+        $followDao =  DAOFactory::getFollowDAO();
+        $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
+
+        
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
