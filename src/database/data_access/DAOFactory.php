@@ -14,6 +14,9 @@ use src\database\data_access\implementations\PostLikeDAOImpl;
 use src\database\data_access\interfaces\CommentLikeDAO;
 use src\database\data_access\interfaces\PostLikeDAO;
 use src\database\data_access\implementations\CommentLikeDAOImpl;
+use src\database\data_access\implementations\FollowDAOImpl;
+use src\database\data_access\interfaces\FollowDAO;
+
 class DAOFactory
 {
     public static function getUserDAO(): UserDAO
@@ -41,5 +44,9 @@ class DAOFactory
 
     public static function getCommentLikeDAO() : CommentLikeDAO {
         return new CommentLikeDAOImpl();
+    }
+
+    public static function getFollowDAO() : FollowDAO {
+        return new FollowDAOImpl();
     }
 }

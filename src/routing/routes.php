@@ -17,6 +17,7 @@ use src\response\render\JSONRenderer;
 use src\models\Comment;
 use src\models\PostLike;
 use src\models\CommentLike;
+use src\models\Follow;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -242,6 +243,7 @@ return [
 
         $userDao = DAOFactory::getUserDAO();
         $user = $userDao->getByUsername($validatedData['username']);
+        $authenticatedUser = Authenticate::getAuthenticatedUser();
 
         $profileDao = DAOFactory::getProfileDAO();
         $profile = $profileDao->getByUserId($user->getId());
@@ -249,7 +251,17 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
-        return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts]);
+        $followDao = DAOFactory::getFollowDAO();
+        $followingCount = count($followDao->getFollowingUserIdList($user->getId()));
+        $followerCount = count($followDao->getFollowerUserIdList($user->getId()));
+
+        // 自分のプロフィールを見る場合
+        if ($user->getId() === $authenticatedUser->getId()) {
+            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
+        } else {
+            $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
+            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow]);
+        }
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -317,7 +329,7 @@ return [
         $numberOfPostLike = $postLikeDao->getNumberOfLikes($post->getId());
         $isLike = $postLikeDao->getByUserIdAndPostId($currentUser->getId(), $post->getId()) !== null ? true : false;
 
-        return new HTMLRenderer('page/posts', ['post' => $post,'numberOfPostLike' => $numberOfPostLike, 'isLike'=>$isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $post, 'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -384,8 +396,8 @@ return [
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
         $isLike = $commentLikeDao->getByUserIdAndPostId($currentUser->getId(), $parentComment->getId()) !== null ? true : false;
-        
-        return new HTMLRenderer('page/posts', ['post' => $parentComment,'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -494,7 +506,6 @@ return [
         if (!$success) throw new Exception('Failed to create a post-like!');
 
         return new JSONRenderer(['status' => 'success']);
-    
     })->setMiddleware(['auth']),
     'form/delete-like-post' => Route::create('form/delete-like-post', function (): HTTPRenderer {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
@@ -553,6 +564,49 @@ return [
         $success = $commentLikeDao->delete($user->getId(), $validatedData['post_id']);
 
         if (!$success) throw new Exception('Failed to delete a comment-like!');
+
+        return new JSONRenderer(['status' => 'success']);
+    })->setMiddleware(['auth']),
+    'form/follow' => Route::create('form/follow', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'follower_user_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
+
+        $follow = new Follow(
+            followingUserId: $user->getId(),
+            followerUserId: $validatedData['follower_user_id']
+        );
+
+        $followDao = DAOFactory::getFollowDAO();
+        $success = $followDao->create($follow);
+
+        if (!$success) throw new Exception('Failed to create a follow!');
+
+        return new JSONRenderer(['status' => 'success']);
+    })->setMiddleware(['auth']),
+    'form/unFollow' => Route::create('form/unFollow', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'follower_user_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $user = Authenticate::getAuthenticatedUser();
+
+        $followDao = DAOFactory::getFollowDAO();
+        $success = $followDao->delete($user->getId(), $validatedData['follower_user_id']);
+
+        if (!$success) throw new Exception('Failed to delete a follow!');
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),

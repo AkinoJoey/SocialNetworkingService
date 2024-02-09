@@ -1,13 +1,29 @@
 <!-- profile -->
-<div class="container mx-auto p-4">
-	<div class="rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 sm:m-12 lg:mx-40">
-		<div class="flex flex-col space-y-4 lg:flex-row lg:space-x-6 lg:space-y-0">
-			<img src="https://source.unsplash.com/75x75/?portrait" alt="" class="h-24 w-24 flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" />
+<div class="container flex justify-center p-4">
+	<div class="w-full rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 sm:m-12 lg:mx-40 max-w-2xl">
+		<div class="flex flex-col">
+			<div class="w-full flex flex-row">
+				<div class="w-1/3">
+					<img src="https://source.unsplash.com/75x75/?portrait" alt="" class="flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" />
+				</div>
+				<!-- TODO: 10Kみたいな表示にする -->
+				<div class="w-2/3 flex justify-around">
+					<div class="flex flex-col justify-around font-semibold">
+						<p>フォロー中</p>
+						<p class="text-center"><?= $followingCount ?></p>
+					</div>
+					<div class="flex flex-col justify-around font-semibold">
+						<p>フォロワー</p>
+						<p id="followerCount" class="text-center"><?= $followerCount ?></p>
+					</div>
+				</div>
+			</div>
+
 			<div class="flex flex-col">
-				<h4 class="text-center text-lg font-semibold lg:text-left">
+				<h4 class="text-lg font-semibold">
 					<?= $user->getAccountName() ?>
 				</h4>
-				<h4 class="text-center text-sm text-gray-500 dark:text-gray-400 lg:text-left">
+				<h4 class="text-sm text-gray-500 dark:text-gray-400">
 					<?= "@" . $user->getUsername() ?>
 				</h4>
 				<p class="dark:text-gray-400">
@@ -15,14 +31,28 @@
 				</p>
 			</div>
 		</div>
-		<div class="align-center flex justify-center space-x-4 pt-4">
-			<button class="btn btn-active">
-				<a href="/profile/edit">プロフィールを編集</a>
-			</button>
-			<button class="btn btn-active">
-				<a href="/logout">ログアウト</a>
-			</button>
-		</div>
+		<?php if ($user->getId() === $authenticatedUser->getId()) : ?>
+			<div class="align-center flex justify-center space-x-4 pt-4">
+				<button class="btn btn-active">
+					<a href="/profile/edit">プロフィールを編集</a>
+				</button>
+				<button class="btn btn-active">
+					<a href="/logout">ログアウト</a>
+				</button>
+			</div>
+		<?php else : ?>
+			<form id="follow_form">
+				<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>" />
+				<input type="hidden" name="follower_user_id" value="<?= $user->getId()?>">
+				<div class="align-center flex justify-center space-x-4 pt-4">
+					<button type="submit" id="follow_btn" class="btn btn-info text-white">
+						<?php echo ($isFollow) ? 'フォロー中' : 'フォローする' ?>
+					</button>
+					<button class="btn">メッセージ</button>
+				</div>
+			</form>
+
+		<?php endif; ?>
 	</div>
 </div>
 
@@ -80,3 +110,12 @@
 	<?php endforeach; ?>
 
 </div>
+
+
+<?php if ($user->getId() !== $authenticatedUser->getId()) : ?>
+	<script>
+		let isFollow = Boolean(<?= $isFollow ?>);
+	</script>
+
+	<script src="./profile.bundle.js"></script>
+<?php endif; ?>
