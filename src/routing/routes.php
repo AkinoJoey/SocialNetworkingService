@@ -30,22 +30,22 @@ return [
         }
 
         // TODO: フォロワーのツイートを見られるようにする
-        // ユーザーがフォローしているuser id list
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
 
-        
+        // 自分の投稿を表示させるために追加
+        $followingUserIdList[] = $user->getId();
         $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getTwentyPosts($user->getId(), 0);
+        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, 0);
 
         $userDao = DAOFactory::getUserDAO();
 
         $users = [];
-        foreach ($posts as $post) {
+        foreach ($postsByFollowedUsers as $post) {
             $users[] = $userDao->getById($post->getUserId());
         }
 
-        return new HTMLRenderer('page/top', ['users' => $users, 'posts' => $posts]);
+        return new HTMLRenderer('page/top', ['users' => $users, 'posts' => $postsByFollowedUsers]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -257,8 +257,10 @@ return [
         $posts = $postDao->getTwentyPosts($user->getId(), 0);
 
         $followDao = DAOFactory::getFollowDAO();
-        $followingCount = count($followDao->getFollowingUserIdList($user->getId()));
-        $followerCount = count($followDao->getFollowerUserIdList($user->getId()));
+        $followingList = $followDao->getFollowingUserIdList($user->getId());
+        $followingCount = $followingList !== null ? count($followingList) : 0;
+        $followerList = $followDao->getFollowerUserIdList($user->getId());
+        $followerCount = $followerList !== null ? count($followerList) : 0;
 
         // 自分のプロフィールを見る場合
         if ($user->getId() === $authenticatedUser->getId()) {
