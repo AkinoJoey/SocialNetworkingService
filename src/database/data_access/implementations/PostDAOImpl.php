@@ -84,7 +84,7 @@ class PostDAOImpl implements PostDAO
 
         return $this->rawDataToPost($postRow);
     }
-    
+
 
     private function getRowByUserId(int $userId): ?array
     {
@@ -100,7 +100,7 @@ class PostDAOImpl implements PostDAO
     }
 
     private function rawDataToPost(array $rawData): Post
-    {   
+    {
         return new Post(
             content: $rawData['content'],
             url: $rawData['url'],
@@ -136,6 +136,24 @@ class PostDAOImpl implements PostDAO
         $query = "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ?, ?";
 
         $results = $mysqli->prepareAndFetchAll($query, 'iii', [$userId, $offset, $limit]);
+
+        return $results === null ? [] : $this->rawDataToPosts($results);
+    }
+
+
+    public function getPostsByFollowedUsers(array $followedUserIds, int $offset, int $limit = 20): array
+    {
+        if (count($followedUserIds) === 0) return [];
+
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $placeholders = implode(',', array_fill(0, count($followedUserIds), '?'));
+        $query = "SELECT * FROM posts WHERE user_id IN ($placeholders) ORDER BY created_at DESC LIMIT ?, ?";
+
+        $types = str_repeat('i', count($followedUserIds)) . 'ii';
+        $params = array_merge($followedUserIds, [$offset, $limit]);
+
+        $results = $mysqli->prepareAndFetchAll($query, $types, $params);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
