@@ -79,12 +79,21 @@ Entity follows{
     created_at: Datetime
 }
 
+Entity dm_threads{
+    + id: INT [PK]
+    --
+    # user_id1: INT [FK]
+    # user_id2: INT [FK]
+    url: String
+}
+
 Entity private_messages{
     + id: INT [PK]
     --
-    sender_user_id: INT [FK]
-    receiver_user_id INT [FK]
-    content: String
+    # private_room_id: INT [FK]
+    # sender_user_id: INT [FK]
+    # receiver_user_id: INT [FK]
+    text: String
     media_path: String
     created_at: Datetime
 }
@@ -98,11 +107,11 @@ comments ||--o{ comment_likes: has
 comments ||--o{ comments: has
 users ||--o{ follows: following
 users ||--o{ follows: be followed
-users ||---o{ private_messages: writes
-users ||---o{ private_messages: receive
 users ||--o{ notifications: notices
 users ||--o{ post_likes: likes
 users ||--o{ comment_likes: likes
 users ||--|| profile: has
+users }|--o{ dm_threads: has
+dm_threads ||--o{ private_messages: belongs to 
 
 @enduml
