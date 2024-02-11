@@ -617,4 +617,12 @@ return [
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
+    'direct' =>Route::create('direct', function () : HTTPRenderer {
+
+        // ユーザーのIDと相手のIDをwhereで探す。ない場合は作る。
+
+        
+        
+        return new HTMLRenderer('page/direct');
+    })->setMiddleware(['auth']),
 ];
