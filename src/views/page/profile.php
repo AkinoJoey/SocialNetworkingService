@@ -41,16 +41,16 @@
 				</button>
 			</div>
 		<?php else : ?>
-			<form id="follow_form">
-				<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>" />
-				<input type="hidden" name="follower_user_id" value="<?= $user->getId()?>">
-				<div class="align-center flex justify-center space-x-4 pt-4">
+			<div class="align-center flex justify-center space-x-4 pt-4">
+				<form id="follow_form">
+					<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>" />
+					<input type="hidden" name="follower_user_id" value="<?= $user->getId() ?>">
 					<button type="submit" id="follow_btn" class="btn btn-info text-white">
 						<?php echo ($isFollow) ? 'フォロー中' : 'フォローする' ?>
 					</button>
-					<button class="btn">メッセージ</button>
-				</div>
-			</form>
+				</form>
+				<button class="btn">メッセージ</button>
+			</div>
 
 		<?php endif; ?>
 	</div>
