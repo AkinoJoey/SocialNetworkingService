@@ -49,7 +49,7 @@
 						<?php echo ($isFollow) ? 'フォロー中' : 'フォローする' ?>
 					</button>
 				</form>
-				<button class="btn">メッセージ</button>
+				<a href="direct?url=<?= $dmUrl ?>" class="btn">メッセージ</a>
 			</div>
 
 		<?php endif; ?>
