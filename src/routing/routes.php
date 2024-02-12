@@ -17,6 +17,8 @@ use src\response\render\JSONRenderer;
 use src\models\Comment;
 use src\models\PostLike;
 use src\models\CommentLike;
+use src\models\DmMessage;
+use src\models\DmThread;
 use src\models\Follow;
 
 return [
@@ -266,8 +268,27 @@ return [
         if ($user->getId() === $authenticatedUser->getId()) {
             return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
         } else {
+            $dmThreadDao = DAOFactory::getDmThreadDAO();
+
+            // dm用のURLが作成されていない場合は作成する
+            $dmThread = $dmThreadDao->getByUserIds($user->getId(), $authenticatedUser->getId());
+
+            if ($dmThread === null) {
+                $numberOfCharacters = 18;
+                $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
+                $dmThread = new DmThread(
+                    url: $randomString,
+                    userId1: $user->getId(),
+                    userId2: $authenticatedUser->getId()
+                );
+
+                $success = $dmThreadDao->create($dmThread);
+                if (!$success) throw new Exception('Failed to create a dm thread!');
+            }
+
             $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
-            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow]);
+
+            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
         }
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
@@ -617,12 +638,54 @@ return [
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
-    'direct' =>Route::create('direct', function () : HTTPRenderer {
+    'direct' => Route::create('direct', function (): HTTPRenderer {
 
-        // ユーザーのIDと相手のIDをwhereで探す。ない場合は作る。
+        // TODO: Authenticateでも良いかも
+        $query = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+        parse_str($query, $output);
+        $url = $output['url'];
 
-        
-        
-        return new HTMLRenderer('page/direct');
+        $user = Authenticate::getAuthenticatedUser();
+        $dmThreadDao = DAOFactory::getDmThreadDAO();
+        $dmThread = $dmThreadDao->getByUserIdAndUrl($user->getId(), $url);
+
+        // TODO: try-catch
+        if ($dmThread === null) throw new Exception('Invalid URL!');
+
+        $receiverUserId = $dmThread->getUserId1() === $user->getId() ? $dmThread->getUserId2() : $dmThread->getUserId1();
+        $userDao = DAOFactory::getUserDAO();
+        $receiverUser = $userDao->getById($receiverUserId);
+
+        $dmMessageDao = DAOFactory::getDmMessageDAO();
+        $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
+
+        return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages'=>$messages]);
+    })->setMiddleware(['auth']),
+    'form/direct' => Route::create('form/direct', function (): HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'dm_thread_id' => ValueType::INT,
+            'sender_user_id' => ValueType::INT,
+            'receiver_user_id' => ValueType::INT,
+            'text' => ValueType::STRING,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+
+        $messageDao = DAOFactory::getDmMessageDAO();
+        $dmMessage = new DmMessage(
+            text: $validatedData['text'],
+            senderUserId: $validatedData['sender_user_id'],
+            receiverUserId: $validatedData['receiver_user_id'],
+            dmThreadId: $validatedData['dm_thread_id'],
+        );
+
+        $success = $messageDao->create($dmMessage);
+        if (!$success) throw new Exception('Failed to create a message!');
+
+        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
 ];
