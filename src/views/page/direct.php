@@ -59,7 +59,7 @@
                 </svg>
                 <span class="sr-only">Add emoji</span>
             </button>
-            <textarea id="text" name="text" rows="1" class="mx-4 block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500" placeholder="Your message..."></textarea>
+            <textarea id="message" name="message" rows="1" class="mx-4 block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500" placeholder="Your message..."></textarea>
             <button type="submit" class="inline-flex cursor-pointer justify-center rounded-full p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600">
                 <svg class="h-5 w-5 rotate-90 rtl:-rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
                     <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
@@ -71,21 +71,44 @@
 </div>
 
 <script>
-    window.addEventListener('load', function() {
-        // 一度だけページの最下部にスクロール
-        window.scrollTo(0, document.body.scrollHeight);
-    });
-
     document.addEventListener('DOMContentLoaded', function() {
         const chatForm = document.getElementById('chat_form');
-        let chatTextArea = document.getElementById('text');
+        let chatTextArea = document.getElementById('message');
         const chatContainer = document.getElementById('chat_container');
         window.scrollTo(0, document.body.scrollHeight);
+
+        var conn = new WebSocket('ws://localhost:8080');
+
+        conn.onopen = function(e) {
+            console.log("Connection established!");
+        };
+
+        conn.onmessage = function(e) {
+            console.log(e.data);
+            chatContainer.innerHTML +=
+                `
+            <div class="chat chat-start">
+                    <div class="avatar chat-image">
+                        <div class="w-10 rounded-full">
+                            <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="chat-header">
+                        <?= $receiverUser->getAccountName() ?>
+                        <time class="text-xs opacity-50">12:45</time>
+                    </div>
+                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700">${e.data}</div>
+                    <div class="chat-footer opacity-50">Delivered</div>
+                </div>
+            `
+        };
 
 
         chatForm.addEventListener('submit', function(e) {
             send()
             e.preventDefault();
+
+
         });
 
         chatTextArea.addEventListener("keydown", function(e) {
@@ -98,7 +121,9 @@
         function send() {
             const formData = new FormData(chatForm);
 
-            if (formData.get('chat') === '') return;
+            if (formData.get('message') === '') return;
+
+            conn.send(formData.get('message'));
 
             chatContainer.innerHTML +=
                 `
@@ -112,28 +137,28 @@
                         <?= $user->getAccountName() ?>
                         <time class="text-xs opacity-50">12:46</time>
                     </div>
-                    <div class="chat-bubble text-white bg-blue-400">${formData.get('text')}</div>
+                    <div class="chat-bubble text-white bg-blue-400">${formData.get('message')}</div>
                     <div class="chat-footer opacity-50">Seen at 12:46</div>
                 </div>
                 `
 
-            fetch('/form/direct', {
-                    method: "POST",
-                    body: formData,
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.status == 'success') {
-                        console.log("success");
-                    } else if (data.status === 'error') {
-                        // ユーザーにエラーメッセージを表示します
-                        console.error(data.message);
-                        alert("Update failed: " + data.message);
-                    }
-                })
-                .catch((error) => {
-                    alert("An error occurred. Please try again.");
-                });
+            // fetch('/form/direct', {
+            //         method: "POST",
+            //         body: formData,
+            //     })
+            //     .then((response) => response.json())
+            //     .then((data) => {
+            //         if (data.status == 'success') {
+            //             console.log("success");
+            //         } else if (data.status === 'error') {
+            //             // ユーザーにエラーメッセージを表示します
+            //             console.error(data.message);
+            //             alert("Update failed: " + data.message);
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         alert("An error occurred. Please try again.");
+            //     });
 
             chatTextArea.value = "";
             window.scrollTo(0, document.body.scrollHeight);
