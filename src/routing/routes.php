@@ -670,14 +670,14 @@ return [
             'dm_thread_id' => ValueType::INT,
             'sender_user_id' => ValueType::INT,
             'receiver_user_id' => ValueType::INT,
-            'text' => ValueType::STRING,
+            'message' => ValueType::STRING,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
         $messageDao = DAOFactory::getDmMessageDAO();
         $dmMessage = new DmMessage(
-            text: $validatedData['text'],
+            message: $validatedData['message'],
             senderUserId: $validatedData['sender_user_id'],
             receiverUserId: $validatedData['receiver_user_id'],
             dmThreadId: $validatedData['dm_thread_id'],
