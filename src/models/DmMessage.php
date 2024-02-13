@@ -11,7 +11,7 @@ class DmMessage implements Model{
     use GenericModel;
 
     public function __construct(
-        private string $text,
+        private string $message,
         private int $senderUserId,
         private int $receiverUserId,
         private int $dmThreadId,
@@ -28,14 +28,14 @@ class DmMessage implements Model{
         $this->id = $id;
     }
 
-    public function getText(): string
+    public function getMessage(): string
     {
-        return $this->text;
+        return $this->message;
     }
 
-    public function setText(string $text): void
+    public function setMessage(string $message): void
     {
-        $this->text = $text;
+        $this->message = $message;
     }
 
     public function getSenderUserId() : int {

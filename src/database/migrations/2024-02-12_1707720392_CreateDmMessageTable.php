@@ -11,7 +11,7 @@ class CreateDmMessageTable implements SchemaMigration
         return [
             "CREATE table dm_messages(
                 id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                text VARCHAR(10000) NOT NULL,
+                message VARCHAR(10000) NOT NULL,
                 sender_user_id BIGINT NOT NULL,
                 receiver_user_id BIGINT NOT NULL,
                 dm_thread_id BIGINT NOT NULL,

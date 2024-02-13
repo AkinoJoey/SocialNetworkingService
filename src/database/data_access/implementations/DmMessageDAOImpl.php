@@ -16,13 +16,13 @@ class DmMessageDAOImpl implements DmMessageDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO dm_messages (text, sender_user_id, receiver_user_id, dm_thread_id) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO dm_messages (message, sender_user_id, receiver_user_id, dm_thread_id) VALUES (?, ?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
             'siii',
             [
-                $dmMessage->getText(),
+                $dmMessage->getMessage(),
                 $dmMessage->getSenderUserId(),
                 $dmMessage->getReceiverUserId(),
                 $dmMessage->getDmThreadId()
@@ -77,7 +77,7 @@ class DmMessageDAOImpl implements DmMessageDAO
     private function rawDataToDmMessage(array $rowData): DmMessage
     {
         return new DmMessage(
-            text: $rowData['text'],
+            message: $rowData['message'],
             senderUserId: $rowData['sender_user_id'],
             receiverUserId: $rowData['receiver_user_id'],
             dmThreadId: $rowData['dm_thread_id'],
