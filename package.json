@@ -1,9 +1,10 @@
 {
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "npm-run-all --parallel php-server watch:webpack",
+		"dev": "npm-run-all --parallel php-server watch:webpack chat-server",
 		"php-server": "php -S localhost:8000 -t public",
-		"watch:webpack": "npx webpack --mode development --watch"
+		"watch:webpack": "npx webpack --mode development --watch",
+		"chat-server": "php bin/chat_server.php"
 	},
 	"devDependencies": {
 		"css-loader": "^6.9.1",
