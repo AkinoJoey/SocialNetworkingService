@@ -93,7 +93,7 @@ Entity private_messages{
     # private_room_id: INT [FK]
     # sender_user_id: INT [FK]
     # receiver_user_id: INT [FK]
-    text: String
+    message: String
     media_path: String
     created_at: Datetime
 }
