@@ -13,7 +13,7 @@
                         <?= $user->getAccountName() ?>
                         <time class="text-xs opacity-50">12:46</time>
                     </div>
-                    <div class="chat-bubble text-white bg-blue-400"><?= $message->getText() ?></div>
+                    <div class="chat-bubble text-white bg-blue-400"><?= $message->getMessage() ?></div>
                     <div class="chat-footer opacity-50">Seen at 12:46</div>
                 </div>
             <?php else : ?>
@@ -27,7 +27,7 @@
                         <?= $receiverUser->getAccountName() ?>
                         <time class="text-xs opacity-50">12:45</time>
                     </div>
-                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700"><?= $message->getText() ?></div>
+                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700"><?= $message->getMessage() ?></div>
                     <div class="chat-footer opacity-50">Delivered</div>
                 </div>
             <?php endif; ?>
@@ -76,31 +76,58 @@
         let chatTextArea = document.getElementById('message');
         const chatContainer = document.getElementById('chat_container');
         window.scrollTo(0, document.body.scrollHeight);
+        const dmThreadId = Number(<?= $dmThread->getId() ?>);
+        const receiverUserId = Number(<?= $receiverUser->getId() ?>);
 
         var conn = new WebSocket('ws://localhost:8080');
 
         conn.onopen = function(e) {
             console.log("Connection established!");
+            let data = {
+                type: 'join',
+                dm_thread_id: <?= $dmThread->getId() ?>,
+                sender_user_id: <?= $user->getId() ?>,
+                receiver_user_id: <?= $receiverUser->getId() ?>,
+            };
+
+            conn.send(JSON.stringify(data));
+
         };
 
+        conn.onclose = function() {
+            let data = {
+                type: 'close',
+                dm_thread_id: <?= $dmThread->getId() ?>,
+                sender_user_id: <?= $user->getId() ?>,
+                receiver_user_id: <?= $receiverUser->getId() ?>,
+            };
+
+            conn.send(JSON.stringify(data));
+        }
+
+
         conn.onmessage = function(e) {
-            console.log(e.data);
-            chatContainer.innerHTML +=
-                `
-            <div class="chat chat-start">
-                    <div class="avatar chat-image">
-                        <div class="w-10 rounded-full">
-                            <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+            let data = JSON.parse(e.data);
+            console.log(data);
+
+            if (data.dm_thread_id === dmThreadId && data.sender_user_id === receiverUserId) {
+                chatContainer.innerHTML +=
+                    `
+                <div class="chat chat-start">
+                        <div class="avatar chat-image">
+                            <div class="w-10 rounded-full">
+                                <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="chat-header">
-                        <?= $receiverUser->getAccountName() ?>
-                        <time class="text-xs opacity-50">12:45</time>
-                    </div>
-                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700">${e.data}</div>
-                    <div class="chat-footer opacity-50">Delivered</div>
+                        <div class="chat-header">
+                            <?= $receiverUser->getAccountName() ?>
+                            <time class="text-xs opacity-50">12:45</time>
+                        </div>
+                        <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700">${data.message}</div>
+                        <div class="chat-footer opacity-50">Delivered</div>
                 </div>
             `
+            }
         };
 
 
@@ -123,7 +150,15 @@
 
             if (formData.get('message') === '') return;
 
-            conn.send(formData.get('message'));
+            let data = {
+                type: 'message',
+                dm_thread_id: <?= $dmThread->getId() ?>,
+                sender_user_id: <?= $user->getId() ?>,
+                receiver_user_id: <?= $receiverUser->getId() ?>,
+                message: formData.get('message')
+            };
+
+            conn.send(JSON.stringify(data));
 
             chatContainer.innerHTML +=
                 `
