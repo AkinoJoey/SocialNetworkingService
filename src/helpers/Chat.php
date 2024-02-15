@@ -9,11 +9,13 @@ use src\helpers\ValidationHelper;
 use src\database\data_access\DAOFactory;
 use src\models\DmMessage;
 use Exception;
+use src\helpers\ChatClient;
 
 class Chat implements MessageComponentInterface
 {
-    protected $threads = []; // [threadId => [userId1 => userId1, userId2=>userId2]]
-    protected $clients = []; // [userId(resourceId) => [conn => conn, joinedThreads => [threads_id ...]]]
+    protected $threads = []; // [threadId => [resourceId => ChatClient, resourceId=>ChatClient]]
+    protected $clients = []; // [resourceId => ChatClient ]
+
 
     public function __construct()
     {
@@ -38,23 +40,23 @@ class Chat implements MessageComponentInterface
             case 'message':
                 $this->sendMessage($data);
                 break;
-
         }
-
     }
 
     public function onClose(ConnectionInterface $conn)
     {
-        // threadから削除
-        $user_id = $conn->resourceId;
+        // threadからclientを削除
+        $client = $this->clients[$conn->resourceId];
+        $threadId = $client->getJoinedThreadId();
+        $thread = $this->threads[$threadId];
 
+        unset($thread[$client->getConn()->resourceId]);
 
         // threadが空の場合はthreadを削除
-        if (count($thread) < 1) unset($thread);
+        if (count($thread) < 1) unset($this->threads[$threadId]);
 
         // clientsから削除
-        unset($this->clients[$validatedData['sender_user_id']]);
-        var_dump($this->threads);
+        unset($this->clients[$conn->resourceId]);
 
         echo "Connection {$conn->resourceId} has disconnected\n";
     }
@@ -77,19 +79,12 @@ class Chat implements MessageComponentInterface
 
         $validatedData = ValidationHelper::validateFields($required_fields, $data, true);
 
-        $from->resourceId = $validatedData['sender_user_id'];
+        $client = new ChatClient($from, $validatedData['sender_user_id'], $validatedData['dm_thread_id']);
 
-        if(!isset($this->clients[$validatedData['sender_user_id']])){
-            $this->clients[$validatedData['sender_user_id']] = ['conn' => $from];
-        }
-
-        $this->clients[$validatedData['sender_user_id']]['joinedThreads'][$validatedData['dm_thread_id']] =  $validatedData['dm_thread_id'];
-
-
-        $this->threads[$validatedData['dm_thread_id']][$validatedData['sender_user_id']] = [$validatedData['sender_user_id']];
+        $this->clients[$from->resourceId] = $client;
+        $this->threads[$validatedData['dm_thread_id']][$from->resourceId] = $client;
 
         echo "Starting chat! ({$from->resourceId})\n";
-        
     }
 
     private function sendMessage(array $data): void
@@ -115,27 +110,13 @@ class Chat implements MessageComponentInterface
         // TODO: try-catch
         if (!$success) throw new Exception('Failed to create a message!');
 
-        $thread = isset($this->threads[$validatedData['dm_thread_id']]) ? $this->threads[$validatedData['dm_thread_id']] : null;
-        //　スレッドが作成されていて、かつreceiver_user_idが存在するときに、receiver_user_idにメッセージを送る
-        if (isset($thread) && isset($thread[$validatedData['receiver_user_id']])) {
-            $this->clients[$validatedData['receiver_user_id']]->send(json_encode($validatedData));
+        $thread = $this->threads[$validatedData['dm_thread_id']] ?? null;
+        //　スレッドが作成されている場合、receiver_user_idにだけメッセージを送る
+        if (isset($thread)) {
+            foreach (array_values($thread) as $client) {
+                if ($client->getUserId() === $validatedData['receiver_user_id']) $client->getConn()->send($validatedData['message']);
+            }
         }
-
-
-    }
-
-    private function leave(array $data): void
-    {
-        // TODO: error handling
-        $required_fields = [
-            'dm_thread_id' => ValueType::INT,
-            'sender_user_id' => ValueType::INT,
-            'receiver_user_id' => ValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $data, true);
-
-        
 
     }
 }
