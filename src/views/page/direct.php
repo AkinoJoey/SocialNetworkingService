@@ -39,11 +39,7 @@
 
 <!-- text input -->
 <div>
-    <form id="chat_form" class="fixed -translate-x-1/2 left-1/2  bottom-14 w-full sm:bottom-4 sm:pl-20 sm:pr-4 lg:pl-44">
-        <input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
-        <input type="hidden" name="dm_thread_id" value="<?= $dmThread->getId() ?>">
-        <input type="hidden" name="sender_user_id" value="<?= $user->getId() ?>">
-        <input type="hidden" name="receiver_user_id" value="<?= $receiverUser->getId() ?>">
+    <form class="fixed -translate-x-1/2 left-1/2  bottom-14 w-full sm:bottom-4 sm:pl-20 sm:pr-4 lg:pl-44">
         <div class="flex items-center rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-700">
             <button type="button" class="inline-flex cursor-pointer justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white">
                 <svg class="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 18">
@@ -60,7 +56,7 @@
                 <span class="sr-only">Add emoji</span>
             </button>
             <textarea id="message" name="message" rows="1" class="mx-4 block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500" placeholder="Your message..."></textarea>
-            <button type="submit" class="inline-flex cursor-pointer justify-center rounded-full p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600">
+            <button id="submit_btn" type="submit" class="inline-flex cursor-pointer justify-center rounded-full p-2 text-blue-600 hover:bg-blue-100 dark:text-blue-500 dark:hover:bg-gray-600">
                 <svg class="h-5 w-5 rotate-90 rtl:-rotate-90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
                     <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z" />
                 </svg>
@@ -71,132 +67,12 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatForm = document.getElementById('chat_form');
-        let chatTextArea = document.getElementById('message');
-        const chatContainer = document.getElementById('chat_container');
-        window.scrollTo(0, document.body.scrollHeight);
-        const dmThreadId = Number(<?= $dmThread->getId() ?>);
-        const receiverUserId = Number(<?= $receiverUser->getId() ?>);
-
-        var conn = new WebSocket('ws://localhost:8080');
-
-        conn.onopen = function(e) {
-            console.log("Connection established!");
-            let data = {
-                type: 'join',
-                dm_thread_id: <?= $dmThread->getId() ?>,
-                sender_user_id: <?= $user->getId() ?>,
-                receiver_user_id: <?= $receiverUser->getId() ?>,
-            };
-
-            conn.send(JSON.stringify(data));
-
-        };
-
-        conn.onclose = function() {
-            let data = {
-                type: 'close',
-                dm_thread_id: <?= $dmThread->getId() ?>,
-                sender_user_id: <?= $user->getId() ?>,
-                receiver_user_id: <?= $receiverUser->getId() ?>,
-            };
-
-            conn.send(JSON.stringify(data));
-        }
-
-
-        conn.onmessage = function(e) {
-            let data = JSON.parse(e.data);
-            console.log(data);
-
-            if (data.dm_thread_id === dmThreadId && data.sender_user_id === receiverUserId) {
-                chatContainer.innerHTML +=
-                    `
-                <div class="chat chat-start">
-                        <div class="avatar chat-image">
-                            <div class="w-10 rounded-full">
-                                <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
-                            </div>
-                        </div>
-                        <div class="chat-header">
-                            <?= $receiverUser->getAccountName() ?>
-                            <time class="text-xs opacity-50">12:45</time>
-                        </div>
-                        <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700">${data.message}</div>
-                        <div class="chat-footer opacity-50">Delivered</div>
-                </div>
-            `
-            }
-        };
-
-
-        chatForm.addEventListener('submit', function(e) {
-            send()
-            e.preventDefault();
-
-
-        });
-
-        chatTextArea.addEventListener("keydown", function(e) {
-            if (e.key === 'Enter' && e.shiftKey) {
-                send()
-                e.preventDefault();
-            }
-        })
-
-        function send() {
-            const formData = new FormData(chatForm);
-
-            if (formData.get('message') === '') return;
-
-            let data = {
-                type: 'message',
-                dm_thread_id: <?= $dmThread->getId() ?>,
-                sender_user_id: <?= $user->getId() ?>,
-                receiver_user_id: <?= $receiverUser->getId() ?>,
-                message: formData.get('message')
-            };
-
-            conn.send(JSON.stringify(data));
-
-            chatContainer.innerHTML +=
-                `
-                <div class="chat chat-end">
-                    <div class="avatar chat-image">
-                        <div class="w-10 rounded-full">
-                            <img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
-                        </div>
-                    </div>
-                    <div class="chat-header">
-                        <?= $user->getAccountName() ?>
-                        <time class="text-xs opacity-50">12:46</time>
-                    </div>
-                    <div class="chat-bubble text-white bg-blue-400">${formData.get('message')}</div>
-                    <div class="chat-footer opacity-50">Seen at 12:46</div>
-                </div>
-                `
-
-            // fetch('/form/direct', {
-            //         method: "POST",
-            //         body: formData,
-            //     })
-            //     .then((response) => response.json())
-            //     .then((data) => {
-            //         if (data.status == 'success') {
-            //             console.log("success");
-            //         } else if (data.status === 'error') {
-            //             // ユーザーにエラーメッセージを表示します
-            //             console.error(data.message);
-            //             alert("Update failed: " + data.message);
-            //         }
-            //     })
-            //     .catch((error) => {
-            //         alert("An error occurred. Please try again.");
-            //     });
-
-            chatTextArea.value = "";
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-    })
+    const dmThreadId = <?= $dmThread->getId() ?>;
+    const senderUserId = <?= $user->getId() ?>;
+    const receiverUserId = <?= $receiverUser->getId() ?>;
+    const csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>";
+    const receiverUserAccountName = "<?= $receiverUser->getAccountName() ?>";
+    const senderUserAccountName = "<?= $user->getAccountName() ?>";
 </script>
+
+<script src="./direct.bundle.js"></script>
