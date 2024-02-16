@@ -10,6 +10,7 @@ use src\database\data_access\DAOFactory;
 use src\models\DmMessage;
 use Exception;
 use src\helpers\ChatClient;
+use src\helpers\Settings;
 
 class Chat implements MessageComponentInterface
 {
@@ -98,9 +99,12 @@ class Chat implements MessageComponentInterface
 
         $validatedData = ValidationHelper::validateFields($required_fields, $data, true);
 
+        $encryptedData = CipherHelper::encryptMessage($validatedData['message']);
+
         $messageDao = DAOFactory::getDmMessageDAO();
         $dmMessage = new DmMessage(
-            message: $validatedData['message'],
+            message: $encryptedData['encrypted'],
+            iv: $encryptedData['iv'],
             senderUserId: $validatedData['sender_user_id'],
             receiverUserId: $validatedData['receiver_user_id'],
             dmThreadId: $validatedData['dm_thread_id'],
@@ -117,6 +121,5 @@ class Chat implements MessageComponentInterface
                 if ($client->getUserId() === $validatedData['receiver_user_id']) $client->getConn()->send($validatedData['message']);
             }
         }
-
     }
 }
