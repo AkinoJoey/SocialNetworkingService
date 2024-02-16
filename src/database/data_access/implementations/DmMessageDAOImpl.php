@@ -7,6 +7,7 @@ use Exception;
 use src\database\data_access\interfaces\DmMessageDAO;
 use src\models\DmMessage;
 use src\database\DatabaseManager;
+use src\helpers\CipherHelper;
 
 class DmMessageDAOImpl implements DmMessageDAO
 {
@@ -16,13 +17,14 @@ class DmMessageDAOImpl implements DmMessageDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO dm_messages (message, sender_user_id, receiver_user_id, dm_thread_id) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO dm_messages (message, iv, sender_user_id, receiver_user_id, dm_thread_id) VALUES (?, ?, ?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'siii',
+            'ssiii',
             [
                 $dmMessage->getMessage(),
+                $dmMessage->getIv(),
                 $dmMessage->getSenderUserId(),
                 $dmMessage->getReceiverUserId(),
                 $dmMessage->getDmThreadId()
@@ -76,8 +78,10 @@ class DmMessageDAOImpl implements DmMessageDAO
 
     private function rawDataToDmMessage(array $rowData): DmMessage
     {
+        $decryptedMessage = CipherHelper::decryptMessage($rowData['message'], $rowData['iv']);
+
         return new DmMessage(
-            message: $rowData['message'],
+            message: $decryptedMessage,
             senderUserId: $rowData['sender_user_id'],
             receiverUserId: $rowData['receiver_user_id'],
             dmThreadId: $rowData['dm_thread_id'],
