@@ -20,6 +20,7 @@ use src\models\CommentLike;
 use src\models\DmMessage;
 use src\models\DmThread;
 use src\models\Follow;
+use src\models\PostLikeNotification;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -533,6 +534,16 @@ return [
 
         if (!$success) throw new Exception('Failed to create a post-like!');
 
+        $postLikeNotification = new PostLikeNotification(
+            userId: $user->getId(),
+            postId: $validatedData['post_id']
+        );
+
+        $postLikeNotificationDao = DAOFactory::getPostLikeNotificationDAO();
+        $success = $postLikeNotificationDao->create($postLikeNotification);
+
+        if (!$success) throw new Exception('Failed to create a post-like notification!');
+
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'form/delete-like-post' => Route::create('form/delete-like-post', function (): HTTPRenderer {
@@ -550,6 +561,11 @@ return [
         $success = $postLikeDao->delete($user->getId(), $validatedData['post_id']);
 
         if (!$success) throw new Exception('Failed to delete a post-like!');
+
+        $postLikeNotificationDao = DAOFactory::getPostLikeNotificationDAO();
+        $success = $postLikeNotificationDao->delete($user->getId(), $validatedData['post_id']);
+
+        if (!$success) throw new Exception('Failed to delete a post-like-notification!');
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
@@ -660,32 +676,5 @@ return [
         $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
 
         return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages'=>$messages]);
-    })->setMiddleware(['auth']),
-    'form/direct' => Route::create('form/direct', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'dm_thread_id' => ValueType::INT,
-            'sender_user_id' => ValueType::INT,
-            'receiver_user_id' => ValueType::INT,
-            'message' => ValueType::STRING,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
-
-        $messageDao = DAOFactory::getDmMessageDAO();
-        $dmMessage = new DmMessage(
-            message: $validatedData['message'],
-            senderUserId: $validatedData['sender_user_id'],
-            receiverUserId: $validatedData['receiver_user_id'],
-            dmThreadId: $validatedData['dm_thread_id'],
-        );
-
-        $success = $messageDao->create($dmMessage);
-        if (!$success) throw new Exception('Failed to create a message!');
-
-        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
 ];
