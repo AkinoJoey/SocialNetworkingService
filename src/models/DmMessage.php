@@ -16,6 +16,7 @@ class DmMessage implements Model{
         private int $receiverUserId,
         private int $dmThreadId,
         private ?int $id = null,
+        private ?string $iv = null,
         private ?DateTime $createdAt = null
     ) {
     }
@@ -36,6 +37,16 @@ class DmMessage implements Model{
     public function setMessage(string $message): void
     {
         $this->message = $message;
+    }
+
+    public function getIv(): ?string
+    {
+        return $this->iv;
+    }
+
+    public function setIv(string $iv): void
+    {
+        $this->iv = $iv;
     }
 
     public function getSenderUserId() : int {
