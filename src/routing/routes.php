@@ -20,7 +20,8 @@ use src\models\CommentLike;
 use src\models\DmMessage;
 use src\models\DmThread;
 use src\models\Follow;
-use src\models\PostLikeNotification;
+use src\models\Notification;
+use src\types\NotificationType;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -534,15 +535,16 @@ return [
 
         if (!$success) throw new Exception('Failed to create a post-like!');
 
-        $postLikeNotification = new PostLikeNotification(
+        $notification = new Notification(
             userId: $user->getId(),
-            postId: $validatedData['post_id']
+            notificationType: NotificationType::POST_LIKE->value,
+            relatedId: $validatedData['post_id'],
         );
 
-        $postLikeNotificationDao = DAOFactory::getPostLikeNotificationDAO();
-        $success = $postLikeNotificationDao->create($postLikeNotification);
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->create($notification);
 
-        if (!$success) throw new Exception('Failed to create a post-like notification!');
+        if (!$success) throw new Exception('Failed to create a notification!');
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
@@ -562,10 +564,10 @@ return [
 
         if (!$success) throw new Exception('Failed to delete a post-like!');
 
-        $postLikeNotificationDao = DAOFactory::getPostLikeNotificationDAO();
-        $success = $postLikeNotificationDao->delete($user->getId(), $validatedData['post_id']);
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->delete($user->getId(),NotificationType::POST_LIKE->value, $validatedData['post_id']);
 
-        if (!$success) throw new Exception('Failed to delete a post-like-notification!');
+        if (!$success) throw new Exception('Failed to delete a notification!');
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
@@ -676,5 +678,13 @@ return [
         $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
 
         return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages'=>$messages]);
+    })->setMiddleware(['auth']),
+    'notifications' => Route::create('notifications', function () : HTTPRenderer {
+        $user = Authenticate::getAuthenticatedUser();
+        
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $notifications = $notificationDao->getNotificationList($user->getId());
+    
+        return new HTMLRenderer('page/notifications', ['notifications'=> $notifications]);
     })->setMiddleware(['auth']),
 ];
