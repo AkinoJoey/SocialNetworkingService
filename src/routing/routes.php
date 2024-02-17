@@ -403,6 +403,21 @@ return [
 
         if (!$success) throw new Exception('Failed to create a comment!');
 
+        // 自分の投稿に対して自分がコメントしていない場合は通知する
+        if ($currentPost->getUserId() !== $user->getId()) {
+            $notification = new Notification(
+                userId: $currentPost->getUserId(),
+                sourceId: $user->getId(),
+                notificationType: NotificationType::COMMENT->value,
+                commentId: $comment->getId()
+            );
+
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $success = $notificationDao->create($notification);
+
+            if (!$success) throw new Exception('Failed to create a notification!');
+        }
+
         return new RedirectRenderer(sprintf('posts?url=%s', $currentPost->getUrl()));
     })->setMiddleware(['auth']),
     'comments' => Route::create('comments', function (): HTTPRenderer {
@@ -511,6 +526,10 @@ return [
         $success = $commentDao->delete($targetComment->getId());
         if (!$success) throw new Exception('Failed to delete a comment!');
 
+        $user = Authenticate::getAuthenticatedUser();
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->delete($parentPost->getUserId(), NotificationType::COMMENT->value, $user->getId(), null, $validatedData['comment_id'], null);
+
         return new RedirectRenderer(sprintf('posts?url=%s', $parentPost->getUrl()));
     })->setMiddleware(['auth']),
     'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
@@ -535,16 +554,23 @@ return [
 
         if (!$success) throw new Exception('Failed to create a post-like!');
 
-        $notification = new Notification(
-            userId: $user->getId(),
-            notificationType: NotificationType::POST_LIKE->value,
-            relatedId: $validatedData['post_id'],
-        );
+        $postDao = DAOFactory::getPostDAO();
+        $post = $postDao->getById($validatedData['post_id']);
 
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->create($notification);
+        // 自分が投稿したポストじゃない場合はnotificationを作成する
+        if ($post->getUserId() !== $user->getId()) {
+            $notification = new Notification(
+                userId: $post->getUserId(),
+                sourceId: $user->getId(),
+                notificationType: NotificationType::POST_LIKE->value,
+                postId: $validatedData['post_id']
+            );
 
-        if (!$success) throw new Exception('Failed to create a notification!');
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $success = $notificationDao->create($notification);
+
+            if (!$success) throw new Exception('Failed to create a notification!');
+        }
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
@@ -564,8 +590,11 @@ return [
 
         if (!$success) throw new Exception('Failed to delete a post-like!');
 
+        $postDao = DAOFactory::getPostDAO();
+        $post = $postDao->getById($validatedData['post_id']);
+
         $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->delete($user->getId(),NotificationType::POST_LIKE->value, $validatedData['post_id']);
+        $success = $notificationDao->delete($post->getUserId(), NotificationType::POST_LIKE->value, $user->getId(), $validatedData['post_id'], null, null);
 
         if (!$success) throw new Exception('Failed to delete a notification!');
 
@@ -635,6 +664,17 @@ return [
 
         if (!$success) throw new Exception('Failed to create a follow!');
 
+        $notification = new Notification(
+            userId: $validatedData['follower_user_id'],
+            sourceId: $user->getId(),
+            notificationType: NotificationType::FOLLOW->value,
+        );
+
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->create($notification);
+
+        if (!$success) throw new Exception('Failed to create a notification!');
+
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'form/unFollow' => Route::create('form/unFollow', function (): HTTPRenderer {
@@ -653,6 +693,9 @@ return [
         $success = $followDao->delete($user->getId(), $validatedData['follower_user_id']);
 
         if (!$success) throw new Exception('Failed to delete a follow!');
+
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->delete($validatedData['follower_user_id'], NotificationType::FOLLOW->value, $user->getId(), null, null, null);
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
@@ -677,14 +720,14 @@ return [
         $dmMessageDao = DAOFactory::getDmMessageDAO();
         $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
 
-        return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages'=>$messages]);
+        return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages' => $messages]);
     })->setMiddleware(['auth']),
-    'notifications' => Route::create('notifications', function () : HTTPRenderer {
+    'notifications' => Route::create('notifications', function (): HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
-        
+
         $notificationDao = DAOFactory::getNotificationDAO();
         $notifications = $notificationDao->getNotificationList($user->getId());
-    
-        return new HTMLRenderer('page/notifications', ['notifications'=> $notifications]);
+
+        return new HTMLRenderer('page/notifications', ['notifications' => $notifications, 'user' => $user]);
     })->setMiddleware(['auth']),
 ];
