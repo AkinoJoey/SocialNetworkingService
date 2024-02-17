@@ -6,6 +6,7 @@ use DateTime;
 use src\database\data_access\interfaces\NotificationDAO;
 use src\models\Notification;
 use src\database\DatabaseManager;
+use src\types\NotificationType;
 
 class NotificationDAOImpl implements NotificationDAO
 {
@@ -15,16 +16,18 @@ class NotificationDAOImpl implements NotificationDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO notifications (user_id, notification_type, related_id, is_read) VALUES (?, ?, ?, ?)";
+        $query = "INSERT INTO notifications (user_id, source_id, notification_type, post_id, comment_id,  message_id) VALUES (?, ?, ?, ?,?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'isii',
+            'iisiii',
             [
                 $notification->getUserId(),
+                $notification->getSourceId(),
                 $notification->getNotificationType(),
-                $notification->getRelatedId(),
-                $notification->getIsRead()
+                $notification->getPostId(),
+                $notification->getCommentId(),
+                $notification->getMessageId(),
             ]
         );
 
@@ -60,8 +63,11 @@ class NotificationDAOImpl implements NotificationDAO
     {
         return new Notification(
             userId: $rawData['user_id'],
+            sourceId: $rawData['source_id'],
             notificationType: $rawData['notification_type'],
-            relatedId: $rawData['related_id'],
+            postId: $rawData['post_id'],
+            commentId: $rawData['comment_id'],
+            messageId: $rawData['message_id'],
             isRead: $rawData['is_read'],
             id: $rawData['id'],
             createdAt: new DateTime($rawData['created_at'])
@@ -93,19 +99,24 @@ class NotificationDAOImpl implements NotificationDAO
             UPDATE notifications
                 SET 
                     user_id = ?,
+                    source_id = ?,
                     notification_type = ?,
-                    related_id = ?,
+                    post_id = ?,
+                    comment_id = ?
+                    message_id = ?,
                     is_read = ?,
                 WHERE id = ?
             SQL;
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'isiii',
+            'iisiiiii',
             [
                 $notification->getUserId(),
                 $notification->getNotificationType(),
-                $notification->getRelatedId(),
+                $notification->getPostId(),
+                $notification->getCommentId(),
+                $notification->getMessageId(),
                 $notification->getIsRead(),
                 $notification->getId()
             ]
@@ -116,10 +127,15 @@ class NotificationDAOImpl implements NotificationDAO
         return true;
     }
 
-    public function delete(int $userId, string $notificationType, int $relatedId): bool
+    public function delete(int $userId, string $notificationType, int $sourceId, ?int $postId, ?int $commentId, ?int $messageId): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE user_id = ? AND notification_type = ? AND related_id = ?", 'isi', [$userId, $notificationType, $relatedId]);
+
+        if($notificationType === NotificationType::FOLLOW->value){
+            return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE (user_id = ? AND notification_type = ? AND source_id = ?)", 'isi', [$userId, $notificationType, $sourceId]);
+        }else{
+            return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE (user_id = ? AND notification_type = ? AND source_id = ?) OR (post_id = ? OR comment_id = ? OR message_id = ?)", 'isiiii', [$userId, $notificationType, $sourceId, $postId, $commentId, $messageId]);
+        }   
     }
 
     public function getNotificationList(int $userId, int $limit = 100): array

@@ -11,9 +11,12 @@ class Notification implements Model{
 
     public function __construct(
         private int $userId,
+        private int $sourceId,
         private string $notificationType,
-        private int $relatedId,
-        private bool $isRead = false,
+        private ?int $postId = null,
+        private ?int $commentId = null,
+        private ?int $messageId = null,
+        private ?bool $isRead = null,
         private ?int $id = null,
         private ?DateTime $createdAt = null
     ) {
@@ -29,6 +32,16 @@ class Notification implements Model{
         $this->userId = $userId;
     }
 
+    public function getSourceId(): int
+    {
+        return $this->sourceId;
+    }
+
+    public function setSourceId(int $sourceId): void
+    {
+        $this->sourceId = $sourceId;
+    }
+
     public function getNotificationType() : string {
         return $this->notificationType;
     }
@@ -37,14 +50,34 @@ class Notification implements Model{
         $this->notificationType = $notificationType;
     }
 
-    public function getRelatedId(): int
+    public function getPostId(): ?int
     {
-        return $this->relatedId;
+        return $this->postId;
     }
 
-    public function setRelatedId(int $relatedId): void
+    public function setPostId(int $postId): void
     {
-        $this->relatedId = $relatedId;
+        $this->postId = $postId;
+    }
+
+    public function getCommentId(): ?int
+    {
+        return $this->commentId;
+    }
+
+    public function setCommentId(int $commentId): void
+    {
+        $this->commentId = $commentId;
+    }
+
+    public function getMessageId(): ?int
+    {
+        return $this->messageId;
+    }
+
+    public function setMessageId(int $messageId): void
+    {
+        $this->messageId = $messageId;
     }
 
     public function getId(): ?int
@@ -57,7 +90,7 @@ class Notification implements Model{
         $this->id = $id;
     }
 
-    public function getIsRead() : bool {
+    public function getIsRead() : ?bool {
         return $this->isRead;
     }
 

@@ -12,11 +12,18 @@ class CreateNotificationsTable implements SchemaMigration
             "CREATE TABLE notifications(
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 user_id BIGINT NOT NULL,
+                source_id BIGINT NOT NULL,
                 notification_type VARCHAR(30) NOT NULL,
-                related_id BIGINT NOT NULL,
-                is_read BOOLEAN NOT NULL,
+                post_id BIGINT, 
+                comment_id BIGINT,
+                message_id BIGINT,
+                is_read BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(source_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+                FOREIGN KEY(comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+                FOREIGN KEY(message_id) REFERENCES dm_messages(id) ON DELETE CASCADE
             );"
         ];
     }
