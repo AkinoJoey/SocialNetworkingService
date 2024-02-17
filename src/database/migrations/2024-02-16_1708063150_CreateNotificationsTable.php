@@ -4,19 +4,19 @@ namespace src\database\migrations;
 
 use src\database\SchemaMigration;
 
-class CreatePostLikeNotification implements SchemaMigration
+class CreateNotificationsTable implements SchemaMigration
 {
     public function up(): array
     {
         return [
-            "CREATE TABLE post_like_notifications(
+            "CREATE TABLE notifications(
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                 user_id BIGINT NOT NULL,
-                post_id BIGINT NOT NULL,
-                is_read BOOLEAN,
+                notification_type VARCHAR(30) NOT NULL,
+                related_id BIGINT NOT NULL,
+                is_read BOOLEAN NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
             );"
         ];
     }
@@ -24,7 +24,7 @@ class CreatePostLikeNotification implements SchemaMigration
     public function down(): array
     {
         return [
-            "DROP TABLE post_like_notifications;"
+            "DROP TABLE notifications;"
         ];
     }
 }

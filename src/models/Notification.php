@@ -6,12 +6,13 @@ use DateTime;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
 
-class PostLikeNotification implements Model{
+class Notification implements Model{
     use GenericModel;
 
     public function __construct(
         private int $userId,
-        private int $postId,
+        private string $notificationType,
+        private int $relatedId,
         private bool $isRead = false,
         private ?int $id = null,
         private ?DateTime $createdAt = null
@@ -28,14 +29,22 @@ class PostLikeNotification implements Model{
         $this->userId = $userId;
     }
 
-    public function getPostId(): int
-    {
-        return $this->postId;
+    public function getNotificationType() : string {
+        return $this->notificationType;
     }
 
-    public function setPostId(int $postId): void
+    public function setNotificationType(string $notificationType) : void {
+        $this->notificationType = $notificationType;
+    }
+
+    public function getRelatedId(): int
     {
-        $this->postId = $postId;
+        return $this->relatedId;
+    }
+
+    public function setRelatedId(int $relatedId): void
+    {
+        $this->relatedId = $relatedId;
     }
 
     public function getId(): ?int
@@ -65,5 +74,4 @@ class PostLikeNotification implements Model{
     {
         $this->createdAt = $createdAt;
     }
-
 }

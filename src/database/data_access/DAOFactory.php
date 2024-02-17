@@ -17,11 +17,11 @@ use src\database\data_access\implementations\CommentLikeDAOImpl;
 use src\database\data_access\implementations\DmMessageDAOImpl;
 use src\database\data_access\implementations\DmThreadDAOImpl;
 use src\database\data_access\implementations\FollowDAOImpl;
-use src\database\data_access\implementations\PostLikeNotificationDAOImpl;
+use src\database\data_access\implementations\NotificationDAOImpl;
 use src\database\data_access\interfaces\DmMessageDAO;
 use src\database\data_access\interfaces\DmThreadDAO;
 use src\database\data_access\interfaces\FollowDAO;
-use src\database\data_access\interfaces\PostLikeNotificationDAO;
+use src\database\data_access\interfaces\NotificationDAO;
 
 class DAOFactory
 {
@@ -64,7 +64,7 @@ class DAOFactory
         return new DmMessageDAOImpl();
     }
 
-    public static function getPostLikeNotificationDAO() : PostLikeNotificationDAO {
-        return new PostLikeNotificationDAOImpl();
+    public static function getNotificationDAO() : NotificationDAO {
+        return new NotificationDAOImpl();
     }
 }
