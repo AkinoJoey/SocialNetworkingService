@@ -11,6 +11,8 @@ use src\models\DmMessage;
 use Exception;
 use src\helpers\ChatClient;
 use src\helpers\Settings;
+use src\types\NotificationType;
+use src\models\Notification;
 
 class Chat implements MessageComponentInterface
 {
@@ -118,7 +120,21 @@ class Chat implements MessageComponentInterface
         //　スレッドが作成されている場合、receiver_user_idにだけメッセージを送る
         if (isset($thread)) {
             foreach (array_values($thread) as $client) {
-                if ($client->getUserId() === $validatedData['receiver_user_id']) $client->getConn()->send($validatedData['message']);
+                if ($client->getUserId() === $validatedData['receiver_user_id']) {
+                    $client->getConn()->send($validatedData['message']);
+                } else {
+                    // リアルタイム通信しない場合は通知を送る
+                    $notification = new Notification(
+                        userId: $validatedData['receiver_user_id'],
+                        sourceId: $validatedData['sender_user_id'],
+                        notificationType: NotificationType::DM->value,
+                        dmThreadId: $validatedData['dm_thread_id'],
+                    );
+
+                    $notificationDao = DAOFactory::getNotificationDAO();
+                    $success = $notificationDao->create($notification);
+                    if (!$success) throw new Exception('Failed to create a notification!');
+                }
             }
         }
     }
