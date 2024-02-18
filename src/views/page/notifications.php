@@ -33,7 +33,7 @@ use src\database\data_access\DAOFactory;
                     case NotificationType::DM->value;
                         $notificationMessage =  'さんからあなたにメッセージが届いています';
                         $dmThreadDao = DAOFactory::getDmThreadDAO();
-                        $href = '/direct?url=' . $dmThreadDao->getByUserIds($user->getId(), $notification->getSourceId());
+                        $href = '/direct?url=' . $dmThreadDao->getByUserIds($user->getId(), $notification->getSourceId())->getUrl();
                         break;
                 }
 
