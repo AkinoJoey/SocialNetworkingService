@@ -15,7 +15,7 @@ class Notification implements Model{
         private string $notificationType,
         private ?int $postId = null,
         private ?int $commentId = null,
-        private ?int $messageId = null,
+        private ?int $dmThreadId = null,
         private ?bool $isRead = null,
         private ?int $id = null,
         private ?DateTime $createdAt = null
@@ -70,14 +70,14 @@ class Notification implements Model{
         $this->commentId = $commentId;
     }
 
-    public function getMessageId(): ?int
+    public function getDmThreadId(): ?int
     {
-        return $this->messageId;
+        return $this->dmThreadId;
     }
 
-    public function setMessageId(int $messageId): void
+    public function setDmThreadId(int $dmThreadId): void
     {
-        $this->messageId = $messageId;
+        $this->dmThreadId = $dmThreadId;
     }
 
     public function getId(): ?int

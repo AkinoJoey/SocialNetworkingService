@@ -16,14 +16,14 @@ class CreateNotificationsTable implements SchemaMigration
                 notification_type VARCHAR(30) NOT NULL,
                 post_id BIGINT, 
                 comment_id BIGINT,
-                message_id BIGINT,
+                dm_thread_id BIGINT,
                 is_read BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY(source_id) REFERENCES users(id) ON DELETE CASCADE,
                 FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
                 FOREIGN KEY(comment_id) REFERENCES comments(id) ON DELETE CASCADE,
-                FOREIGN KEY(message_id) REFERENCES dm_messages(id) ON DELETE CASCADE
+                FOREIGN KEY(dm_thread_id) REFERENCES dm_threads(id) ON DELETE CASCADE
             );"
         ];
     }

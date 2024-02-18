@@ -16,7 +16,7 @@ class NotificationDAOImpl implements NotificationDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO notifications (user_id, source_id, notification_type, post_id, comment_id,  message_id) VALUES (?, ?, ?, ?,?, ?)";
+        $query = "INSERT INTO notifications (user_id, source_id, notification_type, post_id, comment_id,  dm_thread_id) VALUES (?, ?, ?, ?,?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
@@ -27,7 +27,7 @@ class NotificationDAOImpl implements NotificationDAO
                 $notification->getNotificationType(),
                 $notification->getPostId(),
                 $notification->getCommentId(),
-                $notification->getMessageId(),
+                $notification->getDmThreadId(),
             ]
         );
 
@@ -67,7 +67,7 @@ class NotificationDAOImpl implements NotificationDAO
             notificationType: $rawData['notification_type'],
             postId: $rawData['post_id'],
             commentId: $rawData['comment_id'],
-            messageId: $rawData['message_id'],
+            dmThreadId: $rawData['dm_thread_id'],
             isRead: $rawData['is_read'],
             id: $rawData['id'],
             createdAt: new DateTime($rawData['created_at'])
@@ -103,7 +103,7 @@ class NotificationDAOImpl implements NotificationDAO
                     notification_type = ?,
                     post_id = ?,
                     comment_id = ?
-                    message_id = ?,
+                    dm_thread_id = ?,
                     is_read = ?,
                 WHERE id = ?
             SQL;
@@ -116,7 +116,7 @@ class NotificationDAOImpl implements NotificationDAO
                 $notification->getNotificationType(),
                 $notification->getPostId(),
                 $notification->getCommentId(),
-                $notification->getMessageId(),
+                $notification->getDmThreadId(),
                 $notification->getIsRead(),
                 $notification->getId()
             ]
@@ -127,14 +127,14 @@ class NotificationDAOImpl implements NotificationDAO
         return true;
     }
 
-    public function delete(int $userId, string $notificationType, int $sourceId, ?int $postId, ?int $commentId, ?int $messageId): bool
+    public function delete(int $userId, string $notificationType, int $sourceId, ?int $postId, ?int $commentId, ?int $dmThreadId): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
         if($notificationType === NotificationType::FOLLOW->value){
             return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE (user_id = ? AND notification_type = ? AND source_id = ?)", 'isi', [$userId, $notificationType, $sourceId]);
         }else{
-            return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE (user_id = ? AND notification_type = ? AND source_id = ?) OR (post_id = ? OR comment_id = ? OR message_id = ?)", 'isiiii', [$userId, $notificationType, $sourceId, $postId, $commentId, $messageId]);
+            return $mysqli->prepareAndExecute("DELETE FROM notifications WHERE (user_id = ? AND notification_type = ? AND source_id = ?) OR (post_id = ? OR comment_id = ? OR dm_thread_id = ?)", 'isiiii', [$userId, $notificationType, $sourceId, $postId, $commentId, $dmThreadId]);
         }   
     }
 
