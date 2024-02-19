@@ -10,6 +10,7 @@ use src\database\data_access\DAOFactory;
             通知
         </div>
         <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            <?php $csrfToken = src\helpers\CrossSiteForgeryProtection::getToken(); ?>
             <?php foreach ($notifications as $notification) : ?>
                 <?php
                 $userDao = DAOFactory::getUserDAO();
@@ -38,25 +39,58 @@ use src\database\data_access\DAOFactory;
                 }
 
                 ?>
-                <a href="<?= $href ?>" class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <div class="flex w-full items-center">
-                        <div class="mr-2">
-                            <img class="rounded-full" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
+                <div onclick='clickNotification(<?= $notification->getId() ?>, "<?= $href ?>", "<?= $csrfToken ?>", <?= strtolower($notification->getIsRead()) ?>  )' class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
+                    <div class="indicator">
+                        <div class="pr-4">
+                            <?php if (!$notification->getIsRead()) : ?>
+                                <span id="indicator" class="indicator-item indicator-middle indicator-start badge badge-primary badge-xs"></span>
+                            <?php endif; ?>
                         </div>
-                        <div class="w-3/4">
-                            <div class="flex h-full flex-col justify-center">
-                                <div class="mb-1.5 text-sm text-gray-500 dark:text-gray-400">
-                                    <span class="font-semibold text-gray-900 dark:text-white"><?= $sourceUser->getAccountName() ?></span>
-                                    <?= $notificationMessage ?>
-                                </div>
-                                <div class="text-xs text-blue-600 dark:text-blue-500">
-                                    a few moments ago
+                        <div class="flex w-full items-center">
+                            <div class="mr-2">
+                                <img class="rounded-full" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
+                            </div>
+                            <div class="w-3/4">
+                                <div class="flex h-full flex-col justify-center">
+                                    <div class="mb-1.5 text-sm <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-950 dark:text-gray-400'  ?>">
+                                        <span class="font-semibold   <?php echo ($notification->getIsRead()) ? 'text-gray-600 dark:text-white' : 'text-gray-900 dark:text-white' ?> "><?= $sourceUser->getAccountName() ?></span>
+                                        <?= $notificationMessage ?>
+                                    </div>
+                                    <div class="text-xs <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-blue-600 dark:text-blue-500' ?>">
+                                        a few moments ago
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </a>
+                </div>
             <?php endforeach; ?>
         </div>
     </div>
 </div>
+
+<script>
+    function clickNotification(notificationId, href, csrfToken, isRead) {
+        console.log(notificationId, href, csrfToken, isRead);
+        // // 既読の場合はすぐにページ遷移
+        // if (formData.get('is_read')) {
+        //     window.location.href = formData.get('href');
+        // } else {
+        //     fetch('/update-isRead', {
+        //             method: "POST",
+        //             body: formData
+        //         })
+        //         .then((response) => response.json())
+        //         .then((data) => {
+        //             if (data.status === "success") {
+        //                 window.location.href = formData.get('href')
+        //             } else if (data.status === "error") {
+        //                 alert(data.message);
+        //             }
+        //         })
+        //         .catch((error) => {
+        //             alert("An error occurred. Please try again.");
+        //         });
+        // }
+    }
+</script>

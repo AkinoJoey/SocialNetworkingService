@@ -730,4 +730,25 @@ return [
 
         return new HTMLRenderer('page/notifications', ['notifications' => $notifications, 'user' => $user]);
     })->setMiddleware(['auth']),
+    'update-isRead' => Route::create('update-isRead', function () : HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'notification_id' => ValueType::INT,
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+
+
+        $notificationDao = DAOFactory::getNotificationDAO();
+        $success = $notificationDao->updateReadStatus($validatedData['notification_id']);
+
+        if (!$success) throw new Exception('Failed to update a notification!');
+
+        return new JSONRenderer(['status' => 'success']);
+    
+
+    })->setMiddleware(['auth']),
 ];
