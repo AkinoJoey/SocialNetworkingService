@@ -14,6 +14,7 @@ use src\helpers\Settings;
 use src\types\NotificationType;
 use src\models\Notification;
 
+// TODO: authenticate
 class Chat implements MessageComponentInterface
 {
     protected $threads = []; // [threadId => [resourceId => ChatClient, resourceId=>ChatClient]]
