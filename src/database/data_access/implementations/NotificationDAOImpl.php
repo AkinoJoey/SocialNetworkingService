@@ -135,7 +135,7 @@ class NotificationDAOImpl implements NotificationDAO
         $result = $mysql->prepareAndExecute(
             $query,
             'is',
-            [$id, $status]
+            [$status, $id]
         );
 
         if (!$result) return false;
