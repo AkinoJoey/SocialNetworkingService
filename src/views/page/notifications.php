@@ -39,7 +39,7 @@ use src\database\data_access\DAOFactory;
                 }
 
                 ?>
-                <div onclick='clickNotification(<?= $notification->getId() ?>, "<?= $href ?>", "<?= $csrfToken ?>", <?= strtolower($notification->getIsRead()) ?>  )' class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
+                <a href="<?= $href ?>" data-notification-id="<?= $notification->getId() ?>" data-notification-isRead="<?= $notification->getIsRead() ?>" class="notification flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
                     <div class="indicator">
                         <div class="pr-4">
                             <?php if (!$notification->getIsRead()) : ?>
@@ -63,34 +63,14 @@ use src\database\data_access\DAOFactory;
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
             <?php endforeach; ?>
         </div>
     </div>
 </div>
 
+
 <script>
-    function clickNotification(notificationId, href, csrfToken, isRead) {
-        console.log(notificationId, href, csrfToken, isRead);
-        // // 既読の場合はすぐにページ遷移
-        // if (formData.get('is_read')) {
-        //     window.location.href = formData.get('href');
-        // } else {
-        //     fetch('/update-isRead', {
-        //             method: "POST",
-        //             body: formData
-        //         })
-        //         .then((response) => response.json())
-        //         .then((data) => {
-        //             if (data.status === "success") {
-        //                 window.location.href = formData.get('href')
-        //             } else if (data.status === "error") {
-        //                 alert(data.message);
-        //             }
-        //         })
-        //         .catch((error) => {
-        //             alert("An error occurred. Please try again.");
-        //         });
-        // }
-    }
+    const csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken(); ?>"
 </script>
+<script src="/notifications.bundle.js"></script>
