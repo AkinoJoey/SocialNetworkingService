@@ -11,8 +11,8 @@
 
 <body>
 	<div class="container mx-auto p-4">
-		<!-- side bar -->
 		<?php if ($user) : ?>
+			<!-- side bar -->
 			<aside class="fixed left-0 top-0 z-40 h-screen w-14 -translate-x-full transition-transform sm:translate-x-0 lg:w-40" aria-label="Sidebar">
 				<div class="h-full overflow-y-auto bg-gray-50 px-2 py-4 dark:bg-gray-800">
 					<a href="/" class="mb-5 flex items-center ps-2.5">
@@ -135,58 +135,60 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- post modal -->
+			<div id="post_modal" class="fixed left-0 right-0 top-0 z-50 hidden h-screen w-full items-center justify-center">
+				<div class="w-full rounded-xl bg-white sm:w-2/3 lg:w-1/2">
+					<div class="flex items-center justify-between border-b px-5 py-3 text-blue-400">
+						<button data-modal-hide="post_modal" class="rounded-full px-4 py-3 hover:bg-blue-100">
+							<i class="fas fa-times text-xl"></i>
+						</button>
+
+						<p class="inline cursor-pointer rounded-full px-4 py-3 font-bold hover:bg-blue-100">
+							未送信ポスト
+						</p>
+					</div>
+					<form action="/form/new" method="POST">
+						<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
+						<div class="flex p-4">
+							<div>
+								<img class="w-14 rounded-full" src="https://source.unsplash.com/100x100/?portrait" />
+							</div>
+
+							<div class="ml-3 flex w-full flex-col">
+								<textarea id="content" name="content" placeholder="What's happening?" class="h-32 w-full resize-none rounded-xl border-gray-200 text-xl outline-none"></textarea>
+							</div>
+						</div>
+
+						<div class="flex items-center justify-between border-t px-4 py-6 text-blue-400">
+							<div class="flex pl-12 text-2xl">
+								<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+									<i class="fas fa-image"></i>
+								</div>
+
+								<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+									<i class="fas fa-poll-h"></i>
+								</div>
+
+								<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+									<i class="fas fa-smile"></i>
+								</div>
+
+								<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+									<i class="fas fa-calendar-alt"></i>
+								</div>
+							</div>
+
+							<div>
+								<button type="submit" class="inline cursor-pointer rounded-full bg-blue-500 px-4 py-3 font-bold text-white">
+									Tweet
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
 		<?php endif; ?>
 
-		<!-- post modal -->
-		<div id="post_modal" class="fixed left-0 right-0 top-0 z-50 hidden h-screen w-full items-center justify-center">
-			<div class="w-full rounded-xl bg-white sm:w-2/3 lg:w-1/2">
-				<div class="flex items-center justify-between border-b px-5 py-3 text-blue-400">
-					<button data-modal-hide="post_modal" class="rounded-full px-4 py-3 hover:bg-blue-100">
-						<i class="fas fa-times text-xl"></i>
-					</button>
 
-					<p class="inline cursor-pointer rounded-full px-4 py-3 font-bold hover:bg-blue-100">
-						未送信ポスト
-					</p>
-				</div>
-				<form action="/form/new" method="POST">
-					<input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
-					<div class="flex p-4">
-						<div>
-							<img class="w-14 rounded-full" src="https://source.unsplash.com/100x100/?portrait" />
-						</div>
-
-						<div class="ml-3 flex w-full flex-col">
-							<textarea id="content" name="content" placeholder="What's happening?" class="h-32 w-full resize-none rounded-xl border-gray-200 text-xl outline-none"></textarea>
-						</div>
-					</div>
-
-					<div class="flex items-center justify-between border-t px-4 py-6 text-blue-400">
-						<div class="flex pl-12 text-2xl">
-							<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-								<i class="fas fa-image"></i>
-							</div>
-
-							<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-								<i class="fas fa-poll-h"></i>
-							</div>
-
-							<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-								<i class="fas fa-smile"></i>
-							</div>
-
-							<div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-								<i class="fas fa-calendar-alt"></i>
-							</div>
-						</div>
-
-						<div>
-							<button type="submit" class="inline cursor-pointer rounded-full bg-blue-500 px-4 py-3 font-bold text-white">
-								Tweet
-							</button>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
 	</div>
