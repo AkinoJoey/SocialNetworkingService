@@ -5,7 +5,8 @@ module.exports = {
 		main: "./src/assets/js/index.js",
 		posts: "./src/assets/js/posts.js",
 		profile: "./src/assets/js/profile.js",
-		direct: "./src/assets/js/directAsync.js"
+		direct: "./src/assets/js/directAsync.js",
+		notifications: "./src/assets/js/notifications.js",
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
