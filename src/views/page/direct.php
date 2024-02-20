@@ -75,4 +75,4 @@
     const senderUserAccountName = "<?= $user->getAccountName() ?>";
 </script>
 
-<script src="./direct.bundle.js"></script>
+<script src="/direct.bundle.js"></script>

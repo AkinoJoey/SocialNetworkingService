@@ -136,4 +136,4 @@
 <script>
     let isLike = Boolean(<?= $isLike ?>);
 </script>
-<script src="./posts.bundle.js"></script>
+<script src="/posts.bundle.js"></script>
