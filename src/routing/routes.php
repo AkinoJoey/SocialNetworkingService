@@ -37,10 +37,8 @@ return [
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
 
-        // 自分の投稿を表示させるために追加
-        $followingUserIdList[] = $user->getId();
         $postDao = DAOFactory::getPostDAO();
-        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, 0);
+        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
         $userDao = DAOFactory::getUserDAO();
 
