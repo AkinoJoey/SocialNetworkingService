@@ -5,8 +5,7 @@ namespace src\models;
 use DateTime;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
-use src\models\User;
-use src\database\data_access\DAOFactory;
+
 class Post implements Model
 {
     use GenericModel;
@@ -19,6 +18,11 @@ class Post implements Model
         private ?string $mediaPath = null,
         private ?DateTime $scheduledAt = null,
         private ?DataTimeStamp $timeStamp = null,
+        private ?string $username = null,
+        private ?string $accountName = null,
+        private ?int $numberOfComments = null,
+        private ?int $numberOfLikes = null,
+        private ?int $isLike = null
     ) {
     }
 
@@ -81,7 +85,7 @@ class Post implements Model
     {
         $this->scheduledAt = $scheduledAt;
     }
-    
+
     public function getTimeStamp(): ?DataTimeStamp
     {
         return $this->timeStamp;
@@ -92,11 +96,28 @@ class Post implements Model
         $this->timeStamp = $timeStamp;
     }
 
-    public function getCreatedUser(): User
+    public function getUsername(): ?string
     {
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getById($this->userId);
+        return $this->username;
+    }
 
-        return $user;
+    public function getAccountName(): ?string
+    {
+        return $this->accountName;
+    }
+
+    public function getNumberOfComments(): ?int
+    {
+        return $this->numberOfComments;
+    }
+
+    public function getNumberOfLikes(): ?int
+    {
+        return $this->numberOfLikes;
+    }
+
+    public function getIsLike(): ?int
+    {
+        return $this->isLike;
     }
 }
