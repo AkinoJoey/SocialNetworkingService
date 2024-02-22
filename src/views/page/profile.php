@@ -68,8 +68,17 @@
 
 <?php if ($user->getId() !== $authenticatedUser->getId()) : ?>
 	<script>
+		let myProfile = false;
 		let isFollow = Boolean(<?= $isFollow ?>);
 	</script>
 
-	<script src="/profile.bundle.js"></script>
+<?php else : ?>
+	<script>
+		myProfile = true;
+	</script>
 <?php endif; ?>
+
+<script>
+	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
+</script>
+<script src="/profile.bundle.js"></script>
