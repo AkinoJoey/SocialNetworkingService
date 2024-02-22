@@ -126,6 +126,7 @@ class PostDAOImpl implements PostDAO
     private function rawDataToPostForTimeline(array $rawData): Post
     {
         return new Post(
+            id: $rawData['post_id'],
             content: $rawData['content'],
             url: $rawData['url'],
             userId: $rawData['user_id'],
@@ -204,7 +205,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.content, pd.url, pd.media_path, pd.created_at, pd.updated_at ,pd.user_id,
+            SELECT pd.post_id, pd.content, pd.url, pd.media_path, pd.created_at, pd.updated_at ,pd.user_id,
                 pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
