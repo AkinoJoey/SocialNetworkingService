@@ -256,7 +256,7 @@ return [
         $profile = $profileDao->getByUserId($user->getId());
 
         $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getTwentyPosts($user->getId(), 0);
+        $posts = $postDao->getPostsByFollowedUsers([],$user->getId(), 0);
 
         $followDao = DAOFactory::getFollowDAO();
         $followingList = $followDao->getFollowingUserIdList($user->getId());
@@ -728,7 +728,7 @@ return [
 
         return new HTMLRenderer('page/notifications', ['notifications' => $notifications, 'user' => $user]);
     })->setMiddleware(['auth']),
-    'update-isRead' => Route::create('update-isRead', function () : HTTPRenderer {
+    'update-isRead' => Route::create('update-isRead', function (): HTTPRenderer {
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
@@ -746,7 +746,9 @@ return [
         if (!$success) throw new Exception('Failed to update a notification!');
 
         return new JSONRenderer(['status' => 'success']);
-    
-
     })->setMiddleware(['auth']),
+    'message'=> Route::create('message', function () :HTTPRenderer {
+        
+        return new HTMLRenderer('page/message');
+    })->setMiddleware(['auth'])
 ];
