@@ -17,7 +17,9 @@ class DmMessage implements Model{
         private int $dmThreadId,
         private ?int $id = null,
         private ?string $iv = null,
-        private ?DateTime $createdAt = null
+        private ?DateTime $createdAt = null,
+        private ?string $from_user_account_name = null,
+        private ?string $url = null
     ) {
     }
 
@@ -85,4 +87,11 @@ class DmMessage implements Model{
         $this->createdAt = $createdAt;
     }
 
+    public function getFromUserAccountName() : ?string {
+        return $this->from_user_account_name;
+    }
+
+    public function getUrl() : ?string {
+        return $this->url;
+    }
 }
