@@ -36,17 +36,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
 
-    document.getElementById('submit_btn').addEventListener('submit', function(e) {
-        send()
+    document.getElementById('submit_btn').addEventListener('click', function(e) {
         e.preventDefault();
+        send()
     });
 
     let chatTextArea = document.getElementById('message');
 
     chatTextArea.addEventListener("keydown", function(e) {
         if (e.key === 'Enter' && e.shiftKey) {
-            send()
             e.preventDefault();
+            send()
         }
     })
 
