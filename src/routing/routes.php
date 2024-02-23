@@ -256,7 +256,7 @@ return [
         $profile = $profileDao->getByUserId($user->getId());
 
         $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getPostsByFollowedUsers([],$user->getId(), 0);
+        $posts = $postDao->getPostsByFollowedUsers([], $user->getId(), 0);
 
         $followDao = DAOFactory::getFollowDAO();
         $followingList = $followDao->getFollowingUserIdList($user->getId());
@@ -354,10 +354,9 @@ return [
         $currentUser = Authenticate::getAuthenticatedUser();
 
         $postLikeDao = DAOFactory::getPostLikeDAO();
-        $numberOfPostLike = $postLikeDao->getNumberOfLikes($post->getId());
         $isLike = $postLikeDao->getByUserIdAndPostId($currentUser->getId(), $post->getId()) !== null ? true : false;
 
-        return new HTMLRenderer('page/posts', ['post' => $post, 'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $post, 'isLike' => $isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -747,8 +746,12 @@ return [
 
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
-    'message'=> Route::create('message', function () :HTTPRenderer {
-        
-        return new HTMLRenderer('page/message');
+    'messages' => Route::create('messages', function (): HTTPRenderer {
+        $user = Authenticate::getAuthenticatedUser();
+
+        $messageDao = DAOFactory::getDmMessageDAO();
+        $messageList = $messageDao->getMessageList($user->getId());
+
+        return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user'=>$user]);
     })->setMiddleware(['auth'])
 ];
