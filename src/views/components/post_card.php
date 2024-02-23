@@ -9,7 +9,6 @@
                 <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
                 <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
             </div>
-
             <span class="text-xs dark:text-gray-400">4 hours ago</span>
         </div>
     </div>
