@@ -3,10 +3,8 @@
 namespace src\models;
 
 use DateTime;
-use src\database\data_access\DAOFactory;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
-use src\models\User;
 
 class Comment implements Model
 {
@@ -20,7 +18,12 @@ class Comment implements Model
         private ?int $postId = null,
         private ?int $parentCommentId = null,
         private ?string $mediaPath = null,
-        private ?DateTime $createdAt = null
+        private ?DateTime $createdAt = null,
+        private ?string $username = null,
+        private ?string $accountName = null,
+        private ?int $numberOfComments = null,
+        private ?int $numberOfLikes = null,
+        private ?int $isLike = null
     ) {
     }
 
@@ -104,12 +107,29 @@ class Comment implements Model
     {
         $this->createdAt = $createdAt;
     }
-    
-    public function getCreatedUser(): User
-    {
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getById($this->userId);
 
-        return $user;
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function getAccountName(): ?string
+    {
+        return $this->accountName;
+    }
+
+    public function getNumberOfComments(): ?int
+    {
+        return $this->numberOfComments;
+    }
+
+    public function getNumberOfLikes(): ?int
+    {
+        return $this->numberOfLikes;
+    }
+
+    public function getIsLike(): ?int
+    {
+        return $this->isLike;
     }
 }
