@@ -100,4 +100,59 @@ class DmMessageDAOImpl implements DmMessageDAO
 
         return $messages;
     }
+
+    public function getMessageList(int $userId, int $limit = 100): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query =
+            <<<SQL
+            WITH latest_messages AS (
+                SELECT dm_thread_id, 
+                    MAX(created_at) AS latest_created_at
+                FROM dm_messages
+                WHERE sender_user_id = ? OR receiver_user_id = ?
+                GROUP BY dm_thread_id
+            )
+            SELECT dm.id, dm.message, dm.iv, dm.dm_thread_id, dm.created_at , u.account_name as from_user_account_name, dm.sender_user_id , dm.receiver_user_id , dt.url
+            FROM dm_messages dm
+            JOIN latest_messages latest 
+            ON dm.dm_thread_id = latest.dm_thread_id AND dm.created_at = latest.latest_created_at
+            left join users u 
+            ON CASE WHEN dm.sender_user_id = ? THEN dm.receiver_user_id ELSE dm.sender_user_id END = u.id
+            left join dm_threads dt on dm.dm_thread_id = dt.id
+            LIMIT ?;
+            SQL;
+
+        $results = $mysqli->prepareAndFetchAll($query, 'iiii', [$userId, $userId, $userId, $limit]);
+
+        return $results === null ? [] : $this->rawDataToDmMessagesForList($results);
+    }
+
+    private function rawDataToDmMessagesForList(array $results): array
+    {
+        $messages = [];
+
+        foreach ($results as $result) {
+            $messages[] = $this->rawDataToDmMessageForList($result);
+        }
+
+        return $messages;
+    }
+
+    private function rawDataToDmMessageForList(array $rowData): DmMessage
+    {
+        $decryptedMessage = CipherHelper::decryptMessage($rowData['message'], $rowData['iv']);
+
+        return new DmMessage(
+            message: $decryptedMessage,
+            senderUserId: $rowData['sender_user_id'],
+            receiverUserId: $rowData['receiver_user_id'],
+            dmThreadId: $rowData['dm_thread_id'],
+            id: $rowData['id'],
+            createdAt: new DateTime($rowData['created_at']),
+            from_user_account_name: $rowData['from_user_account_name'],
+            url: $rowData['url']
+        );
+    }
 }
