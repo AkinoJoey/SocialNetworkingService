@@ -105,10 +105,15 @@ class PostDAOImpl implements PostDAO
             content: $rawData['content'],
             url: $rawData['url'],
             userId: $rawData['user_id'],
-            id: $rawData['id'],
+            id: $rawData['id'] ?? null,
             mediaPath: $rawData['media_path'],
-            scheduledAt: $rawData['scheduled_at'],
-            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at'])
+            scheduledAt: $rawData['scheduled_at'] ?? null,
+            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
+            username: $rawData['username'] ?? null,
+            accountName: $rawData['account_name'] ?? null,
+            numberOfComments: $rawData['number_of_comments'] ?? null,
+            numberOfLikes: $rawData['number_of_likes'] ?? null,
+            isLike: $rawData['is_like'] ?? null
         );
     }
 
@@ -123,33 +128,6 @@ class PostDAOImpl implements PostDAO
         return $posts;
     }
 
-    private function rawDataToPostForTimeline(array $rawData): Post
-    {
-        return new Post(
-            id: $rawData['post_id'],
-            content: $rawData['content'],
-            url: $rawData['url'],
-            userId: $rawData['user_id'],
-            mediaPath: $rawData['media_path'],
-            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
-            username: $rawData['username'] ?? null,
-            accountName: $rawData['account_name'] ?? null,
-            numberOfComments: $rawData['number_of_comments'] ?? null,
-            numberOfLikes: $rawData['number_of_likes'] ?? null,
-            isLike: $rawData['is_like']
-        );
-    }
-
-    private function rawDataToPostsForTimeline(array $results): array
-    {
-        $posts = [];
-
-        foreach ($results as $result) {
-            $posts[] = $this->rawDataToPostForTimeline($result);
-        }
-
-        return $posts;
-    }
 
     public function delete(int $id): bool
     {
@@ -222,6 +200,6 @@ class PostDAOImpl implements PostDAO
 
         $results = $mysqli->prepareAndFetchAll($query, $types, $params);
 
-        return $results === null ? [] : $this->rawDataToPostsForTimeline($results);
+        return $results === null ? [] : $this->rawDataToPosts($results);
     }
 }
