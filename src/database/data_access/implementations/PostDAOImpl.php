@@ -50,11 +50,31 @@ class PostDAOImpl implements PostDAO
 
     private function getRawByUrl(string $url): ?array
     {
+        $postId = $this->getPostIdByUrl($url);
+        if ($postId === null) return null;
+
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "SELECT * FROM posts WHERE url = ?";
+        $query =
+            <<<SQL
+            WITH post_data AS(
+                SELECT p.id, p.content , p.url, p.media_path , p.user_id , p.created_at, p.updated_at, u.account_name , u.username
+                    FROM posts p
+                    LEFT JOIN users u ON p.user_id  = u.id
+                    WHERE p.id = ?
+            ),
+            number_of_likes AS(
+                SELECT pl.post_id, COUNT(*) AS number_of_likes
+                    FROM post_likes pl 
+                    WHERE pl.post_id = ?
+                    GROUP BY pl.post_id
+            )
+            SELECT pd.* ,COALESCE(nol.number_of_likes, 0) AS number_of_likes
+                FROM post_data pd
+                LEFT JOIN number_of_likes nol ON pd.id = nol.post_id;
+            SQL;
 
-        $result = $mysqli->prepareAndFetchAll($query, 's', [$url])[0] ?? null;
+        $result = $mysqli->prepareAndFetchAll($query, 'ii', [$postId, $postId])[0] ?? null;
 
         if ($result === null) return null;
 
@@ -97,6 +117,19 @@ class PostDAOImpl implements PostDAO
         if ($result === null) return null;
 
         return $result;
+    }
+
+    private function getPostIdByUrl(string $url): ?int
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT p.id FROM posts p WHERE url = ?";
+
+        $result = $mysqli->prepareAndFetchAll($query, 's', [$url])[0] ?? null;
+
+        if ($result === null) return null;
+
+        return $result['id'];
     }
 
     private function rawDataToPost(array $rawData): Post
@@ -161,7 +194,7 @@ class PostDAOImpl implements PostDAO
         $query =
             <<<SQL
             WITH post_data AS (
-                SELECT p.id AS post_id, p.content, p.url, p.media_path, p.created_at, p.updated_at,p.user_id,
+                SELECT p.id, p.content, p.url, p.media_path, p.created_at, p.updated_at,p.user_id,
                     u.account_name, u.username
                 FROM posts p
                 INNER JOIN users u ON p.user_id = u.id
@@ -183,15 +216,15 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.post_id, pd.content, pd.url, pd.media_path, pd.created_at, pd.updated_at ,pd.user_id,
+            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.created_at, pd.updated_at ,pd.user_id,
                 pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
                 COALESCE(ul.is_like, 0) AS is_like
             FROM post_data pd
-            LEFT JOIN comment_data cd ON pd.post_id = cd.post_id
-            LEFT JOIN like_data ld ON pd.post_id = ld.post_id
-            LEFT JOIN user_likes ul ON pd.post_id = ul.post_id
+            LEFT JOIN comment_data cd ON pd.id = cd.post_id
+            LEFT JOIN like_data ld ON pd.id = ld.post_id
+            LEFT JOIN user_likes ul ON pd.id = ul.post_id
             ORDER BY pd.created_at DESC LIMIT ?, ?;
             SQL;
 
