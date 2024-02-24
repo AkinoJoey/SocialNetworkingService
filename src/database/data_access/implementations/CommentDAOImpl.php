@@ -79,18 +79,6 @@ class CommentDAOImpl implements CommentDAO
         return $result;
     }
 
-    private function getCommentIdsByUrl(string $url): array
-    {
-        $mysqli = DatabaseManager::getMysqliConnection();
-
-        $query = "SELECT c.id FROM comments c where url = ?";
-        $result = $mysqli->prepareAndFetchAll($query, 's', [$url])[0] ?? null;
-
-        if ($result === null) return null;
-
-        return $result;
-    }
-
     public function getById(int $id): ?Comment
     {
         $commentRaw = $this->getRawById($id);
@@ -143,13 +131,44 @@ class CommentDAOImpl implements CommentDAO
         return $mysqli->prepareAndExecute("DELETE FROM comments WHERE id = ?", 'i', [$id]);
     }
 
-    public function getChildComments(int $parentId, int $offset, int $limit = 20): array
+    public function getChildComments(int $parentCommentId, int $offset, int $limit = 20): array
     {
+        $childCommentIds = $this->getChildCommentIdsByParentCommentId($parentCommentId);
+        if ($childCommentIds === null) return [];
+
         $mysqli = DatabaseManager::getMysqliConnection();
+        $placeholders = implode(',', array_fill(0, count($childCommentIds), '?'));
 
-        $query = "SELECT * FROM comments WHERE parent_comment_id = ? ORDER BY created_at DESC LIMIT ?, ?";
+        $query =
+            <<<SQL
+            WITH comments_data AS(
+                SELECT c.*, u.account_name, u.username
+                FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.parent_comment_id = ?
+            ),number_of_comments AS(
+                SELECT c.parent_comment_id, COUNT(*) AS number_of_comments
+                FROM comments c
+                WHERE c.parent_comment_id IN ($placeholders)
+                GROUP BY c.parent_comment_id
+            ),number_of_likes AS(
+                SELECT cl.comment_id, COUNT(*) AS number_of_likes
+                FROM comment_likes cl
+                WHERE cl.comment_id in ($placeholders)
+                GROUP BY cl.comment_id
+            )
+            select cd.*, COALESCE(ns.number_of_comments, 0) AS number_of_comments, COALESCE(nl.number_of_likes, 0) AS number_of_likes
+                from comments_data cd
+                LEFT JOIN number_of_comments ns ON cd.id = ns.parent_comment_id
+                LEFT JOIN number_of_likes nl ON cd.id = nl.comment_id
+                WHERE cd.post_id = ? LIMIT ?, ?;
+            SQL;
 
-        $results = $mysqli->prepareAndFetchAll($query, 'iii', [$parentId, $offset, $limit]);
+        $commentIdsTypes = str_repeat('i', count($childCommentIds));
+        $types = $commentIdsTypes . $commentIdsTypes . 'iiii';
+        $params = array_merge([$parentCommentId], $childCommentIds, $childCommentIds, [$parentCommentId, $offset, $limit]);
+
+        $results = $mysqli->prepareAndFetchAll($query, $types, $params);
 
         return $results === null ? [] : $this->rawDataToComments($results);
     }
@@ -193,6 +212,7 @@ class CommentDAOImpl implements CommentDAO
 
         $results = $mysqli->prepareAndFetchAll($query, $types, $params);
 
+
         return $results === null ? [] : $this->rawDataToComments($results);
     }
 
@@ -204,7 +224,25 @@ class CommentDAOImpl implements CommentDAO
 
         $results = $mysqli->prepareAndFetchAll($query, 'ii', [$postId,  $limit]);
 
-        if ($results == null) return [];
+        if (count($results) == 0) return null;
+
+        $userIds = [];
+        foreach ($results as $row) {
+            $userIds[] = $row['id'];
+        }
+
+        return $userIds;
+    }
+
+    private function getChildCommentIdsByParentCommentId(int $parentCommentId, int $limit = 20): ?array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT c.id FROM comments c WHERE c.parent_comment_id = ? LIMIT ?";
+
+        $results = $mysqli->prepareAndFetchAll($query, 'ii', [$parentCommentId,  $limit]);
+
+        if (count($results) == 0) return null;
 
         $userIds = [];
         foreach ($results as $row) {
