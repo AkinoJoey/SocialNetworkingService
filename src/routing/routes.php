@@ -40,14 +40,7 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
-        $userDao = DAOFactory::getUserDAO();
-
-        $users = [];
-        foreach ($postsByFollowedUsers as $post) {
-            $users[] = $userDao->getById($post->getUserId());
-        }
-
-        return new HTMLRenderer('page/top', ['users' => $users, 'posts' => $postsByFollowedUsers]);
+        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -752,6 +745,6 @@ return [
         $messageDao = DAOFactory::getDmMessageDAO();
         $messageList = $messageDao->getMessageList($user->getId());
 
-        return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user'=>$user]);
+        return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user' => $user]);
     })->setMiddleware(['auth'])
 ];
