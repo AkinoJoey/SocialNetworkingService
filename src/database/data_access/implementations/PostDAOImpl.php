@@ -48,7 +48,7 @@ class PostDAOImpl implements PostDAO
         return $result;
     }
 
-    private function getRawByUrl(string $url): ?array
+    private function getRawByUrl(string $url, int $userId): ?array
     {
         $postId = $this->getPostIdByUrl($url);
         if ($postId === null) return null;
@@ -68,13 +68,20 @@ class PostDAOImpl implements PostDAO
                     FROM post_likes pl 
                     WHERE pl.post_id = ?
                     GROUP BY pl.post_id
+            ),
+            user_likes AS (
+                SELECT pl.post_id, COUNT(*) AS is_like
+                FROM post_likes pl
+                WHERE pl.user_id = ? AND pl.post_id = ?
+                GROUP BY pl.post_id
             )
-            SELECT pd.* ,COALESCE(nol.number_of_likes, 0) AS number_of_likes
+            SELECT pd.* ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like
                 FROM post_data pd
-                LEFT JOIN number_of_likes nol ON pd.id = nol.post_id;
+                LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
+                LEFT JOIN user_likes ul ON pd.id = ul.post_id;
             SQL;
 
-        $result = $mysqli->prepareAndFetchAll($query, 'ii', [$postId, $postId])[0] ?? null;
+        $result = $mysqli->prepareAndFetchAll($query, 'iiii', [$postId, $postId, $userId, $postId])[0] ?? null;
 
         if ($result === null) return null;
 
@@ -97,9 +104,9 @@ class PostDAOImpl implements PostDAO
         return $this->rawDataToPost($postRow);
     }
 
-    public function getByUrl(string $url): ?Post
+    public function getByUrl(string $url, int $userId): ?Post
     {
-        $postRow = $this->getRawByUrl($url);
+        $postRow = $this->getRawByUrl($url, $userId);
         if ($postRow === null) return null;
 
         return $this->rawDataToPost($postRow);
@@ -162,10 +169,10 @@ class PostDAOImpl implements PostDAO
     }
 
 
-    public function delete(int $id): bool
+    public function delete(int $id, int $userId): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        return $mysqli->prepareAndExecute("DELETE FROM posts WHERE id = ?", 'i', [$id]);
+        return $mysqli->prepareAndExecute("DELETE FROM posts WHERE id = ? AND user_id = ?", 'ii', [$id, $userId]);
     }
 
     public function getTwentyPosts(int $userId, int $offset, int $limit = 20): array
