@@ -1,71 +1,97 @@
+import { likePost, deleteLikePost } from "./likeButton";
+
 document.addEventListener("DOMContentLoaded", function () {
-    const likePostForm = document.getElementById("like_post_form");
-	let numberOfPostLikeSpan = document.getElementById("number_of_post_like");
-	let numberOfPostLike = Number(numberOfPostLikeSpan.textContent);
-	let goodBtn = document.getElementById('good_btn');
-	let  path = location.pathname;
+	let likeButtons = document.querySelectorAll(".like-btn");
+	let deleteButtons = document.querySelectorAll(".delete-btn");
+	let path = location.pathname;
 
-	likePostForm.addEventListener("submit", function (event) {
-		event.preventDefault();
+	likeButtons.forEach(function (likeBtn) {
+		likeBtn.addEventListener("click", function (e) {
+			e.preventDefault();
 
-		const formData = new FormData(likePostForm);
+			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
+			let numberOfLikes = Number(numberOfLikesSpan.textContent);
+			let goodIcon = likeBtn.querySelector(".good-icon");
+			let isLike = likeBtn.getAttribute("data-isLike");
 
-		// isLikeはViews/posts.phpで定義
-		if (isLike) {
-			let resource = (path === '/posts') ? "form/delete-like-post" : (path === '/comments') ? "form/delete-like-comment" : '';
+			let formData = new FormData();
+			let postId = likeBtn.getAttribute("data-post-id");
+			formData.append("csrf_token", csrfToken);
+			formData.append("post_id", postId);
 
-			deleteLikePost(resource, formData);
+			let requestUrl = "";
 
-		} else {
-			let resource = (path === '/posts') ? "form/like-post" : (path === '/comments') ? "form/like-comment" : '';
+			if (isLike === "1") {
+				if (likeBtn.name === "post_like_btn" && path === "/posts") {
+					requestUrl = "form/delete-like-post";
+				} else {
+					requestUrl = "form/delete-like-comment";
+				}
 
-			likePost(resource,formData);
-		}
+				deleteLikePost(
+					requestUrl,
+					formData,
+					likeBtn,
+					numberOfLikes,
+					numberOfLikesSpan,
+					goodIcon,
+				);
+			} else {
+				if (likeBtn.name === "post_like_btn" && path === "/posts") {
+					requestUrl = "form/like-post";
+				} else {
+					requestUrl = "form/like-comment";
+				}
+
+				likePost(
+					requestUrl,
+					formData,
+					likeBtn,
+					numberOfLikes,
+					numberOfLikesSpan,
+					goodIcon,
+				);
+			}
+		});
 	});
 
-	function likePost(resource, formData) {
-		fetch(resource, {
-			method: "POST",
-			body: formData,
-		})
-			.then((response) => response.json()) 
-			.then((data) => {
-				if (data.status === "success") {
-					isLike = true;
-					numberOfPostLike += 1;
-					numberOfPostLikeSpan.innerHTML = numberOfPostLike;
-					goodBtn.classList.add('fill-blue-700');
-				} else if (data.status === "error") {
-					// ユーザーにエラーメッセージを表示します
-					console.error(data.message);
-					alert("Update failed: " + data.message);
-				}
-			})
-			.catch((error) => {
-				alert("An error occurred. Please try again.");
-			});
-	}
+	const alertModalEl = document.getElementById("alert-modal");
+	const alertModal = new Modal(alertModalEl);
+	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
 
-	function deleteLikePost(resource, formData) {
-		fetch(resource, {
-			method: "POST",
-			body: formData,
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				if (data.status === "success") {
-					isLike = false;
-					numberOfPostLike -= 1;
-					numberOfPostLikeSpan.innerHTML = numberOfPostLike;
-					goodBtn.classList.remove('fill-blue-700');
-				} else if (data.status === "error") {
-					// ユーザーにエラーメッセージを表示します
-					console.error(data.message);
-					alert("Update failed: " + data.message);
+	deleteButtons.forEach(function (deleteBtn) {
+		deleteBtn.addEventListener("click", function (e) {
+			e.preventDefault();
+			alertModal.show();
+
+			deleteExecuteBtn.addEventListener("click", function () {
+				let formData = new FormData();
+				let postId = deleteBtn.getAttribute("data-post-id");
+				formData.append("csrf_token", csrfToken);
+				formData.append("post_id", postId);
+
+				if (deleteBtn.name === "delete_post_btn" && path === "/posts") {
+					fetch("delete/post", {
+						method: "POST",
+						body: formData,
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.status === "success") {
+								console.log('test');
+								window.location.href = "/";
+								
+							} else if (data.status === "error") {
+								console.error(data.message);
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again.");
+						});
+				} else {
+					console.log(test);
 				}
-			})
-			.catch((error) => {
-				alert("An error occurred. Please try again.");
 			});
-	}
+		});
+	});
 });
