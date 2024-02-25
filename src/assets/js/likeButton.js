@@ -1,11 +1,12 @@
 export function likePost(
+	requestUrl,
 	formData,
 	likeBtn,
-	numberOfPostLike,
-	numberOfPostLikeSpan,
-	goodBtn,
+	numberOfLikes,
+	numberOfLikesSpan,
+	goodIcon,
 ) {
-	fetch("/form/like-post", {
+	fetch(requestUrl, {
 		method: "POST",
 		body: formData,
 	})
@@ -13,9 +14,9 @@ export function likePost(
 		.then((data) => {
 			if (data.status === "success") {
 				likeBtn.setAttribute("data-isLike", "1");
-				numberOfPostLike += 1;
-				numberOfPostLikeSpan.innerHTML = numberOfPostLike;
-				goodBtn.classList.add("fill-blue-600");
+				numberOfLikes += 1;
+				numberOfLikesSpan.innerHTML = numberOfLikes;
+				goodIcon.classList.add("fill-blue-600");
 			} else if (data.status === "error") {
 				// ユーザーにエラーメッセージを表示します
 				console.error(data.message);
@@ -28,13 +29,14 @@ export function likePost(
 }
 
 export function deleteLikePost(
+	requestUrl,
 	formData,
 	likeBtn,
-	numberOfPostLike,
-	numberOfPostLikeSpan,
-	goodBtn,
+	numberOfLikes,
+	numberOfLikesSpan,
+	goodIcon,
 ) {
-	fetch("/form/delete-like-post", {
+	fetch(requestUrl, {
 		method: "POST",
 		body: formData,
 	})
@@ -42,9 +44,9 @@ export function deleteLikePost(
 		.then((data) => {
 			if (data.status === "success") {
 				likeBtn.setAttribute("data-isLike", "0");
-				numberOfPostLike -= 1;
-				numberOfPostLikeSpan.innerHTML = numberOfPostLike;
-				goodBtn.classList.remove("fill-blue-600");
+				numberOfLikes -= 1;
+				numberOfLikesSpan.innerHTML = numberOfLikes;
+				goodIcon.classList.remove("fill-blue-600");
 			} else if (data.status === "error") {
 				// ユーザーにエラーメッセージを表示します
 				console.error(data.message);
