@@ -327,7 +327,6 @@ return [
         return new RedirectRenderer('');
     })->setMiddleware(['auth']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
-
         // TODO: 厳格なバリデーション
         $required_fields = [
             'url' => ValueType::STRING,
@@ -335,21 +334,37 @@ return [
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
 
+        $currentUser = Authenticate::getAuthenticatedUser();
         $postDao = DAOFactory::getPostDAO();
-        $post = $postDao->getByUrl($validatedData['url']);
+        $post = $postDao->getByUrl($validatedData['url'], $currentUser->getId());
 
         $commentDao = DAOFactory::getCommentDAO();
-        $comments = $commentDao->getCommentsToPost($post->getId(), 0);
+        $comments = $commentDao->getCommentsToPost($post->getId(), $currentUser->getId(), 0);
 
         $createFormAction = "/form/comment";
         $deleteFormAction = '/form/delete-comment-to-post';
 
-        $currentUser = Authenticate::getAuthenticatedUser();
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+    })->setMiddleware(['auth']),
+    'delete/post' => Route::create('delete/post', function() : HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!'
+    );
 
-        $postLikeDao = DAOFactory::getPostLikeDAO();
-        $isLike = $postLikeDao->getByUserIdAndPostId($currentUser->getId(), $post->getId()) !== null ? true : false;
+        // TODO: 厳格なバリデーション
+        $required_fields = [
+            'post_id' => ValueType::INT,
+        ];
 
-        return new HTMLRenderer('page/posts', ['post' => $post, 'isLike' => $isLike,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        $user = Authenticate::getAuthenticatedUser();
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $postDao = DAOFactory::getPostDAO();
+        $success = $postDao->delete($validatedData['post_id'], $user->getId());
+
+        if (!$success) throw new Exception('Failed to delete a comment!');
+
+        FlashData::setFlashData('success', "投稿を削除しました");
+        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -417,22 +432,20 @@ return [
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+        $currentUser = Authenticate::getAuthenticatedUser();
 
         $commentDao = DAOFactory::getCommentDAO();
-        $parentComment = $commentDao->getByUrl($validatedData['url']);
+        $parentComment = $commentDao->getByUrl($validatedData['url'], $currentUser->getId());
 
-        $childComments = $commentDao->getChildComments($parentComment->getId(), 0);
+        $childComments = $commentDao->getChildComments($parentComment->getId(), $currentUser->getId(),  0);
 
         $createFormAction = "/form/comment-to-comment";
         $deleteFormAction = '/form/delete-comment-to-comment';
 
-        $currentUser = Authenticate::getAuthenticatedUser();
-
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
-        $isLike = $commentLikeDao->getByUserIdAndPostId($currentUser->getId(), $parentComment->getId()) !== null ? true : false;
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'isLike' => $isLike,  'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
     })->setMiddleware(['auth']),
     'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
