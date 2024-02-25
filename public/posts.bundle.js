@@ -7,26 +7,90 @@
  * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
  */
 /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
+
+/***/ "./src/assets/js/likeButton.js":
+/*!*************************************!*\
+  !*** ./src/assets/js/likeButton.js ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   deleteLikePost: () => (/* binding */ deleteLikePost),\n/* harmony export */   likePost: () => (/* binding */ likePost)\n/* harmony export */ });\nfunction likePost(\r\n\trequestUrl,\r\n\tformData,\r\n\tlikeBtn,\r\n\tnumberOfLikes,\r\n\tnumberOfLikesSpan,\r\n\tgoodIcon,\r\n) {\r\n\tfetch(requestUrl, {\r\n\t\tmethod: \"POST\",\r\n\t\tbody: formData,\r\n\t})\r\n\t\t.then((response) => response.json())\r\n\t\t.then((data) => {\r\n\t\t\tif (data.status === \"success\") {\r\n\t\t\t\tlikeBtn.setAttribute(\"data-isLike\", \"1\");\r\n\t\t\t\tnumberOfLikes += 1;\r\n\t\t\t\tnumberOfLikesSpan.innerHTML = numberOfLikes;\r\n\t\t\t\tgoodIcon.classList.add(\"fill-blue-600\");\r\n\t\t\t} else if (data.status === \"error\") {\r\n\t\t\t\t// ユーザーにエラーメッセージを表示します\r\n\t\t\t\tconsole.error(data.message);\r\n\t\t\t\talert(\"Update failed: \" + data.message);\r\n\t\t\t}\r\n\t\t})\r\n\t\t.catch((error) => {\r\n\t\t\talert(\"An error occurred. Please try again.\");\r\n\t\t});\r\n}\r\n\r\nfunction deleteLikePost(\r\n\trequestUrl,\r\n\tformData,\r\n\tlikeBtn,\r\n\tnumberOfLikes,\r\n\tnumberOfLikesSpan,\r\n\tgoodIcon,\r\n) {\r\n\tfetch(requestUrl, {\r\n\t\tmethod: \"POST\",\r\n\t\tbody: formData,\r\n\t})\r\n\t\t.then((response) => response.json())\r\n\t\t.then((data) => {\r\n\t\t\tif (data.status === \"success\") {\r\n\t\t\t\tlikeBtn.setAttribute(\"data-isLike\", \"0\");\r\n\t\t\t\tnumberOfLikes -= 1;\r\n\t\t\t\tnumberOfLikesSpan.innerHTML = numberOfLikes;\r\n\t\t\t\tgoodIcon.classList.remove(\"fill-blue-600\");\r\n\t\t\t} else if (data.status === \"error\") {\r\n\t\t\t\t// ユーザーにエラーメッセージを表示します\r\n\t\t\t\tconsole.error(data.message);\r\n\t\t\t\talert(\"Update failed: \" + data.message);\r\n\t\t\t}\r\n\t\t})\r\n\t\t.catch((error) => {\r\n\t\t\talert(\"An error occurred. Please try again.\");\r\n\t\t});\r\n}\r\n\n\n//# sourceURL=webpack:///./src/assets/js/likeButton.js?");
+
+/***/ }),
 
 /***/ "./src/assets/js/posts.js":
 /*!********************************!*\
   !*** ./src/assets/js/posts.js ***!
   \********************************/
-/***/ (() => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-eval("document.addEventListener(\"DOMContentLoaded\", function () {\r\n    const likePostForm = document.getElementById(\"like_post_form\");\r\n\tlet numberOfPostLikeSpan = document.getElementById(\"number_of_post_like\");\r\n\tlet numberOfPostLike = Number(numberOfPostLikeSpan.textContent);\r\n\tlet goodBtn = document.getElementById('good_btn');\r\n\tlet  path = location.pathname;\r\n\r\n\tlikePostForm.addEventListener(\"submit\", function (event) {\r\n\t\tevent.preventDefault();\r\n\r\n\t\tconst formData = new FormData(likePostForm);\r\n\r\n\t\t// isLikeはViews/posts.phpで定義\r\n\t\tif (isLike) {\r\n\t\t\tlet resource = (path === '/posts') ? \"form/delete-like-post\" : (path === '/comments') ? \"form/delete-like-comment\" : '';\r\n\r\n\t\t\tdeleteLikePost(resource, formData);\r\n\r\n\t\t} else {\r\n\t\t\tlet resource = (path === '/posts') ? \"form/like-post\" : (path === '/comments') ? \"form/like-comment\" : '';\r\n\r\n\t\t\tlikePost(resource,formData);\r\n\t\t}\r\n\t});\r\n\r\n\tfunction likePost(resource, formData) {\r\n\t\tfetch(resource, {\r\n\t\t\tmethod: \"POST\",\r\n\t\t\tbody: formData,\r\n\t\t})\r\n\t\t\t.then((response) => response.json()) \r\n\t\t\t.then((data) => {\r\n\t\t\t\tif (data.status === \"success\") {\r\n\t\t\t\t\tisLike = true;\r\n\t\t\t\t\tnumberOfPostLike += 1;\r\n\t\t\t\t\tnumberOfPostLikeSpan.innerHTML = numberOfPostLike;\r\n\t\t\t\t\tgoodBtn.classList.add('fill-blue-700');\r\n\t\t\t\t} else if (data.status === \"error\") {\r\n\t\t\t\t\t// ユーザーにエラーメッセージを表示します\r\n\t\t\t\t\tconsole.error(data.message);\r\n\t\t\t\t\talert(\"Update failed: \" + data.message);\r\n\t\t\t\t}\r\n\t\t\t})\r\n\t\t\t.catch((error) => {\r\n\t\t\t\talert(\"An error occurred. Please try again.\");\r\n\t\t\t});\r\n\t}\r\n\r\n\tfunction deleteLikePost(resource, formData) {\r\n\t\tfetch(resource, {\r\n\t\t\tmethod: \"POST\",\r\n\t\t\tbody: formData,\r\n\t\t})\r\n\t\t\t.then((response) => response.json())\r\n\t\t\t.then((data) => {\r\n\t\t\t\tif (data.status === \"success\") {\r\n\t\t\t\t\tisLike = false;\r\n\t\t\t\t\tnumberOfPostLike -= 1;\r\n\t\t\t\t\tnumberOfPostLikeSpan.innerHTML = numberOfPostLike;\r\n\t\t\t\t\tgoodBtn.classList.remove('fill-blue-700');\r\n\t\t\t\t} else if (data.status === \"error\") {\r\n\t\t\t\t\t// ユーザーにエラーメッセージを表示します\r\n\t\t\t\t\tconsole.error(data.message);\r\n\t\t\t\t\talert(\"Update failed: \" + data.message);\r\n\t\t\t\t}\r\n\t\t\t})\r\n\t\t\t.catch((error) => {\r\n\t\t\t\talert(\"An error occurred. Please try again.\");\r\n\t\t\t});\r\n\t}\r\n});\r\n\n\n//# sourceURL=webpack:///./src/assets/js/posts.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _likeButton__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./likeButton */ \"./src/assets/js/likeButton.js\");\n\r\n\r\ndocument.addEventListener(\"DOMContentLoaded\", function () {\r\n\tlet likeButtons = document.querySelectorAll(\".like-btn\");\r\n\tlet deleteButtons = document.querySelectorAll(\".delete-btn\");\r\n\tlet path = location.pathname;\r\n\r\n\tlikeButtons.forEach(function (likeBtn) {\r\n\t\tlikeBtn.addEventListener(\"click\", function (e) {\r\n\t\t\te.preventDefault();\r\n\r\n\t\t\tlet numberOfLikesSpan = likeBtn.querySelector(\".number-of-likes\");\r\n\t\t\tlet numberOfLikes = Number(numberOfLikesSpan.textContent);\r\n\t\t\tlet goodIcon = likeBtn.querySelector(\".good-icon\");\r\n\t\t\tlet isLike = likeBtn.getAttribute(\"data-isLike\");\r\n\r\n\t\t\tlet formData = new FormData();\r\n\t\t\tlet postId = likeBtn.getAttribute(\"data-post-id\");\r\n\t\t\tformData.append(\"csrf_token\", csrfToken);\r\n\t\t\tformData.append(\"post_id\", postId);\r\n\r\n\t\t\tlet requestUrl = \"\";\r\n\r\n\t\t\tif (isLike === \"1\") {\r\n\t\t\t\tif (likeBtn.name === \"post_like_btn\" && path === \"/posts\") {\r\n\t\t\t\t\trequestUrl = \"form/delete-like-post\";\r\n\t\t\t\t} else {\r\n\t\t\t\t\trequestUrl = \"form/delete-like-comment\";\r\n\t\t\t\t}\r\n\r\n\t\t\t\t(0,_likeButton__WEBPACK_IMPORTED_MODULE_0__.deleteLikePost)(\r\n\t\t\t\t\trequestUrl,\r\n\t\t\t\t\tformData,\r\n\t\t\t\t\tlikeBtn,\r\n\t\t\t\t\tnumberOfLikes,\r\n\t\t\t\t\tnumberOfLikesSpan,\r\n\t\t\t\t\tgoodIcon,\r\n\t\t\t\t);\r\n\t\t\t} else {\r\n\t\t\t\tif (likeBtn.name === \"post_like_btn\" && path === \"/posts\") {\r\n\t\t\t\t\trequestUrl = \"form/like-post\";\r\n\t\t\t\t} else {\r\n\t\t\t\t\trequestUrl = \"form/like-comment\";\r\n\t\t\t\t}\r\n\r\n\t\t\t\t(0,_likeButton__WEBPACK_IMPORTED_MODULE_0__.likePost)(\r\n\t\t\t\t\trequestUrl,\r\n\t\t\t\t\tformData,\r\n\t\t\t\t\tlikeBtn,\r\n\t\t\t\t\tnumberOfLikes,\r\n\t\t\t\t\tnumberOfLikesSpan,\r\n\t\t\t\t\tgoodIcon,\r\n\t\t\t\t);\r\n\t\t\t}\r\n\t\t});\r\n\t});\r\n\r\n\tconst alertModalEl = document.getElementById(\"alert-modal\");\r\n\tconst alertModal = new Modal(alertModalEl);\r\n\tconst deleteExecuteBtn = document.getElementById(\"delete-execute-btn\");\r\n\r\n\tdeleteButtons.forEach(function (deleteBtn) {\r\n\t\tdeleteBtn.addEventListener(\"click\", function (e) {\r\n\t\t\te.preventDefault();\r\n\t\t\talertModal.show();\r\n\r\n\t\t\tdeleteExecuteBtn.addEventListener(\"click\", function () {\r\n\t\t\t\tlet formData = new FormData();\r\n\t\t\t\tlet postId = deleteBtn.getAttribute(\"data-post-id\");\r\n\t\t\t\tformData.append(\"csrf_token\", csrfToken);\r\n\t\t\t\tformData.append(\"post_id\", postId);\r\n\r\n\t\t\t\tif (deleteBtn.name === \"delete_post_btn\" && path === \"/posts\") {\r\n\t\t\t\t\tfetch(\"delete/post\", {\r\n\t\t\t\t\t\tmethod: \"POST\",\r\n\t\t\t\t\t\tbody: formData,\r\n\t\t\t\t\t})\r\n\t\t\t\t\t\t.then((response) => response.json())\r\n\t\t\t\t\t\t.then((data) => {\r\n\t\t\t\t\t\t\tif (data.status === \"success\") {\r\n\t\t\t\t\t\t\t\tconsole.log('test');\r\n\t\t\t\t\t\t\t\twindow.location.href = \"/\";\r\n\t\t\t\t\t\t\t\t\r\n\t\t\t\t\t\t\t} else if (data.status === \"error\") {\r\n\t\t\t\t\t\t\t\tconsole.error(data.message);\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t})\r\n\t\t\t\t\t\t.catch((error) => {\r\n\t\t\t\t\t\t\talert(\"An error occurred. Please try again.\");\r\n\t\t\t\t\t\t});\r\n\t\t\t\t} else {\r\n\t\t\t\t\tconsole.log(test);\r\n\t\t\t\t}\r\n\t\t\t});\r\n\t\t});\r\n\t});\r\n});\r\n\n\n//# sourceURL=webpack:///./src/assets/js/posts.js?");
 
 /***/ })
 
 /******/ 	});
 /************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
 /******/ 	
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	var __webpack_exports__ = {};
-/******/ 	__webpack_modules__["./src/assets/js/posts.js"]();
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/assets/js/posts.js");
 /******/ 	
 /******/ })()
 ;
