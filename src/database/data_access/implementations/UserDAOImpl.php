@@ -153,4 +153,49 @@ class UserDAOImpl implements UserDAO
 
         return true;
     }
+
+    public function getUserListForSearch(string $keyword, int $limit = 100): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT * FROM users u WHERE u.account_name LIKE ? or u.username LIKE ? LIMIT ?;";
+
+        $param = "%" . $keyword . "%";
+        $results = $mysqli->prepareAndFetchAll($query, 'ssi', [$param, $param, $limit]) ?? null;
+
+        return $results === null ? [] : $this->rawDataToUsers($results);
+    }
+
+    public function getTopFollowedUsers(int $limit = 100): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = 
+            <<<SQL
+            WITH number_of_followers AS(	
+            SELECT f.follower_user_id , count(*) AS number_of_followers
+                FROM follows f 
+                GROUP BY f.follower_user_id
+            )
+            SELECT u.*
+                FROM users u 
+                LEFT JOIN number_of_followers nof ON u.id = nof.follower_user_id
+                ORDER BY nof.number_of_followers DESC LIMIT ?;
+            SQL;
+
+        $results = $mysqli->prepareAndFetchAll($query, 'i', [$limit]) ?? null;
+
+        return $results === null ? [] : $this->rawDataToUsers($results);
+    }
+
+    private function rawDataToUsers(array $results): array
+    {
+        $users = [];
+
+        foreach ($results as $result) {
+            $users[] = $this->rawDataToUser($result);
+        }
+
+        return $users;
+    }
 }
