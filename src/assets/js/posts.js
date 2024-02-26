@@ -68,9 +68,9 @@ document.addEventListener("DOMContentLoaded", function () {
 				let formData = new FormData();
 				let postId = deleteBtn.getAttribute("data-post-id");
 				formData.append("csrf_token", csrfToken);
-				formData.append("post_id", postId);
 
 				if (deleteBtn.name === "delete_post_btn" && path === "/posts") {
+					formData.append("post_id", postId);
 					fetch("delete/post", {
 						method: "POST",
 						body: formData,
@@ -78,9 +78,27 @@ document.addEventListener("DOMContentLoaded", function () {
 						.then((response) => response.json())
 						.then((data) => {
 							if (data.status === "success") {
-								console.log('test');
 								window.location.href = "/";
-								
+							} else if (data.status === "error") {
+								console.error(data.message);
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again.");
+						});
+				} else if (
+					deleteBtn.name === "delete_post_btn" &&
+					path === "/comments"
+				) {
+					formData.append("comment_id", postId);
+					fetch("delete/comment", {
+						method: "POST",
+						body: formData,
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.status === "success") {
+								window.location.href = "/";
 							} else if (data.status === "error") {
 								console.error(data.message);
 							}
@@ -89,7 +107,22 @@ document.addEventListener("DOMContentLoaded", function () {
 							alert("An error occurred. Please try again.");
 						});
 				} else {
-					console.log(test);
+					formData.append("comment_id", postId);
+					fetch("delete/comment", {
+						method: "POST",
+						body: formData,
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.status === "success") {
+								location.reload();
+							} else if (data.status === "error") {
+								console.error(data.message);
+							}
+						})
+						.catch((error) => {
+							alert("An error occurred. Please try again.");
+						});
 				}
 			});
 		});

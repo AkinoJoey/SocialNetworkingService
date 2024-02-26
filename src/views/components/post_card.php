@@ -1,25 +1,47 @@
-<div class="w-full mt-4 flex max-w-lg flex-col space-y-6 overflow-hidden rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 relative hover:bg-gray-100 dark:hover:bg-gray-700">
+<!-- TODO: htmlspecialchars -->
+<div class="w-full mt-4 flex max-w-lg flex-col overflow-hidden rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 relative hover:bg-gray-100 dark:hover:bg-gray-700">
     <a href="/posts?url=<?= $post->getUrl() ?>" class="absolute h-full w-full top-0 left-0 z-0"></a>
-    <div class="flex space-x-4">
-        <a href="/profile?username=<?= $post->getUsername() ?>" class="z-40">
-            <img alt="" src="https://source.unsplash.com/100x100/?portrait" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
-        </a>
-        <div class="flex flex-col space-y-1">
-            <div class="flex">
-                <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
-                <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
+    <div class="flex justify-between items-center ">
+        <div class="flex space-x-4">
+            <a href="/profile?username=<?= $post->getUsername() ?>" class="z-40">
+                <img alt="" src="https://source.unsplash.com/100x100/?portrait" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
+            </a>
+            <div class="flex flex-col space-y-1">
+                <div class="flex">
+                    <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
+                    <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
+                </div>
+                <span class="text-xs dark:text-gray-400">4 hours ago</span>
             </div>
-            <span class="text-xs dark:text-gray-400">4 hours ago</span>
         </div>
+        <?php if($post->getUserId() === $user->getId()): ?>
+            <div class="z-40">
+                <button type="button" data-dropdown-toggle="dropdownPost<?= $post->getId() ?>" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
+                    <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
+                        <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
+                    </svg>
+                    <span class="sr-only">Comment settings</span>
+                </button>
+                <!-- Dropdown menu -->
+                <div id="dropdownPost<?= $post->getId() ?>" class="z-10 hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
+                    <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconHorizontalButton">
+                        <li>
+                            <button type="submit" name="delete_post_btn" data-post-id="<?= $post->getId() ?>" class="delete-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
-    <div>
+
+    <div class="mt-6">
         <p class="text-sm dark:text-gray-400">
             <?= $post->getContent() ?>
         </p>
         <!-- <img src="https://source.unsplash.com/random/100x100/?5" alt="" class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" /> -->
 
     </div>
-    <div class="flex flex-wrap justify-between">
+    <div class="flex flex-wrap justify-between mt-6">
         <div class="flex space-x-2 text-sm dark:text-gray-400">
             <a href="/posts?url=<?= $post->getUrl() ?>" class="flex items-center space-x-1.5 p-1 z-40 hover:bg-gray-300 rounded-full">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Number of comments" class="h-4 w-4 fill-current dark:text-violet-400">
@@ -38,3 +60,4 @@
         </div>
     </div>
 </div>
+

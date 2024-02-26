@@ -148,10 +148,10 @@ class CommentDAOImpl implements CommentDAO
         return $comments;
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id, int $userId): bool
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        return $mysqli->prepareAndExecute("DELETE FROM comments WHERE id = ?", 'i', [$id]);
+        return $mysqli->prepareAndExecute("DELETE FROM comments WHERE id = ? AND user_id = ?", 'ii', [$id, $userId]);
     }
 
     public function getChildComments(int $parentCommentId, int $userId, int $offset, int $limit = 20): array

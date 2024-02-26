@@ -40,7 +40,7 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers]);
+        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user'=> $user]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -342,9 +342,8 @@ return [
         $comments = $commentDao->getCommentsToPost($post->getId(), $currentUser->getId(), 0);
 
         $createFormAction = "/form/comment";
-        $deleteFormAction = '/form/delete-comment-to-post';
 
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user'=> $currentUser]);
     })->setMiddleware(['auth']),
     'delete/post' => Route::create('delete/post', function() : HTTPRenderer {
         // TODO: try-catch文を書く
@@ -440,12 +439,11 @@ return [
         $childComments = $commentDao->getChildComments($parentComment->getId(), $currentUser->getId(),  0);
 
         $createFormAction = "/form/comment-to-comment";
-        $deleteFormAction = '/form/delete-comment-to-comment';
 
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'deleteFormAction' => $deleteFormAction]);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user'=> $currentUser]);
     })->setMiddleware(['auth']),
     'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -489,10 +487,12 @@ return [
 
         return new RedirectRenderer(sprintf('comments?url=%s', $currentComment->getUrl()));
     })->setMiddleware(['auth']),
-    'form/delete-comment-to-comment' => Route::create('form/delete-comment-to-comment', function (): HTTPRenderer {
+    'delete/comment' => Route::create('delete/comment', function () : HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        error_log(print_r($_POST, true));
 
         // TODO: 厳格なバリデーション
         $required_fields = [
@@ -501,39 +501,14 @@ return [
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
         $commentDao = DAOFactory::getCommentDAO();
-        $targetComment = $commentDao->getById($validatedData['comment_id']);
-        $parentComment = $commentDao->getById($targetComment->getParentCommentId());
-
-        $success = $commentDao->delete($targetComment->getId());
-        if (!$success) throw new Exception('Failed to delete a comment!');
-
-        return new RedirectRenderer(sprintf('comments?url=%s', $parentComment->getUrl()));
-    })->setMiddleware(['auth']),
-    'form/delete-comment-to-post' => Route::create('form/delete-comment-to-post', function (): HTTPRenderer {
-        // TODO: 投稿者だけが削除できるようにする
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'comment_id' => ValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
-        $commentDao = DAOFactory::getCommentDAO();
-        $targetComment = $commentDao->getById($validatedData['comment_id']);
-
-        $postDao = DAOFactory::getPostDAO();
-        $parentPost = $postDao->getById($targetComment->getPostId());
-
-        $success = $commentDao->delete($targetComment->getId());
-        if (!$success) throw new Exception('Failed to delete a comment!');
 
         $user = Authenticate::getAuthenticatedUser();
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->delete($parentPost->getUserId(), NotificationType::COMMENT->value, $user->getId(), null, $validatedData['comment_id'], null);
+        $success = $commentDao->delete($validatedData['comment_id'], $user->getId());
+        if (!$success) throw new Exception('Failed to delete a comment!');
 
-        return new RedirectRenderer(sprintf('posts?url=%s', $parentPost->getUrl()));
+        FlashData::setFlashData('success', "コメントを削除しました");
+        return new JSONRenderer(['status' => 'success']);
+
     })->setMiddleware(['auth']),
     'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
