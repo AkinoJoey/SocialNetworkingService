@@ -2,6 +2,7 @@
 
 namespace src\response\render;
 
+use src\database\data_access\DAOFactory;
 use src\response\HTTPRenderer;
 use src\helpers\Authenticate;
 
@@ -45,6 +46,12 @@ class HTMLRenderer implements HTTPRenderer
         ob_start();
         // guestの場合はサイドバーを表示しない
         $user = Authenticate::getAuthenticatedUser();
+
+        if($user){
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $numberOfNotification = $notificationDao->getNumberOfNotification($user->getId());
+        }
+
         require $this->getViewPath('layout/sidebar');
         require $this->getViewPath('components/message-boxes');
         return ob_get_clean();
