@@ -157,10 +157,20 @@ class NotificationDAOImpl implements NotificationDAO
     public function getNotificationList(int $userId, int $limit = 100): array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        $query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at LIMIT ?";
+        $query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
 
         $results = $mysqli->prepareAndFetchAll($query, 'ii', [$userId, $limit]);
 
         return $results === null ? [] : $this->rawDataToNotifications($results);
+    }
+
+    public function getNumberOfNotification(int $userId): int
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "SELECT COUNT(*) AS number_of_notification FROM notifications WHERE user_id = ? AND is_read = 0";
+
+        $results = $mysqli->prepareAndFetchAll($query, 'i', [$userId])[0];
+
+        return $results['number_of_notification'];
     }
 }
