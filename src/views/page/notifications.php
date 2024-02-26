@@ -48,7 +48,7 @@ use src\database\data_access\DAOFactory;
                         </div>
                         <div class="flex w-full items-center">
                             <div class="mr-2">
-                                <img class="rounded-full" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
+                                <img class="rounded-full w-16" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
                             </div>
                             <div class="w-3/4">
                                 <div class="flex h-full flex-col justify-center">

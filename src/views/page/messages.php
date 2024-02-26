@@ -9,7 +9,7 @@
                 <a href="direct?url=<?= $message->getUrl() ?>" data-message-id="<?= $message->getId() ?>" class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
                     <div class="flex w-full items-center">
                         <div class="mr-2">
-                            <img class="rounded-full" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
+                            <img class="rounded-full w-16" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
                         </div>
                         <div class="w-3/4">
                             <div class="flex h-full flex-col justify-center">
