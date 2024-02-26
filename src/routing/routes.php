@@ -40,7 +40,7 @@ return [
         $postDao = DAOFactory::getPostDAO();
         $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user'=> $user]);
+        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user]);
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -343,12 +343,13 @@ return [
 
         $createFormAction = "/form/comment";
 
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user'=> $currentUser]);
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser]);
     })->setMiddleware(['auth']),
-    'delete/post' => Route::create('delete/post', function() : HTTPRenderer {
+    'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!'
-    );
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception(
+            'Invalid request method!'
+        );
 
         // TODO: 厳格なバリデーション
         $required_fields = [
@@ -443,7 +444,7 @@ return [
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user'=> $currentUser]);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser]);
     })->setMiddleware(['auth']),
     'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -487,7 +488,7 @@ return [
 
         return new RedirectRenderer(sprintf('comments?url=%s', $currentComment->getUrl()));
     })->setMiddleware(['auth']),
-    'delete/comment' => Route::create('delete/comment', function () : HTTPRenderer {
+    'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
@@ -508,7 +509,6 @@ return [
 
         FlashData::setFlashData('success', "コメントを削除しました");
         return new JSONRenderer(['status' => 'success']);
-
     })->setMiddleware(['auth']),
     'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -734,5 +734,30 @@ return [
         $messageList = $messageDao->getMessageList($user->getId());
 
         return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user' => $user]);
+    })->setMiddleware(['auth']),
+    'search/user' => Route::create('search/user', function (): HTTPRenderer {
+
+        // TODO: GETの時はフォロワー数が多いuserをデフォルトで表示する
+        $userDao = DAOFactory::getUserDAO();
+        $users = $userDao->getTopFollowedUsers();
+
+        return new HTMLRenderer('page/search_user', ['users'=>$users]);
+    })->setMiddleware(['auth']),
+    'form/search/user'=>Route::create('form/search/user', function () : HTTPRenderer {
+        // TODO: try-catch文を書く
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
+        // TODO: 厳格なバリデーション
+        // $required_fields = [
+        //     'search_words' => ValueType::STRING,
+        // ];
+
+        // $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+
+
+        // $userDao = DAOFactory::getUserDAO();
+        // $users = $userDao->getUserListForSearch($validatedData['keywords']);
+
+        return new JSONRenderer(['status'=>'success']);
     })->setMiddleware(['auth'])
 ];
