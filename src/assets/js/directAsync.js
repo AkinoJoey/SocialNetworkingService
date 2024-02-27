@@ -64,8 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         conn.send(JSON.stringify(data));
 
-        chatContainer.innerHTML +=
-            `
+        chatContainer.innerHTML += `
             <div class="chat chat-end">
                 <div class="avatar chat-image">
                     <div class="w-10 rounded-full">
@@ -74,12 +73,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="chat-header">
                     ${senderUserAccountName}
-                    <time class="text-xs opacity-50">12:46</time>
                 </div>
                 <div class="chat-bubble text-white bg-blue-400">${chatTextArea.value}</div>
-                <div class="chat-footer opacity-50">Seen at 12:46</div>
+                <div class="chat-footer opacity-50">${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
             </div>
-            `
+            `;
         chatTextArea.value = "";
         window.scrollTo(0, document.body.scrollHeight);
     }
