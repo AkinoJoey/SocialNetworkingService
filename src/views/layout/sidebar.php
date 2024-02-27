@@ -28,6 +28,17 @@
 							</a>
 						</li>
 						<li>
+							<a href="/search/user" class="group flex items-center rounded-lg p-2 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+								<svg class="h-6 w-6 flex-shrink-0 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white" aria-hidden="true" fill="none" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+									<path stroke="currentColor" stroke-linecap="round" stroke-width="3" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+								</svg>
+								<!-- <svg class="w-[48px] h-[48px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+									<path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+								</svg> -->
+								<span class="hidden ms-3 flex-1 whitespace-nowrap lg:block">検索</span>
+							</a>
+						</li>
+						<li>
 							<a href="/notifications" class="group flex items-center rounded-lg p-2 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
 								<div class="indicator">
 									<?php
