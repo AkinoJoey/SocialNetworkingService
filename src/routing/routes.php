@@ -737,27 +737,41 @@ return [
     })->setMiddleware(['auth']),
     'search/user' => Route::create('search/user', function (): HTTPRenderer {
 
-        // TODO: GETの時はフォロワー数が多いuserをデフォルトで表示する
+        if (isset($_GET['keyword']) && strlen($_GET['keyword']) !== 0) {
+            // TODO: 厳格なバリデーション
+            $required_fields = [
+                'keyword' => ValueType::STRING,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+
+            $userDao = DAOFactory::getUserDAO();
+            $users = $userDao->getUserListForSearch($validatedData['keyword']);
+
+            return new HTMLRenderer('page/search_user', ['users' => $users]);
+        }
+
+        // デフォルトではフォロワーが多いユーザーを表示する
         $userDao = DAOFactory::getUserDAO();
         $users = $userDao->getTopFollowedUsers();
 
-        return new HTMLRenderer('page/search_user', ['users'=>$users]);
+        return new HTMLRenderer('page/search_user', ['users' => $users]);
     })->setMiddleware(['auth']),
-    'form/search/user'=>Route::create('form/search/user', function () : HTTPRenderer {
+    'form/search/user' => Route::create('form/search/user', function (): HTTPRenderer {
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
         // TODO: 厳格なバリデーション
-        // $required_fields = [
-        //     'search_words' => ValueType::STRING,
-        // ];
+        $required_fields = [
+            'keywords' => ValueType::STRING,
+        ];
 
-        // $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
 
-        // $userDao = DAOFactory::getUserDAO();
-        // $users = $userDao->getUserListForSearch($validatedData['keywords']);
+        $userDao = DAOFactory::getUserDAO();
+        $users = $userDao->getUserListForSearch($validatedData['keywords']);
 
-        return new JSONRenderer(['status'=>'success']);
+        return new JSONRenderer(['status' => 'success', 'users' => $users]);
     })->setMiddleware(['auth'])
 ];
