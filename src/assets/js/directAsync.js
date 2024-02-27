@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let chatTextArea = document.getElementById('message');
+    chatTextArea.focus();
 
     chatTextArea.addEventListener("keydown", function(e) {
         if (e.key === 'Enter' && e.shiftKey) {
