@@ -2,7 +2,7 @@
 
 namespace src\database\data_access\implementations;
 
-use DateTime;
+use src\models\DataTimeStamp;
 use src\database\data_access\interfaces\NotificationDAO;
 use src\models\Notification;
 use src\database\DatabaseManager;
@@ -70,12 +70,12 @@ class NotificationDAOImpl implements NotificationDAO
             dmThreadId: $rawData['dm_thread_id'],
             isRead: $rawData['is_read'],
             id: $rawData['id'],
-            createdAt: new DateTime($rawData['created_at']),
-            accountName: $rawData['account_name'],
-            username: $rawData['username'],
-            commentUrl: $rawData['comment_url'],
-            postUrl: $rawData['post_url'],
-            threadUrl: $rawData['thread_url']
+            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
+            accountName: $rawData['account_name'] ?? null,
+            username: $rawData['username'] ?? null,
+            commentUrl: $rawData['comment_url'] ?? null,
+            postUrl: $rawData['post_url'] ?? null,
+            threadUrl: $rawData['thread_url'] ?? null
         );
     }
 
@@ -107,9 +107,9 @@ class NotificationDAOImpl implements NotificationDAO
                     source_id = ?,
                     notification_type = ?,
                     post_id = ?,
-                    comment_id = ?
+                    comment_id = ?,
                     dm_thread_id = ?,
-                    is_read = ?,
+                    is_read = ?
                 WHERE id = ?
             SQL;
 
@@ -118,6 +118,7 @@ class NotificationDAOImpl implements NotificationDAO
             'iisiiiii',
             [
                 $notification->getUserId(),
+                $notification->getSourceId(),
                 $notification->getNotificationType(),
                 $notification->getPostId(),
                 $notification->getCommentId(),
@@ -162,8 +163,7 @@ class NotificationDAOImpl implements NotificationDAO
     public function getNotificationList(int $userId, int $limit = 100): array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        $query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
-        $query = 
+        $query =
             <<<SQL
             WITH user_data AS(
                 SELECT n.id, u.account_name , u.username 
@@ -193,7 +193,7 @@ class NotificationDAOImpl implements NotificationDAO
                     LEFT JOIN post_data pd ON n.id = pd.id
                     LEFT JOIN thread_data td ON n.id = td.id
                     WHERE n.user_id = ?
-                    ORDER BY n.created_at DESC LIMIT ?;
+                    ORDER BY n.updated_at DESC LIMIT ?;
             SQL;
 
         $results = $mysqli->prepareAndFetchAll($query, 'iiiiiii', [$userId, $userId, $userId, $userId, $userId, $userId, $limit]);
@@ -209,5 +209,41 @@ class NotificationDAOImpl implements NotificationDAO
         $results = $mysqli->prepareAndFetchAll($query, 'i', [$userId])[0];
 
         return $results['number_of_notification'];
+    }
+
+    public function getUnreadDMNotificationId(int $userId, int $sourceId): ?int
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query =
+            <<<SQL
+            SELECT id
+                FROM notifications
+                WHERE user_id = ?
+                AND source_id = ? 
+                AND notification_type = 'dm' 
+                AND is_read = 0
+                limit 1;
+            SQL;
+
+        $results = $mysqli->prepareAndFetchAll($query, 'ii', [$userId, $sourceId])[0] ?? null;
+
+        if ($results === null) return null;
+
+        error_log($results['id']);
+
+        return $results['id'];
+    }
+
+    public function updateUpdatedAt(int $id): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "UPDATE notifications SET updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        $result = $mysqli->prepareAndExecute($query, 'i', [$id]);
+
+        if (!$result) return false;
+
+        return true;
     }
 }

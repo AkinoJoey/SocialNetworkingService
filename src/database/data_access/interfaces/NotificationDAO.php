@@ -13,4 +13,6 @@ interface NotificationDAO
     public function getById(int $id): ?Notification;
     public function getNotificationList(int $userId, int $limit = 100): array;
     public function getNumberOfNotification(int $userId) : int;
+    public function getUnreadDMNotificationId(int $userId, int $sourceId): ?int;
+    public function updateUpdatedAt(int $id) : bool;
 }

@@ -2,7 +2,6 @@
 
 namespace src\models;
 
-use DateTime;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
 
@@ -16,9 +15,9 @@ class Notification implements Model{
         private ?int $postId = null,
         private ?int $commentId = null,
         private ?int $dmThreadId = null,
-        private ?bool $isRead = null,
+        private ?bool $isRead = false,
         private ?int $id = null,
-        private ?DateTime $createdAt = null,
+        private ?DataTimeStamp $timeStamp = null,
         private ?string $accountName = null,
         private ?string $username = null,
         private ?string $commentUrl = null,
@@ -103,14 +102,14 @@ class Notification implements Model{
         $this->isRead = $isRead;
     }
 
-    public function getCreatedAt(): ?DateTime
+    public function getTimeStamp(): ?DataTimeStamp
     {
-        return $this->createdAt;
+        return $this->timeStamp;
     }
 
-    public function setCreatedAt(DateTime $createdAt): void
+    public function setTimeStamp(DataTimeStamp $timeStamp): void
     {
-        $this->createdAt = $createdAt;
+        $this->timeStamp = $timeStamp;
     }
 
     public function getAccountName() : ?string {

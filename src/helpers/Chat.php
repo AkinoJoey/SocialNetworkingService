@@ -124,17 +124,26 @@ class Chat implements MessageComponentInterface
                 if ($client->getUserId() === $validatedData['receiver_user_id']) {
                     $client->getConn()->send($validatedData['message']);
                 } else {
-                    // リアルタイム通信しない場合は通知を送る
-                    $notification = new Notification(
-                        userId: $validatedData['receiver_user_id'],
-                        sourceId: $validatedData['sender_user_id'],
-                        notificationType: NotificationType::DM->value,
-                        dmThreadId: $validatedData['dm_thread_id'],
-                    );
-
+                    // リアルタイム通信しない場合、DMの未読通知がない場合は通知を作成する。ある場合は通知のupdatedAtを更新する
                     $notificationDao = DAOFactory::getNotificationDAO();
-                    $success = $notificationDao->create($notification);
-                    if (!$success) throw new Exception('Failed to create a notification!');
+                    $notificationId =  $notificationDao->getUnreadDMNotificationId($validatedData['receiver_user_id'], $validatedData['sender_user_id']);
+
+                    if(isset($notificationId)){
+                        $success = $notificationDao->updateUpdatedAt($notificationId);
+                        if (!$success) throw new Exception('Failed to update a notification!');
+                    }else{
+                        
+                        $notification = new Notification(
+                            id: $notificationId,
+                            userId: $validatedData['receiver_user_id'],
+                            sourceId: $validatedData['sender_user_id'],
+                            notificationType: NotificationType::DM->value,
+                            dmThreadId: $validatedData['dm_thread_id'],
+                        );
+
+                        $success = $notificationDao->create($notification);
+                        if (!$success) throw new Exception('Failed to create a notification!');
+                    }
                 }
             }
         }
