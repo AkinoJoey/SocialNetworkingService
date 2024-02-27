@@ -70,7 +70,12 @@ class NotificationDAOImpl implements NotificationDAO
             dmThreadId: $rawData['dm_thread_id'],
             isRead: $rawData['is_read'],
             id: $rawData['id'],
-            createdAt: new DateTime($rawData['created_at'])
+            createdAt: new DateTime($rawData['created_at']),
+            accountName: $rawData['account_name'],
+            username: $rawData['username'],
+            commentUrl: $rawData['comment_url'],
+            postUrl: $rawData['post_url'],
+            threadUrl: $rawData['thread_url']
         );
     }
 
@@ -158,8 +163,40 @@ class NotificationDAOImpl implements NotificationDAO
     {
         $mysqli = DatabaseManager::getMysqliConnection();
         $query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
+        $query = 
+            <<<SQL
+            WITH user_data AS(
+                SELECT n.id, u.account_name , u.username 
+                    FROM notifications n
+                    JOIN users u ON n.source_id  = u.id
+                    WHERE user_id = ?
+                ), comment_data AS(
+                SELECT n.id, c.url
+                    FROM notifications n 
+                    JOIN comments c ON n.comment_id = c.id
+                    where n.user_id = ?
+                ), post_data AS(
+                SELECT n.id, p.url
+                    FROM notifications n 
+                    JOIN posts p ON n.post_id = p.id 
+                    WHERE n.user_id = ?
+                ), thread_data AS(
+                SELECT n.id,dt.url 
+                    FROM notifications n 
+                    JOIN dm_threads dt ON n.dm_thread_id = dt.id
+                    WHERE user_id1 = ? OR user_id2 = ?
+                )
+                SELECT n.*, ud.account_name, ud.username, cd.url as comment_url, pd.url as post_url, td.url as thread_url
+                    FROM notifications n 
+                    LEFT JOIN user_data ud ON n.id = ud.id
+                    LEFT JOIN comment_data cd ON n.id = cd.id
+                    LEFT JOIN post_data pd ON n.id = pd.id
+                    LEFT JOIN thread_data td ON n.id = td.id
+                    WHERE n.user_id = ?
+                    ORDER BY n.created_at DESC LIMIT ?;
+            SQL;
 
-        $results = $mysqli->prepareAndFetchAll($query, 'ii', [$userId, $limit]);
+        $results = $mysqli->prepareAndFetchAll($query, 'iiiiiii', [$userId, $userId, $userId, $userId, $userId, $userId, $limit]);
 
         return $results === null ? [] : $this->rawDataToNotifications($results);
     }

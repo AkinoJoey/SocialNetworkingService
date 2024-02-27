@@ -18,7 +18,12 @@ class Notification implements Model{
         private ?int $dmThreadId = null,
         private ?bool $isRead = null,
         private ?int $id = null,
-        private ?DateTime $createdAt = null
+        private ?DateTime $createdAt = null,
+        private ?string $accountName = null,
+        private ?string $username = null,
+        private ?string $commentUrl = null,
+        private ?string $postUrl = null,
+        private ?string $threadUrl = null
     ) {
     }
 
@@ -106,5 +111,25 @@ class Notification implements Model{
     public function setCreatedAt(DateTime $createdAt): void
     {
         $this->createdAt = $createdAt;
+    }
+
+    public function getAccountName() : ?string {
+        return $this->accountName;
+    }
+
+    public function getUsername() : ?string {
+        return $this->username;
+    }
+
+    public function getCommentUrl() : ?string {
+        return $this->commentUrl;
+    }
+
+    public function getPostUrl() : ?string {
+        return $this->postUrl;
+    }
+
+    public function getThreadUrl() : ?string {
+        return $this->threadUrl;
     }
 }

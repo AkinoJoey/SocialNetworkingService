@@ -1,7 +1,5 @@
 <?php
-
 use src\types\NotificationType;
-use src\database\data_access\DAOFactory;
 ?>
 <!-- notification -->
 <div class="container mx-auto mb-14 flex items-center justify-center p-4">
@@ -10,31 +8,24 @@ use src\database\data_access\DAOFactory;
             通知
         </div>
         <div class="divide-y divide-gray-100 dark:divide-gray-700">
-            <?php $csrfToken = src\helpers\CrossSiteForgeryProtection::getToken(); ?>
             <?php foreach ($notifications as $notification) : ?>
                 <?php
-                $userDao = DAOFactory::getUserDAO();
-                $sourceUser = $userDao->getById($notification->getSourceId());
-
                 switch ($notification->getNotificationType()) {
                     case NotificationType::POST_LIKE->value:
                         $notificationMessage =  'さんがあなたの投稿にいいねしました';
-                        $postDao = DAOFactory::getPostDAO();
-                        $href = '/posts?url=' . $postDao->getById($notification->getPostId())->getUrl();
+                        $href = '/posts?url=' . $notification->getPostUrl();
                         break;
                     case NotificationType::COMMENT->value;
                         $notificationMessage =  'さんがあなたの投稿にコメントをしました';
-                        $commentDao = DAOFactory::getCommentDAO();
-                        $href = '/comments?url=' . $commentDao->getById($notification->getCommentId())->getUrl();
+                        $href = '/comments?url=' . $notification->getCommentUrl();
                         break;
                     case NotificationType::FOLLOW->value;
                         $notificationMessage =  'さんがあなたをフォローしました';
-                        $href = '/profile?username=' . $sourceUser->getUsername();
+                        $href = '/profile?username=' . $notification->getUsername();
                         break;
                     case NotificationType::DM->value;
                         $notificationMessage =  'さんからあなたにメッセージが届いています';
-                        $dmThreadDao = DAOFactory::getDmThreadDAO();
-                        $href = '/direct?url=' . $dmThreadDao->getByUserIds($user->getId(), $notification->getSourceId())->getUrl();
+                        $href = '/direct?url=' . $notification->getThreadUrl();
                         break;
                 }
 
@@ -53,7 +44,7 @@ use src\database\data_access\DAOFactory;
                             <div class="w-3/4">
                                 <div class="flex h-full flex-col justify-center">
                                     <div class="mb-1.5 text-sm <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-950 dark:text-gray-400'  ?>">
-                                        <span class="font-semibold   <?php echo ($notification->getIsRead()) ? 'text-gray-600 dark:text-white' : 'text-gray-900 dark:text-white' ?> "><?= $sourceUser->getAccountName() ?></span>
+                                        <span class="font-semibold   <?php echo ($notification->getIsRead()) ? 'text-gray-600 dark:text-white' : 'text-gray-900 dark:text-white' ?> "><?= $notification->getAccountName() ?></span>
                                         <?= $notificationMessage ?>
                                     </div>
                                     <div class="text-xs <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-blue-600 dark:text-blue-500' ?>">
