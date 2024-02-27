@@ -1,5 +1,8 @@
 <?php
+
 use src\types\NotificationType;
+use Carbon\Carbon;
+
 ?>
 <!-- notification -->
 <div class="container mx-auto mb-14 flex items-center justify-center p-4">
@@ -48,7 +51,7 @@ use src\types\NotificationType;
                                         <?= $notificationMessage ?>
                                     </div>
                                     <div class="text-xs <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-blue-600 dark:text-blue-500' ?>">
-                                        a few moments ago
+                                        <?= Carbon::parse($notification->getTimeStamp()->getUpdatedAt())->diffForHumans() ?>
                                     </div>
                                 </div>
                             </div>

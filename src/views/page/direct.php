@@ -1,7 +1,13 @@
 <!-- chat -->
 <div class="container mx-auto flex justify-center p-4">
     <div id="chat_container" class="w-full px-12 py-3 md:w-4/5 mb-20">
-        <?php foreach ($messages as $message) : ?>
+        <?php for ($i = 0; $i < count($messages); $i++) : ?>
+            <?php $message = $messages[$i] ?>
+            <?php if ($i === 0 || ($i > 0 && $message->getCreatedAt()->format('Y/m/d') !== $messages[$i - 1]->getCreatedAt()->format('Y/m/d'))) : ?>
+                <div class="text-center w-full my-1 opacity-50">
+                    <?= $message->getCreatedAt()->format('Y/m/d (D)') ?>
+                </div>
+            <?php endif; ?>
             <?php if ($message->getSenderUserId() === $user->getId()) : ?>
                 <div class="chat chat-end">
                     <div class="avatar chat-image">
@@ -11,10 +17,9 @@
                     </div>
                     <div class="chat-header">
                         <?= $user->getAccountName() ?>
-                        <time class="text-xs opacity-50">12:46</time>
                     </div>
                     <div class="chat-bubble text-white bg-blue-400"><?= $message->getMessage() ?></div>
-                    <div class="chat-footer opacity-50">Seen at 12:46</div>
+                    <div class="chat-footer opacity-50"><?= $message->getCreatedAt()->format('H:i') ?></div>
                 </div>
             <?php else : ?>
                 <div class="chat chat-start">
@@ -25,13 +30,12 @@
                     </div>
                     <div class="chat-header">
                         <?= $receiverUser->getAccountName() ?>
-                        <time class="text-xs opacity-50">12:45</time>
                     </div>
                     <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700"><?= $message->getMessage() ?></div>
-                    <div class="chat-footer opacity-50">Delivered</div>
+                    <div class="chat-footer opacity-50"><?= $message->getCreatedAt()->format('H:i') ?></div>
                 </div>
             <?php endif; ?>
-        <?php endforeach; ?>
+        <?php endfor; ?>
     </div>
 
 

@@ -1,3 +1,8 @@
+<?php
+
+use Carbon\Carbon;
+
+?>
 <div class="container mx-auto mb-14 flex flex-col items-center justify-center p-4">
     <div class="mt-4 flex w-full flex-col space-y-6 overflow-hidden rounded-lg p-4 shadow-md dark:bg-gray-900 dark:text-gray-100 sm:w-4/5 md:w-3/5 lg:w-1/2">
         <!-- main post -->
@@ -11,10 +16,10 @@
                         <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
                         <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
                     </div>
-                    <span class="text-xs dark:text-gray-400">4 hours ago</span>
+                    <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
                 </div>
             </div>
-            <?php if($post->getUserId() === $user->getId()): ?>
+            <?php if ($post->getUserId() === $user->getId()) : ?>
                 <div>
                     <button data-dropdown-toggle="dropdownPost" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
                         <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
@@ -117,10 +122,10 @@
                                             <a href="/profile?username=<?= $comment->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $comment->getAccountName() ?></a>
                                             <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $comment->getUsername() ?></span>
                                         </div>
-                                        <span class="text-xs dark:text-gray-400">4 hours ago</span>
+                                        <span class="text-xs dark:text-gray-400"><?= Carbon::parse($comment->getCreatedAt())->diffForHumans() ?></span>
                                     </div>
                                 </div>
-                                <?php if($comment->getUserId() === $user->getId()): ?>
+                                <?php if ($comment->getUserId() === $user->getId()) : ?>
                                     <div class="z-40">
                                         <button data-dropdown-toggle="dropdownPost<?= $comment->getId() ?>" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
                                             <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">

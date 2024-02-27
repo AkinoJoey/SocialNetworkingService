@@ -1,3 +1,8 @@
+<?php
+
+use Carbon\Carbon;
+
+?>
 <!-- TODO: htmlspecialchars -->
 <div class="w-full mt-4 flex max-w-lg flex-col overflow-hidden rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 relative hover:bg-gray-100 dark:hover:bg-gray-700">
     <a href="/posts?url=<?= $post->getUrl() ?>" class="absolute h-full w-full top-0 left-0 z-0"></a>
@@ -11,10 +16,10 @@
                     <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
                     <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
                 </div>
-                <span class="text-xs dark:text-gray-400">4 hours ago</span>
+                <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
             </div>
         </div>
-        <?php if($post->getUserId() === $user->getId()): ?>
+        <?php if ($post->getUserId() === $user->getId()) : ?>
             <div class="z-40">
                 <button type="button" data-dropdown-toggle="dropdownPost<?= $post->getId() ?>" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
                     <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
@@ -60,4 +65,3 @@
         </div>
     </div>
 </div>
-
