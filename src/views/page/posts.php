@@ -175,7 +175,7 @@ use Carbon\Carbon;
         </div>
     </div>
 
-    <?php include(__DIR__ . '/../components/alert-modal.php') ?>
+    <?php include(__DIR__ . '/../components/alert_modal.php') ?>
 
 </div>
 

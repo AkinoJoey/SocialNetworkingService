@@ -47,13 +47,13 @@ class HTMLRenderer implements HTTPRenderer
         // guestの場合はサイドバーを表示しない
         $user = Authenticate::getAuthenticatedUser();
 
-        if($user){
+        if ($user) {
             $notificationDao = DAOFactory::getNotificationDAO();
             $numberOfNotification = $notificationDao->getNumberOfNotification($user->getId());
         }
 
         require $this->getViewPath('layout/sidebar');
-        require $this->getViewPath('components/message-boxes');
+        require $this->getViewPath('components/message_boxes');
         return ob_get_clean();
     }
 

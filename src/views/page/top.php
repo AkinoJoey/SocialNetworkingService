@@ -5,7 +5,7 @@
 	<?php endforeach; ?>
 </div>
 
-<?php include(__DIR__ . '/../components/alert-modal.php') ?>
+<?php include(__DIR__ . '/../components/alert_modal.php') ?>
 
 <script>
 	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
