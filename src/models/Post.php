@@ -11,9 +11,9 @@ class Post implements Model
     use GenericModel;
 
     public function __construct(
-        private string $content,
         private string $url,
         private int $userId,
+        private ?string $content = null,
         private ?int $id = null,
         private ?string $mediaPath = null,
         private ?DateTime $scheduledAt = null,
@@ -46,7 +46,7 @@ class Post implements Model
         $this->userId = $userId;
     }
 
-    public function getContent(): string
+    public function getContent(): ?string
     {
         return $this->content;
     }
