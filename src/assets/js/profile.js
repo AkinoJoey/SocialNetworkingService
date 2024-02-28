@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		likeBtn.addEventListener("click", function (e) {
 			e.preventDefault();
 
-			let numberOfPostLikeSpan = likeBtn.querySelector(".number-of-post-likes");
-			let numberOfPostLike = Number(numberOfPostLikeSpan.textContent);
-			let goodBtn = likeBtn.querySelector(".good-btn");
+			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
+			let numberOfLikes = Number(numberOfLikesSpan.textContent);
+			let goodIcon = likeBtn.querySelector(".good-icon");
 
 			let isLike = likeBtn.getAttribute("data-isLike");
 			let postId = likeBtn.getAttribute("data-post-id");
@@ -21,19 +21,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
 			if (isLike === "1") {
 				deleteLikePost(
+					"/form/delete-like-post",
 					formData,
 					likeBtn,
-					numberOfPostLike,
-					numberOfPostLikeSpan,
-					goodBtn,
+					numberOfLikes,
+					numberOfLikesSpan,
+					goodIcon,
 				);
 			} else {
 				likePost(
+					"/form/like-post",
 					formData,
 					likeBtn,
-					numberOfPostLike,
-					numberOfPostLikeSpan,
-					goodBtn,
+					numberOfLikes,
+					numberOfLikesSpan,
+					goodIcon,
 				);
 			}
 		});
