@@ -289,42 +289,47 @@ return [
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        $required_fields = [
-            'content' => ValueType::STRING,
-        ];
+        error_log(print_r($_POST, true));
+        error_log(print_r($_FILES, true));
 
-        // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        // メディアがある場合はcontentはnullable, メディアがない場合はnot null
+        
+        // $required_fields = [
+        //     'content' => ValueType::STRING,
+        // ];
 
-        $nullableFields = [
-            'media_path' => ValueType::STRING,
-            'scheduled_at' => ValueType::DATE
-        ];
+        // // TODO: 厳格なバリデーションを作成
+        // $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
-        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
-        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
+        // $nullableFields = [
+        //     'media_path' => ValueType::STRING,
+        //     'scheduled_at' => ValueType::DATE
+        // ];
 
-        // TODO: 画像アップロード時の振る舞いを追加
+        // $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+        // $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
 
-        $user = Authenticate::getAuthenticatedUser();
+        // // TODO: 画像アップロード時の振る舞いを追加
 
-        $numberOfCharacters = 18;
-        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
+        // $user = Authenticate::getAuthenticatedUser();
 
-        $post = new Post(
-            content: $validatedData['content'],
-            url: $randomString,
-            userId: $user->getId(),
-            mediaPath: $validatedData['media_path'],
-            scheduledAt: $validatedData['scheduled_at']
-        );
+        // $numberOfCharacters = 18;
+        // $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
 
-        $postDao = DAOFactory::getPostDAO();
-        $success = $postDao->create($post);
+        // $post = new Post(
+        //     content: $validatedData['content'],
+        //     url: $randomString,
+        //     userId: $user->getId(),
+        //     mediaPath: $validatedData['media_path'],
+        //     scheduledAt: $validatedData['scheduled_at']
+        // );
 
-        if (!$success) throw new Exception('Failed to create a post!');
+        // $postDao = DAOFactory::getPostDAO();
+        // $success = $postDao->create($post);
 
-        return new RedirectRenderer('');
+        // if (!$success) throw new Exception('Failed to create a post!');
+
+        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
