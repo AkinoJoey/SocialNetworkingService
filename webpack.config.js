@@ -7,7 +7,8 @@ module.exports = {
 		profile: "./src/assets/js/profile.js",
 		direct: "./src/assets/js/directAsync.js",
 		notifications: "./src/assets/js/notifications.js",
-		top: "./src/assets/js/top.js"
+		top: "./src/assets/js/top.js",
+		loggedInUser: "./src/assets/js/postAndLogoutModal.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
