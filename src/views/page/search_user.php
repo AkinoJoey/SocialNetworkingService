@@ -39,28 +39,4 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let searchForm = document.getElementById('search-form');
-        const userList = document.getElementById('user-list');
-        const inputKeyword = document.getElementById('keyword');
-        inputKeyword.focus();
-
-        inputKeyword.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                search();
-            }
-        })
-
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            search();
-        })
-
-        function search() {
-            const formData = new FormData(searchForm);
-            window.location.href = `/search/user?keyword=${formData.get('keyword')}`;
-        }
-    })
-</script>
+<script src="/searchUser.bundle.js"></script>
