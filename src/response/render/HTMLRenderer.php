@@ -52,7 +52,7 @@ class HTMLRenderer implements HTTPRenderer
             $numberOfNotification = $notificationDao->getNumberOfNotification($user->getId());
         }
 
-        require $this->getViewPath('layout/sidebar');
+        require $this->getViewPath('layout/header');
         require $this->getViewPath('components/message_boxes');
         return ob_get_clean();
     }
