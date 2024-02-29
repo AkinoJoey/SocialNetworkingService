@@ -294,12 +294,16 @@ return [
 
         // メディアがある場合はcontentはnullable, メディアがない場合はnot null
         
-        // $required_fields = [
-        //     'content' => ValueType::STRING,
-        // ];
+        $required_fields = [
+            'content' => ValueType::STRING
+        ];
 
         // // TODO: 厳格なバリデーションを作成
-        // $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, false);
+
+
+        // 画像の場合はサムネを作成
+        // 動画の場合は必要に応じて圧縮
 
         // $nullableFields = [
         //     'media_path' => ValueType::STRING,
@@ -761,22 +765,5 @@ return [
         $users = $userDao->getTopFollowedUsers();
 
         return new HTMLRenderer('page/search_user', ['users' => $users]);
-    })->setMiddleware(['auth']),
-    'form/search/user' => Route::create('form/search/user', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'keywords' => ValueType::STRING,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
-
-
-        $userDao = DAOFactory::getUserDAO();
-        $users = $userDao->getUserListForSearch($validatedData['keywords']);
-
-        return new JSONRenderer(['status' => 'success', 'users' => $users]);
     })->setMiddleware(['auth'])
 ];
