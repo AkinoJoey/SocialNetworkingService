@@ -36,8 +36,8 @@
 				<button class="btn btn-active">
 					<a href="/profile/edit">プロフィールを編集</a>
 				</button>
-				<button class="btn btn-active">
-					<a href="/logout">ログアウト</a>
+				<button type="button" class="logout-btn btn btn-active">
+					ログアウト
 				</button>
 			</div>
 		<?php else : ?>
@@ -66,6 +66,7 @@
 </div>
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
+<?php include(__DIR__ . '/../components/speed_dial.php') ?>
 
 <?php if ($user->getId() !== $authenticatedUser->getId()) : ?>
 	<script>

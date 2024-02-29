@@ -6,6 +6,7 @@
 </div>
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
+<?php include(__DIR__ . '/../components/speed_dial.php') ?>
 
 <script>
 	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
