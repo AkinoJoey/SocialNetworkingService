@@ -28,38 +28,47 @@ class ValidationHelper
         throw new \InvalidArgumentException(sprintf("Invalid date format for %s. Required format: %s", $date, $format));
     }
 
+    public static function validatePassword(string $password): string
+    {
+        return is_string($password) && strlen($password) >= 8 && // Minimum 8 characters
+                preg_match('/[A-Z]/', $password) && // 少なくとも1文字の大文字
+                preg_match('/[a-z]/', $password) && // 少なくとも1文字の小文字
+                preg_match('/\d/', $password) && // 少なくとも1桁
+                preg_match('/[\W_]/', $password) // 少なくとも1つの特殊文字（アルファベット以外の文字）
+                ? $password : throw new \InvalidArgumentException("The provided value is not a valid password."); 
+    }
+
 
     public static function validateFields(array $fields, array $data, bool $required): array
     {
+
+        /* 例
+            fields = [
+                'content' => ValueType::STRING
+            ];
+
+            $data($_POST) = [
+                'content' => 'test'
+            ]
+        */
+
         $validatedData = [];
 
         foreach ($fields as $field => $type) {
-            if (!isset($data[$field]) || ($data)[$field] === '') {
-                if($required){
-                    throw new \InvalidArgumentException("Missing field: $field");
-                }else{
-                    // オブジェクト作成時のためにnullを入れておく
-                    $validatedData[$field] = null;
-                    continue;
-                }
+            if (!isset($data[$field]) || $data[$field] === '') {
+                throw new \InvalidArgumentException("Missing field: $field");
+                
             }
 
             $value = $data[$field];
 
             $validatedValue = match ($type) {
                 ValueType::STRING => is_string($value) ? $value : throw new \InvalidArgumentException("The provided value is not a valid string."),
-                ValueType::INT => self::integer($value), // 必要に応じて、この方法をさらにカスタマイズすることができます。
+                ValueType::INT => self::integer($value), 
                 ValueType::FLOAT => filter_var($value, FILTER_VALIDATE_FLOAT),
                 ValueType::DATE => self::validateDate($value),
                 ValueType::EMAIL => filter_var($value, FILTER_VALIDATE_EMAIL),
-                ValueType::PASSWORD =>
-                is_string($value) &&
-                    strlen($value) >= 8 && // Minimum 8 characters
-                    preg_match('/[A-Z]/', $value) && // 少なくとも1文字の大文字
-                    preg_match('/[a-z]/', $value) && // 少なくとも1文字の小文字
-                    preg_match('/\d/', $value) && // 少なくとも1桁
-                    preg_match('/[\W_]/', $value) // 少なくとも1つの特殊文字（アルファベット以外の文字）
-                    ? $value : throw new \InvalidArgumentException("The provided value is not a valid password."),
+                ValueType::PASSWORD => self::validatePassword($value),
                 default => throw new \InvalidArgumentException(sprintf("Invalid type for field: %s, with type %s", $field, $type)),
             };
 
