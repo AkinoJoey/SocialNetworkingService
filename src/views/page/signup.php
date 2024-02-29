@@ -10,23 +10,23 @@
 					<div class="mb-2 flex justify-between">
 						<label for="account_name" class="text-sm">名前</label>
 					</div>
-					<input type="text" name="account_name" id="account_name" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
+					<input type="text" name="account_name" id="account_name" autocomplete="name" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
 				</div>
 				<div>
 					<label for="email" class="mb-2 block text-sm">Eメール</label>
-					<input type="email" name="email" id="email" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
+					<input type="email" name="email" id="email" autocomplete="email" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
 				</div>
 				<div>
 					<div class="mb-2 flex justify-between">
 						<label for="password" class="text-sm">パスワード</label>
 					</div>
-					<input type="password" name="password" id="password" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
+					<input type="password" name="password" id="password" autocomplete="new-password" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
 				</div>
 				<div>
 					<div class="mb-2 flex justify-between">
 						<label for="confirm_password" class="text-sm">パスワードを再入力</label>
 					</div>
-					<input type="password" name="confirm_password" id="confirm_password" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
+					<input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" required />
 				</div>
 
 			</div>
