@@ -8,7 +8,8 @@ module.exports = {
 		direct: "./src/assets/js/directAsync.js",
 		notifications: "./src/assets/js/notifications.js",
 		top: "./src/assets/js/top.js",
-		loggedInUser: "./src/assets/js/postAndLogoutModal.js"
+		loggedInUser: "./src/assets/js/postAndLogoutModal.js",
+		searchUser: "./src/assets/js/searchUser.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
