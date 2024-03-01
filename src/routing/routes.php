@@ -2,7 +2,7 @@
 
 use src\response\HTTPRenderer;
 use src\response\render\HTMLRenderer;
-use src\types\ValueType;
+use src\types\GeneralValueType;
 use src\helpers\ValidationHelper;
 use src\response\FlashData;
 use src\response\render\RedirectRenderer;
@@ -22,6 +22,8 @@ use src\models\DmThread;
 use src\models\Follow;
 use src\models\Notification;
 use src\types\NotificationType;
+use src\types\UserValueType;
+use src\types\PostValueType;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -54,10 +56,10 @@ return [
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
-                'account_name' => ValueType::STRING,
-                'email' => ValueType::EMAIL,
-                'password' => ValueType::PASSWORD,
-                'confirm_password' => ValueType::PASSWORD,
+                'account_name' => UserValueType::ACCOUNT_NAME,
+                'email' => UserValueType::EMAIL,
+                'password' => UserValueType::PASSWORD,
+                'confirm_password' => UserValueType::PASSWORD,
             ];
 
             $userDao = DAOFactory::getUserDAO();
@@ -120,8 +122,8 @@ return [
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
         $required_fields = [
-            'id' => ValueType::INT,
-            'user' => ValueType::STRING,
+            'id' => GeneralValueType::INT,
+            'user' => GeneralValueType::STRING,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
@@ -156,11 +158,11 @@ return [
 
         // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
         $nullableFields = [
-            'id' => ValueType::INT,
-            'username' => ValueType::STRING,
-            'age' => ValueType::INT,
-            'location' => ValueType::STRING,
-            'description' => ValueType::STRING
+            'id' => GeneralValueType::INT,
+            'username' => UserValueType::USERNAME,
+            'age' => UserValueType::AGE,
+            'location' => UserValueType::LOCATION,
+            'description' => UserValueType::DESCRIPTION
         ];
 
         $validatedData = ValidationHelper::validateFields($nullableFields, $_POST, false);
@@ -201,8 +203,8 @@ return [
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
-                'email' => ValueType::EMAIL,
-                'password' => ValueType::STRING,
+                'email' => UserValueType::EMAIL,
+                'password' => UserValueType::PASSWORD,
             ];
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -236,7 +238,7 @@ return [
     'profile' => Route::create('profile', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'username' => ValueType::STRING
+            'username' => UserValueType::USERNAME
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
@@ -295,7 +297,7 @@ return [
         // メディアがある場合はcontentはnullable, メディアがない場合はnot null
         
         $required_fields = [
-            'content' => ValueType::STRING
+            'content' => PostValueType::CONTENT
         ];
 
         // // TODO: 厳格なバリデーションを作成
@@ -303,12 +305,18 @@ return [
 
 
         // 画像の場合はサムネを作成
-        // 動画の場合は必要に応じて圧縮
+        if($_FILES['media']){
+            $validatedTmpPath =  ValidationHelper::media($_FILES['media']);
 
-        // $nullableFields = [
-        //     'media_path' => ValueType::STRING,
-        //     'scheduled_at' => ValueType::DATE
-        // ];
+            // TODO: 画像の場合はサムネの作成
+
+            // TODO: 動画の場合は容量を減らす
+
+        }
+
+        $nullableFields = [
+            'scheduled_at' => GeneralValueType::DATE
+        ];
 
         // $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
         // $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
@@ -337,8 +345,9 @@ return [
     })->setMiddleware(['auth']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
+        // TODO: データベースにないURLのクエリだった場合は404を出す
         $required_fields = [
-            'url' => ValueType::STRING,
+            'url' => PostValueType::URL,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
@@ -362,7 +371,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'post_id' => ValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $user = Authenticate::getAuthenticatedUser();
@@ -381,19 +390,16 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'content' => ValueType::STRING,
-            'post_id' => ValueType::INT
+            'content' => PostValueType::CONTENT,
+            'post_id' => GeneralValueType::INT
         ];
 
         // TODO: 厳格なバリデーションを作成
         $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
-        $nullableFields = [
-            'media_path' => ValueType::STRING
-        ];
+        // TODO: if($_FILE['media'])
 
-        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
-        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
+        $validatedData = array_merge($validatedRequiredData);
 
         $postDao = DAOFactory::getPostDAO();
 
@@ -437,7 +443,7 @@ return [
     'comments' => Route::create('comments', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'url' => ValueType::STRING,
+            'url' => PostValueType::URL
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
@@ -461,18 +467,16 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'content' => ValueType::STRING,
-            'post_id' => ValueType::INT
+            'content' => PostValueType::CONTENT,
+            'post_id' => GeneralValueType::INT
         ];
         // TODO: 厳格なバリデーションを作成
         $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
 
-        $nullableFields = [
-            'media_path' => ValueType::STRING
-        ];
+        // TODO: if($_FILE['media'])
 
-        $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
-        $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
+
+        $validatedData = array_merge($validatedRequiredData);
 
         $commentDao = DAOFactory::getCommentDAO();
 
@@ -506,7 +510,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'comment_id' => ValueType::INT,
+            'comment_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -525,7 +529,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'post_id' => ValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -566,7 +570,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'post_id' => ValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -593,7 +597,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'post_id' => ValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -616,7 +620,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'post_id' => ValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -635,7 +639,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'follower_user_id' => ValueType::INT,
+            'follower_user_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -670,7 +674,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'follower_user_id' => ValueType::INT,
+            'follower_user_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -723,7 +727,7 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'notification_id' => ValueType::INT,
+            'notification_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
@@ -749,7 +753,7 @@ return [
         if (isset($_GET['keyword']) && strlen($_GET['keyword']) !== 0) {
             // TODO: 厳格なバリデーション
             $required_fields = [
-                'keyword' => ValueType::STRING,
+                'keyword' => GeneralValueType::STRING,
             ];
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
