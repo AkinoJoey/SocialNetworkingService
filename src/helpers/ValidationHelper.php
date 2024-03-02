@@ -70,7 +70,7 @@ class ValidationHelper
         return $value;
     }
 
-    public function email(string $value): string
+    public static function email(string $value): string
     {
         $value = filter_var($value, FILTER_VALIDATE_EMAIL);
 
@@ -113,10 +113,11 @@ class ValidationHelper
 
         self::unicodeString($accountName);
 
+        $minAccountName = 1;
         $maximumAccountName = 50;
 
-        if (mb_strlen($accountName) > $maximumAccountName) {
-            throw new \LengthException("アカウント名の最大文字数は50文字です");
+        if (mb_strlen($accountName) < $minAccountName || mb_strlen($accountName) > $maximumAccountName) {
+            throw new \LengthException("アカウント名は1文字以上、50文字以内です");
         }
 
         return $accountName;
@@ -124,10 +125,10 @@ class ValidationHelper
 
     public static function unicodeString(string $value): bool
     {
-        if (!mb_check_encoding($value, 'UTF-8') && !(bool)preg_match('//u', $value)) {
+        // UTF−８かどうか、置換文字（U+FFFD）が含まれているかどうかをチェック
+        if (!mb_check_encoding($value, 'UTF-8') || strpos($value, "\xEF\xBF\xBD") !== false ) {
             throw new \InvalidArgumentException("無効な文字が含まれています");
         }
-
         return true;
     }
 
