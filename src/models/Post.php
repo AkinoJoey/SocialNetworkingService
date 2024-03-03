@@ -16,6 +16,7 @@ class Post implements Model
         private ?string $content = null,
         private ?int $id = null,
         private ?string $mediaPath = null,
+        private ?string $extension = null,
         private ?DateTime $scheduledAt = null,
         private ?DataTimeStamp $timeStamp = null,
         private ?string $username = null,
@@ -74,6 +75,16 @@ class Post implements Model
     public function setMediaPath(String $mediaPath): void
     {
         $this->mediaPath = $mediaPath;
+    }
+
+    public function getExtension(): ?string
+    {
+        return $this->extension;
+    }
+
+    public function setExtension(String $extension): void
+    {
+        $this->extension = $extension;
     }
 
     public function getScheduledAt(): ?DateTime
