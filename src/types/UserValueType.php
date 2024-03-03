@@ -9,6 +9,5 @@ enum UserValueType
     case EMAIL;
     case PASSWORD;
     case AGE;
-    case LOCATION;
     case DESCRIPTION;
 }
