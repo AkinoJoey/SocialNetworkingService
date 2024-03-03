@@ -242,4 +242,22 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### PHPUnit ###
+# Covers PHPUnit
+# Reference: https://phpunit.de/
+
+# Generated files
+.phpunit.result.cache
+.phpunit.cache
+
+# PHPUnit
+/app/phpunit.xml
+/phpunit.xml
+
+# Build data
+/build/
+
+### video for test ###
+test/fixtures/videos
+
 # End of https://www.toptal.com/developers/gitignore/api/node,windows,linux,macos,composer,visualstudiocode
