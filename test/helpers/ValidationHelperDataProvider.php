@@ -2,8 +2,44 @@
 
 namespace test\helpers;
 
+use src\types\GeneralValueType;
+use src\types\UserValueType;
+
 class ValidationHelperDataProvider
 {
+    public static function validFieldsProvider(): array
+    {
+        return [
+            // 有効なフィールドとデータ
+            [
+                ['content' => GeneralValueType::STRING],
+                ['content' => 'This is a valid content'],
+            ],
+            [
+                ['age' => UserValueType::AGE],
+                ['age' => 25],
+            ],
+        ];
+    }
+
+    public static function invalidFieldsProvider(): array
+    {
+        return [
+            // フィールドが欠けている場合
+            [
+                ['content' => GeneralValueType::STRING],
+                [],
+                "フィールドが見つかりません: content",
+            ],
+            // 無効なフィールドの型が指定された場合
+            [
+                ['content' => 'invalid_type'],
+                ['content' => 'This is a valid content'],
+                "フィールドに無効なタイプが指定されています: content、タイプはinvalid_typeです",
+            ],
+        ];
+    }
+
     public static function validIntegerProvider(): array
     {
         return [
