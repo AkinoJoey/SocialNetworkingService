@@ -3,7 +3,7 @@
 namespace src\helpers;
 
 
-class mediaHelper
+class MediaHelper
 {
     public static function createThumbnail(string $imagePath,): bool
     {
