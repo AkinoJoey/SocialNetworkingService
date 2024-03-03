@@ -4,14 +4,22 @@ namespace src\helpers;
 
 use finfo;
 use src\types\GeneralValueType;
+use src\types\PostValueType;
 use src\types\UserValueType;
 
 class ValidationHelper
 {
-    public static function validateFields(array $fields, array $data, bool $required): array
+    /**
+     * データを検証する
+     * 
+     * @param array $fields フィールドの構造を指定 例:['content' => ValueType::STRING]
+     * @param array $data 検証するデータ 例:['content' => 'test']
+     * @return array 検証結果 例:['content' => 'test']
+     */
+    public static function validateFields(array $fields, array $data): array
     {
 
-        /* 例
+        /* ex:
             fields = [
                 'content' => ValueType::STRING
             ];
@@ -25,23 +33,25 @@ class ValidationHelper
 
         foreach ($fields as $field => $type) {
             if (!isset($data[$field]) || $data[$field] === '') {
-                throw new \InvalidArgumentException("Missing field: $field");
+                throw new \InvalidArgumentException("フィールドが見つかりません: $field");
             }
 
             $value = $data[$field];
 
             $validatedValue = match ($type) {
-                GeneralValueType::STRING => is_string($value) ? $value : throw new \InvalidArgumentException("The provided value is not a valid string."),
+                GeneralValueType::STRING => self::string($value),
                 GeneralValueType::INT => self::integer($value),
                 GeneralValueType::DATE => self::date($value),
+                UserValueType::ACCOUNT_NAME => self::accountName($value),
+                UserValueType::USERNAME => self::username($value),
                 UserValueType::EMAIL => self::email($value),
                 UserValueType::PASSWORD => self::password($value),
-                default => throw new \InvalidArgumentException(sprintf("Invalid type for field: %s, with type %s", $field, $type)),
+                UserValueType::AGE => self::age($value),
+                UserValueType::DESCRIPTION => self::description($value),
+                PostValueType::CONTENT => self::post($value),
+                PostValueType::MEDIA => self::media($value),
+                default => throw new \InvalidArgumentException(sprintf("フィールドに無効なタイプが指定されています: %s、タイプは%sです", $field, $type)),
             };
-
-            if ($validatedValue === false) {
-                throw new \InvalidArgumentException(sprintf("Invalid value for field: %s", $field));
-            }
 
             $validatedData[$field] = $validatedValue;
         }
@@ -51,13 +61,10 @@ class ValidationHelper
 
     public static function integer($value, float $min = -INF, float $max = INF): int
     {
-        // PHPには、データを検証する組み込み関数があります。詳細は https://www.php.net/manual/en/filter.filters.validate.php を参照ください。
         $value = filter_var($value, FILTER_VALIDATE_INT, ["min_range" => (int) $min, "max_range" => (int) $max]);
 
-        // 結果がfalseの場合、フィルターは失敗したことになります。
         if ($value === false) throw new \InvalidArgumentException("有効な整数ではありません");
 
-        // 値がすべてのチェックをパスしたら、そのまま返します。
         return $value;
     }
 
@@ -126,7 +133,7 @@ class ValidationHelper
     public static function unicodeString(string $value): bool
     {
         // UTF−８かどうか、置換文字（U+FFFD）が含まれているかどうかをチェック
-        if (!mb_check_encoding($value, 'UTF-8') || strpos($value, "\xEF\xBF\xBD") !== false ) {
+        if (!mb_check_encoding($value, 'UTF-8') || strpos($value, "\xEF\xBF\xBD") !== false) {
             throw new \InvalidArgumentException("無効な文字が含まれています");
         }
         return true;
@@ -178,7 +185,7 @@ class ValidationHelper
 
         $maxContentSize = 140;
 
-        if(mb_strlen($content, "UTF-8") > $maxContentSize){
+        if (mb_strlen($content, "UTF-8") > $maxContentSize) {
             throw new \LengthException("最大文字数は140文字です");
         }
 
