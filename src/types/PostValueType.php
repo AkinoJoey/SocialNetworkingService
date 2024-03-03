@@ -7,5 +7,4 @@ enum PostValueType
 {
     case CONTENT;
     case MEDIA;
-    case URL;
 }
