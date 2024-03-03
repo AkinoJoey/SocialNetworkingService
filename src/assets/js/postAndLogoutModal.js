@@ -89,8 +89,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				if (data.status === "success") {
 					console.log("success");
 				} else if (data.status === "error") {
-					// ユーザーにエラーメッセージを表示します
-					console.error(data.message);
+					alert(data.message);
 				}
 			})
 			.catch((error) => {
