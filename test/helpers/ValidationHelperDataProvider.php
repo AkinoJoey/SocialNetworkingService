@@ -114,8 +114,9 @@ class ValidationHelperDataProvider
     public static function validAccountNameProvider(): array
     {
         return [
-            [bin2hex(random_bytes(25))], // 最大文字数（50文字以下）
+            [str_repeat("a",50)], // 最大文字数（50文字以下）
             ['s'], // 最小文字数のアカウント名
+            ["🌝"]
         ];
     }
 
@@ -123,7 +124,7 @@ class ValidationHelperDataProvider
     {
         return [
             [''], // 最小文字より少ない
-            [bin2hex(random_bytes(26))], // 最大文字数を超えるアカウント名
+            [str_repeat("a", 51)], // 最大文字数を超えるアカウント名
         ];
     }
 
@@ -145,6 +146,134 @@ class ValidationHelperDataProvider
             ["\xC0\xAF"], // 不正なUTF-8バイト列
             ["\x80\x80"], // 不正なUTF-8バイト列
             ["\xF0\x9F\x98\x8D\xFF"], // 不正なUTF-8バイト列
+        ];
+    }
+
+    public static function validUsernameProvider(): array
+    {
+        return [
+            ['username'], // 最小文字数のユーザー名
+            ['user123'], // 有効なユーザー名
+            ['user_name'], // 有効なユーザー名
+            ['12345'], // 最大文字数のユーザー名
+            [str_repeat('a', 50)], // 最大文字数のユーザー名
+        ];
+    }
+
+    public static function invalidUsernameProvider(): array
+    {
+        return [
+            ["🌝"],
+            ['abcd'], // 最小文字数未満のユーザー名
+            [str_repeat('a', 51)], // 最大文字数を超えるユーザー名
+        ];
+    }
+
+    public static function validAgeProvider(): array
+    {
+        return [
+            [1], // 最小年齢
+            [18], // 有効な年齢
+            [100], // 有効な年齢
+            [150], // 最大年齢
+        ];
+    }
+
+    public static function invalidAgeProvider(): array
+    {
+        return [
+            [0], // 最小年齢未満
+            [151], // 最大年齢を超える
+            [-1], // 負の年齢
+            [1000], // 無効な年齢
+        ];
+    }
+
+    public static function validDescriptionProvider(): array
+    {
+        return [
+            [''],
+            [' '], // 空白
+            [str_repeat('a', 160)], // 最大文字数の説明
+            ['description'], // 最大文字数以内の説明
+        ];
+    }
+
+    public static function invalidDescriptionProvider(): array
+    {
+        return [
+            [str_repeat('a', 161)], // 最大文字数を超える説明
+        ];
+    }
+
+    public static function validPostProvider(): array
+    {
+        return [
+            [""], // 有効な投稿
+            [str_repeat('a', 140)], // 有効な投稿
+            [str_repeat('🌝', 140)], // 有効な投稿
+        ];
+    }
+
+    public static function invalidPostProvider(): array
+    {
+        return [
+            [str_repeat('a', 141)], // 140文字を超える投稿
+            [str_repeat('🌝', 141)], 
+
+        ];
+    }
+
+    public static function validMediaProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/images/4.8MB.jpg'], // 有効な画像
+            [__DIR__ . '/../fixtures/videos/3.8MB-30sec.mp4'], // 有効な動画
+        ];
+    }
+
+    public static function invalidMediaProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/images/10KB.webp', "画像は5MB以内かつ、jpg, png, gifの形式のみ対応しています"], // 対応していない形式
+            [__DIR__ . '/../fixtures/videos/1.4MB-31sec.mp4', "30秒より長い動画はアップロードできません。"], // 30秒より長い動画
+        ];
+    }
+
+    public static function validImageProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/images/4.8MB.jpg'], 
+            [__DIR__ . '/../fixtures/images/208KB.jpg'], 
+            [__DIR__ . '/../fixtures/images/832KB.jpeg'], 
+            [__DIR__ . '/../fixtures/images/1.7MB.png'], 
+            [__DIR__ . '/../fixtures/images/175KB.gif'], 
+        ];
+    }
+
+    public static function invalidImageProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/images/10KB.webp'], // 対応していない形式
+            [__DIR__ . '/../fixtures/images/6MB.jpg'], // 5MB以上の画像
+        ];
+    }
+
+    public static function validVideoProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/videos/3.8MB-30sec.mp4'], 
+            [__DIR__ . '/../fixtures/videos/818KB-14sec.mov'], 
+        ];
+    }
+
+    public static function invalidVideoProvider(): array
+    {
+        return [
+            [__DIR__ . '/../fixtures/videos/162KB-3sec.avi', "動画は40MB以内かつ、mp4, movの拡張式のみ対応しています"], // 対応していない形式
+            [__DIR__ . '/../fixtures/videos/52.2MB-3sec.mp4', "動画は40MB以内かつ、mp4, movの拡張式のみ対応しています"], // 40MB以上の動画
+            [__DIR__ . '/../fixtures/videos/1.4MB-31sec.mp4', "30秒より長い動画はアップロードできません。"], // 30秒より長い動画
+            
         ];
     }
 }

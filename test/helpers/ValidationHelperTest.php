@@ -107,4 +107,103 @@ class ValidationHelperTest extends TestCase
         $this->expectExceptionMessage("無効な文字が含まれています");
         ValidationHelper::unicodeString($value);
     }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validUsernameProvider')]
+    public function testValidUsername(string $username): void
+    {
+        $this->assertSame($username, ValidationHelper::username($username));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidUsernameProvider')]
+    public function testInvalidUsername(string $username): void
+    {
+        $this->expectException(\LengthException::class);
+        $this->expectExceptionMessage("ユーザー名の有効な文字数は5文字以上、15文字以内です");
+        ValidationHelper::username($username);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validAgeProvider')]
+    public function testValidAge(int $age): void
+    {
+        $this->assertSame($age, ValidationHelper::age($age));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidAgeProvider')]
+    public function testInvalidAge(int $age): void
+    {
+        $this->expectException(\LengthException::class);
+        $this->expectExceptionMessage("有効な年齢が入力されていません");
+        ValidationHelper::age($age);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validDescriptionProvider')]
+    public function testValidDescription(string $description): void
+    {
+        $this->assertSame($description, ValidationHelper::description($description));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidDescriptionProvider')]
+    public function testInvalidDescription(string $description): void
+    {
+        $this->expectException(\LengthException::class);
+        $this->expectExceptionMessage("プロフィールの最大文字数は160文字です");
+        ValidationHelper::description($description);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validPostProvider')]
+    public function testValidPost(string $content): void
+    {
+        $this->assertSame($content, ValidationHelper::post($content));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidPostProvider')]
+    public function testInvalidPost(string $content): void
+    {
+        $this->expectException(\LengthException::class);
+        $this->expectExceptionMessage("最大文字数は140文字です");
+        ValidationHelper::post($content);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validMediaProvider')]
+    public function testValidMedia(string $path): void
+    {
+        $this->assertSame($path, ValidationHelper::media($path));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidMediaProvider')]
+    public function testInvalidMedia(string $path, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+        ValidationHelper::media($path);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validImageProvider')]
+    public function testValidImage(string $path): void
+    {
+        $this->assertSame($path, ValidationHelper::image($path));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidImageProvider')]
+    public function testInvalidImage(string $path): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("画像は5MB以内かつ、jpg, png, gifの形式のみ対応しています");
+        ValidationHelper::image($path);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validVideoProvider')]
+    public function testValidVideo(string $path): void
+    {
+        $this->assertSame($path, ValidationHelper::video($path));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidVideoProvider')]
+    public function testInvalidVideo(string $path, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+        ValidationHelper::video($path);
+    }
+
 }
