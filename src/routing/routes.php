@@ -65,7 +65,7 @@ return [
             $userDao = DAOFactory::getUserDAO();
 
             // TODO: 厳格なバリデーションを作成
-            $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
                 FlashData::setFlashData('error', 'パスワードが一致しません');
@@ -126,7 +126,7 @@ return [
             'user' => GeneralValueType::STRING,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
         $user = Authenticate::getAuthenticatedUser();
 
@@ -161,11 +161,11 @@ return [
             'id' => GeneralValueType::INT,
             'username' => UserValueType::USERNAME,
             'age' => UserValueType::AGE,
-            'location' => UserValueType::LOCATION,
+            'location' => GeneralValueType::STRING,
             'description' => UserValueType::DESCRIPTION
         ];
 
-        $validatedData = ValidationHelper::validateFields($nullableFields, $_POST, false);
+        $validatedData = ValidationHelper::validateFields($nullableFields, $_POST);
 
         $user = Authenticate::getAuthenticatedUser();
         // Profileオブジェクトを作成
@@ -207,7 +207,7 @@ return [
                 'password' => UserValueType::PASSWORD,
             ];
 
-            $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             Authenticate::authenticate($validatedData['email'], $validatedData['password']);
 
@@ -241,7 +241,7 @@ return [
             'username' => UserValueType::USERNAME
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
         $userDao = DAOFactory::getUserDAO();
         $user = $userDao->getByUsername($validatedData['username']);
@@ -294,19 +294,57 @@ return [
         error_log(print_r($_POST, true));
         error_log(print_r($_FILES, true));
 
-        // メディアがある場合はcontentはnullable, メディアがない場合はnot null
+        // 文字が空かつ、メディアがない場合はアラートを出す
+        if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
+            return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
+        }
+
+        $user = Authenticate::getAuthenticatedUser();
         
-        $required_fields = [
-            'content' => PostValueType::CONTENT
-        ];
+        //投稿のURLとメディアのファイル名の長さ 
+        $numberOfCharacters = 18;
 
-        // // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, false);
+        $post = new Post(
+            url: bin2hex(random_bytes($numberOfCharacters / 2)),
+            userId: $user->getId(),
+        );
+
+        if ($_POST['content'] !== "") {
+            $fields = [
+                'content' => PostValueType::CONTENT
+            ];
+            $validatedData = ValidationHelper::validateFields($fields, $_POST);
+            $post->setContent($validatedData['content']);
+        }
+
+        if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
+            $fields = [
+                'media' => PostValueType::CONTENT
+            ];
+            $validatedData = ValidationHelper::validateFields($fields, ['media' =>$_FILES['media']['tmp_name']]);
+            $post->setContent($validatedData['media']);
+        }
 
 
-        // 画像の場合はサムネを作成
-        if($_FILES['media']){
-            $validatedTmpPath =  ValidationHelper::media($_FILES['media']);
+        // TODO: メディアがある場合は保存と編集を行う
+        if (isset($validatedData['media'])) {
+            $tmpPath = $validatedData['media'];
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($tmpPath);
+            $extension = explode('/', $mime)[1];
+            $filename = bin2hex(random_bytes($numberOfCharacters / 2)) . '.' . $extension;
+            $uploadDir =  __DIR__ . "/../../storage/";
+            $subdirectory = substr($filename, 0, 2);
+            $imagePath = $uploadDir .  $subdirectory . '/' . $filename;
+
+            // アップロード先のディレクトリがない場合は作成
+            if (!is_dir(dirname($imagePath))) mkdir(dirname($imagePath), 0755, true);
+            // アップロードに失敗した場合
+            if (!move_uploaded_file($tmpPath, $imagePath)) throw new Exception("画像のアップロードに失敗しました。");
+            
+            // インスタンスに保存
+            $post->setMediaPath($filename);
+            $post->setExtension($extension);
 
             // TODO: 画像の場合はサムネの作成
 
@@ -314,27 +352,12 @@ return [
 
         }
 
-        $nullableFields = [
-            'scheduled_at' => GeneralValueType::DATE
-        ];
+        // TODO: 予約投稿
 
-        // $validatedNullableData = ValidationHelper::validateFields($nullableFields, $_POST, false);
-        // $validatedData = array_merge($validatedRequiredData, $validatedNullableData);
 
-        // // TODO: 画像アップロード時の振る舞いを追加
-
-        // $user = Authenticate::getAuthenticatedUser();
-
-        // $numberOfCharacters = 18;
         // $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
 
-        // $post = new Post(
-        //     content: $validatedData['content'],
-        //     url: $randomString,
-        //     userId: $user->getId(),
-        //     mediaPath: $validatedData['media_path'],
-        //     scheduledAt: $validatedData['scheduled_at']
-        // );
+
 
         // $postDao = DAOFactory::getPostDAO();
         // $success = $postDao->create($post);
@@ -347,10 +370,10 @@ return [
         // TODO: 厳格なバリデーション
         // TODO: データベースにないURLのクエリだった場合は404を出す
         $required_fields = [
-            'url' => PostValueType::URL,
+            'url' => GeneralValueType::STRING,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
         $currentUser = Authenticate::getAuthenticatedUser();
         $postDao = DAOFactory::getPostDAO();
@@ -375,7 +398,7 @@ return [
         ];
 
         $user = Authenticate::getAuthenticatedUser();
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $postDao = DAOFactory::getPostDAO();
         $success = $postDao->delete($validatedData['post_id'], $user->getId());
 
@@ -395,7 +418,7 @@ return [
         ];
 
         // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST);
 
         // TODO: if($_FILE['media'])
 
@@ -443,10 +466,10 @@ return [
     'comments' => Route::create('comments', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'url' => PostValueType::URL
+            'url' => GeneralValueType::STRING
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
         $currentUser = Authenticate::getAuthenticatedUser();
 
         $commentDao = DAOFactory::getCommentDAO();
@@ -471,7 +494,7 @@ return [
             'post_id' => GeneralValueType::INT
         ];
         // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST);
 
         // TODO: if($_FILE['media'])
 
@@ -506,14 +529,12 @@ return [
         // TODO: try-catch文を書く
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        error_log(print_r($_POST, true));
-
         // TODO: 厳格なバリデーション
         $required_fields = [
             'comment_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $commentDao = DAOFactory::getCommentDAO();
 
         $user = Authenticate::getAuthenticatedUser();
@@ -532,7 +553,7 @@ return [
             'post_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $postLike = new PostLike(
@@ -573,7 +594,7 @@ return [
             'post_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $postLikeDao = DAOFactory::getPostLikeDAO();
@@ -600,7 +621,7 @@ return [
             'post_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $commentLike = new CommentLike(
@@ -623,7 +644,7 @@ return [
             'post_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
@@ -642,7 +663,7 @@ return [
             'follower_user_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $follow = new Follow(
@@ -677,7 +698,7 @@ return [
             'follower_user_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $user = Authenticate::getAuthenticatedUser();
 
         $followDao = DAOFactory::getFollowDAO();
@@ -730,7 +751,7 @@ return [
             'notification_id' => GeneralValueType::INT,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST, true);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
 
         $notificationDao = DAOFactory::getNotificationDAO();
@@ -756,7 +777,7 @@ return [
                 'keyword' => GeneralValueType::STRING,
             ];
 
-            $validatedData = ValidationHelper::validateFields($required_fields, $_GET, true);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
             $userDao = DAOFactory::getUserDAO();
             $users = $userDao->getUserListForSearch($validatedData['keyword']);
