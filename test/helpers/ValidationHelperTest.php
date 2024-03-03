@@ -9,6 +9,21 @@ use test\helpers\ValidationHelperDataProvider;
 
 class ValidationHelperTest extends TestCase
 {
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validFieldsProvider')]
+    public function testValidFields(array $fields, array $data): void
+    {
+        $validatedData = ValidationHelper::validateFields($fields, $data);
+        $this->assertSame($data, $validatedData);
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidFieldsProvider')]
+    public function testInvalidFields(array $fields, array $data, string $expectedExceptionMessage): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+        ValidationHelper::validateFields($fields, $data);
+    }
+
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'validIntegerProvider')]
     public function testValidInteger($value, $min, $max): void
     {
