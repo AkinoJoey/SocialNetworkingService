@@ -116,7 +116,7 @@ class ValidationHelper
         $minAccountName = 1;
         $maximumAccountName = 50;
 
-        if (mb_strlen($accountName) < $minAccountName || mb_strlen($accountName) > $maximumAccountName) {
+        if (mb_strlen($accountName, "UTF-8") < $minAccountName || mb_strlen($accountName, "UTF-8") > $maximumAccountName) {
             throw new \LengthException("アカウント名は1文字以上、50文字以内です");
         }
 
@@ -140,7 +140,7 @@ class ValidationHelper
         $minAccountName = 5;
         $maxAccountName = 50;
 
-        if (mb_strlen($username) > $maxAccountName || mb_strlen($username) < $minAccountName) {
+        if (mb_strlen($username, "UTF-8") > $maxAccountName || mb_strlen($username, "UTF-8") < $minAccountName) {
             throw new \LengthException("ユーザー名の有効な文字数は5文字以上、15文字以内です");
         }
 
@@ -165,7 +165,7 @@ class ValidationHelper
 
         $maxLen = 160;
 
-        if (mb_strlen($description) > $maxLen) {
+        if (mb_strlen($description, "UTF-8") > $maxLen) {
             throw new \LengthException("プロフィールの最大文字数は160文字です");
         }
 
@@ -178,7 +178,7 @@ class ValidationHelper
 
         $maxContentSize = 140;
 
-        if(mb_strlen($content) > $maxContentSize){
+        if(mb_strlen($content, "UTF-8") > $maxContentSize){
             throw new \LengthException("最大文字数は140文字です");
         }
 
@@ -206,17 +206,11 @@ class ValidationHelper
         $byteSize = filesize($path);
 
         $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif'];
-
-        if (!in_array($mime, $allowedMimeTypes)) {
-            throw new \InvalidArgumentException("画像はpng, jpg, gif以外の拡張子には対応していません");
-        }
-
         $maxImageSize =  5 * 1024 * 1024;
 
-        if ($byteSize > $maxImageSize) {
-            throw new \InvalidArgumentException("5MBより大きい画像はアップロードできません。");
+        if (!in_array($mime, $allowedMimeTypes) || $byteSize > $maxImageSize) {
+            throw new \InvalidArgumentException("画像は5MB以内かつ、jpg, png, gifの形式のみ対応しています");
         }
-
         return $path;
     }
 
@@ -226,16 +220,11 @@ class ValidationHelper
         $mime = $finfo->file($path);
         $byteSize = filesize($path);
 
-        $allowedMimeTypes = ['video/mp4', 'video/mov'];
+        $allowedMimeTypes = ['video/mp4', 'video/quicktime'];
+        $maxVideoSize =  40 * 1024 * 1024;
 
-        if (!in_array($mime, $allowedMimeTypes)) {
-            throw new \InvalidArgumentException("動画はmp4, mov以外の拡張子には対応していません");
-        }
-
-        $maxVideoSize =  256 * 1024 * 1024;
-
-        if ($byteSize > $maxVideoSize) {
-            throw new \InvalidArgumentException("256MBより大きい動画はアップロードできません。");
+        if (!in_array($mime, $allowedMimeTypes) || $byteSize > $maxVideoSize) {
+            throw new \InvalidArgumentException("動画は40MB以内かつ、mp4, movの拡張式のみ対応しています");
         }
 
         // 秒数の検証
