@@ -11,6 +11,7 @@ use src\models\User;
 use src\helpers\Authenticate;
 use src\routing\Route;
 use src\exceptions\AuthenticationFailureException;
+use src\helpers\MediaHelper;
 use src\models\Post;
 use src\models\Profile;
 use src\response\render\JSONRenderer;
@@ -288,83 +289,100 @@ return [
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            error_log(print_r($_POST, true));
+            error_log(print_r($_FILES, true));
 
-        error_log(print_r($_POST, true));
-        error_log(print_r($_FILES, true));
+            // 文字が空かつ、メディアがない場合はアラートを出す
+            if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
+                return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
+            }
 
-        // 文字が空かつ、メディアがない場合はアラートを出す
-        if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
-            return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
+            $user = Authenticate::getAuthenticatedUser();
+
+            //投稿のURLとメディアのファイル名の長さ 
+            $numberOfCharacters = 18;
+
+            $post = new Post(
+                url: bin2hex(random_bytes($numberOfCharacters / 2)),
+                userId: $user->getId(),
+            );
+
+            if ($_POST['content'] !== "") {
+                $fields = [
+                    'content' => PostValueType::CONTENT
+                ];
+                $validatedData = ValidationHelper::validateFields($fields, $_POST);
+                $post->setContent($validatedData['content']);
+            }
+
+            if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
+                $fields = [
+                    'media' => PostValueType::MEDIA
+                ];
+                $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
+                $post->setContent($validatedData['media']);
+            }
+
+
+            // TODO: メディアがある場合は保存と編集を行う
+            if (isset($validatedData['media'])) {
+                $tmpPath = $validatedData['media'];
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($tmpPath);
+                $extension = explode('/', $mime)[1];
+                $basename = bin2hex(random_bytes($numberOfCharacters / 2));
+                $filename = $basename . '.' . $extension;
+                $uploadDir =  __DIR__ .  "/../../public/uploads/";
+                $subdirectory = substr($filename, 0, 2) . "/";
+                $mediaPath = $uploadDir .  $subdirectory . $filename;
+
+                $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
+                if(!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
+                error_log($uploadSuccess);
+
+                // インスタンスに保存
+                $post->setMediaPath($filename);
+                $post->setExtension($extension);
+
+                if (str_starts_with($mime, 'image/')) {
+                    $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb." . $extension;
+
+                    $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
+                    if(!$success) throw new Exception("エラーが発生しました");
+                } else if (str_starts_with($mime, 'video/')) {
+                    // TODO: 動画の場合は容量を減らす
+                    $success = MediaHelper::compressVideo($mediaPath);
+                    if (!$success) throw new Exception("エラーが発生しました");
+                }
+            }
+
+            // TODO: 予約投稿
+
+
+
+            // $postDao = DAOFactory::getPostDAO();
+            // $success = $postDao->create($post);
+
+            // if (!$success) throw new Exception('Failed to create a post!');
+
+            return new JSONRenderer(['status' => 'success']);
+        }catch(\InvalidArgumentException $e){
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status"=>"error", "message"=> $e->getMessage()]);
+        }catch(\LengthException $e){
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
         }
+        catch(Exception $e){
+            error_log($e->getMessage());
 
-        $user = Authenticate::getAuthenticatedUser();
-        
-        //投稿のURLとメディアのファイル名の長さ 
-        $numberOfCharacters = 18;
-
-        $post = new Post(
-            url: bin2hex(random_bytes($numberOfCharacters / 2)),
-            userId: $user->getId(),
-        );
-
-        if ($_POST['content'] !== "") {
-            $fields = [
-                'content' => PostValueType::CONTENT
-            ];
-            $validatedData = ValidationHelper::validateFields($fields, $_POST);
-            $post->setContent($validatedData['content']);
+            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
         }
-
-        if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
-            $fields = [
-                'media' => PostValueType::CONTENT
-            ];
-            $validatedData = ValidationHelper::validateFields($fields, ['media' =>$_FILES['media']['tmp_name']]);
-            $post->setContent($validatedData['media']);
-        }
-
-
-        // TODO: メディアがある場合は保存と編集を行う
-        if (isset($validatedData['media'])) {
-            $tmpPath = $validatedData['media'];
-            $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $mime = $finfo->file($tmpPath);
-            $extension = explode('/', $mime)[1];
-            $filename = bin2hex(random_bytes($numberOfCharacters / 2)) . '.' . $extension;
-            $uploadDir =  __DIR__ . "/../../storage/";
-            $subdirectory = substr($filename, 0, 2);
-            $imagePath = $uploadDir .  $subdirectory . '/' . $filename;
-
-            // アップロード先のディレクトリがない場合は作成
-            if (!is_dir(dirname($imagePath))) mkdir(dirname($imagePath), 0755, true);
-            // アップロードに失敗した場合
-            if (!move_uploaded_file($tmpPath, $imagePath)) throw new Exception("画像のアップロードに失敗しました。");
-            
-            // インスタンスに保存
-            $post->setMediaPath($filename);
-            $post->setExtension($extension);
-
-            // TODO: 画像の場合はサムネの作成
-
-            // TODO: 動画の場合は容量を減らす
-
-        }
-
-        // TODO: 予約投稿
-
-
-        // $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
-
-
-
-        // $postDao = DAOFactory::getPostDAO();
-        // $success = $postDao->create($post);
-
-        // if (!$success) throw new Exception('Failed to create a post!');
-
-        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
