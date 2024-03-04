@@ -44,7 +44,9 @@ use Carbon\Carbon;
             <?= $post->getContent() ?>
         </p>
         <!-- <img src="https://source.unsplash.com/random/100x100/?5" alt="" class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" /> -->
-
+        <video autoplay class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
+            <source  src="/uploads/24/242c56951c72f68987.mp4">
+        </video>
     </div>
     <div class="flex flex-wrap justify-between mt-6">
         <div class="flex space-x-2 text-sm dark:text-gray-400">
