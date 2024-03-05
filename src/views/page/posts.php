@@ -42,7 +42,16 @@ use Carbon\Carbon;
             <p class="mb-4 text-sm dark:text-gray-400">
                 <?= $post->getContent() ?>
             </p>
-            <img src="https://source.unsplash.com/random/100x100/?5" alt="" class="h-60 w-full object-cover dark:bg-gray-500 sm:h-96" />
+            <!-- media -->
+            <?php if ($post->getExtension() === '.mov' || $post->getExtension() === '.mp4') : ?>
+                <video autoplay muted class="h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
+                    <source src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" type="video/mp4">
+                </video>
+            <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png') : ?>
+                <a class="z-40 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
+                    <img src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension() ?>" alt="uploaded image" class="h-60 w-full object-cover dark:bg-gray-500 sm:h-96" />
+                </a>
+            <?php endif; ?>
         </div>
         <div class="flex flex-wrap justify-between">
             <div class="flex space-x-2 text-sm dark:text-gray-400">
@@ -64,7 +73,7 @@ use Carbon\Carbon;
 
             <!-- reply -->
             <div class="w-full border-t border-gray-200">
-                <form action="<?= $createFormAction ?>" method="POST">
+                <form enctype="multipart/form-data" id="reply-form">
                     <input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>" />
                     <input type="hidden" name="post_id" value="<?= $post->getId()  ?>">
                     <div class="flex p-2">
@@ -73,31 +82,23 @@ use Carbon\Carbon;
                         </div>
 
                         <div class="ml-3 flex w-full flex-col">
-                            <textarea id="content" name="content" placeholder="What's happening?" class="h-32 w-full resize-none rounded-xl border-gray-200 text-xl outline-none"></textarea>
+                            <textarea id="reply-content" name="content" placeholder="返信する" class="h-32 w-full resize-none rounded-xl border-gray-200 text-xl border-none focus:ring-0"></textarea>
+                            <input type="hidden" name="MAX_FILE_SIZE" value="41943040" />
+                            <input class="hidden" id="reply-file-input" type="file" name="media" accept="image/png, image/gif, image/jpeg, image/jpg, image/webp, video/mp4, video/mov">
+                            <div class="w-full flex justify-center rounded-full relative" id="reply-previewContainer">
+                            </div>
                         </div>
                     </div>
 
                     <div class="flex items-center justify-between px-4 text-blue-400">
                         <div class="flex text-2xl">
-                            <div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+                            <div id="reply-file-input-icon" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
                                 <i class="fas fa-image"></i>
-                            </div>
-
-                            <div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-                                <i class="fas fa-poll-h"></i>
-                            </div>
-
-                            <div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-                                <i class="fas fa-smile"></i>
-                            </div>
-
-                            <div class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
-                                <i class="fas fa-calendar-alt"></i>
                             </div>
                         </div>
 
                         <div class="mb-1">
-                            <button type="submit" class="rounded-full bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            <button id="reply-submit" type="submit" class="inline cursor-pointer rounded-full bg-blue-500 px-4 py-3 font-bold text-white hover:opacity-75 btn btn-disabled">
                                 返信
                             </button>
                         </div>
@@ -122,7 +123,7 @@ use Carbon\Carbon;
                                             <a href="/profile?username=<?= $comment->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $comment->getAccountName() ?></a>
                                             <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $comment->getUsername() ?></span>
                                         </div>
-                                        <span class="text-xs dark:text-gray-400"><?= Carbon::parse($comment->getCreatedAt())->diffForHumans() ?></span>
+                                        <span class="text-xs dark:text-gray-400"><?= Carbon::parse($comment->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
                                     </div>
                                 </div>
                                 <?php if ($comment->getUserId() === $user->getId()) : ?>

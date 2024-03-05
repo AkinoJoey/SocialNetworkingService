@@ -43,10 +43,17 @@ use Carbon\Carbon;
         <p class="text-sm dark:text-gray-400">
             <?= $post->getContent() ?>
         </p>
-        <!-- <img src="https://source.unsplash.com/random/100x100/?5" alt="" class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" /> -->
-        <video autoplay class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
-            <source  src="/uploads/24/242c56951c72f68987.mp4">
-        </video>
+
+        <!-- media -->
+        <?php if ($post->getExtension() === '.mov' || $post->getExtension() === '.mp4') : ?>
+            <video autoplay muted class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
+                <source src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" type="video/mp4">
+            </video>
+        <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png') : ?>
+            <a class="z-40 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
+                <img src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension() ?>" alt="uploaded image" class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" />
+            </a>
+        <?php endif; ?>
     </div>
     <div class="flex flex-wrap justify-between mt-6">
         <div class="flex space-x-2 text-sm dark:text-gray-400">
