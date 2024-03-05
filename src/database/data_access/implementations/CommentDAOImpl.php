@@ -2,7 +2,7 @@
 
 namespace src\database\data_access\implementations;
 
-use DateTime;
+use src\models\DataTimeStamp;
 use src\database\data_access\interfaces\CommentDAO;
 use src\database\DatabaseManager;
 use src\models\Comment;
@@ -15,15 +15,16 @@ class CommentDAOImpl implements CommentDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO comments (content, url ,media_path, user_id, post_id, parent_comment_id) VALUES (?, ? ,?, ?, ?, ?)";
+        $query = "INSERT INTO comments (content, url ,media_path, extension, user_id, post_id, parent_comment_id) VALUES (?, ? ,?, ?, ?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'sssiii',
+            'ssssiii',
             [
                 $comment->getContent(),
                 $comment->getUrl(),
                 $comment->getMediaPath(),
+                $comment->getExtension(),
                 $comment->getUserId(),
                 $comment->getPostId(),
                 $comment->getParentCommentId()
@@ -128,7 +129,8 @@ class CommentDAOImpl implements CommentDAO
             postId: $rawData['post_id'],
             parentCommentId: $rawData['parent_comment_id'],
             mediaPath: $rawData['media_path'],
-            createdAt: new DateTime($rawData['created_at']),
+            extension: $rawData['extension'],
+            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
             username: $rawData['username'] ?? null,
             accountName: $rawData['account_name'] ?? null,
             numberOfComments: $rawData['number_of_comments'] ?? null,

@@ -2,7 +2,6 @@
 
 namespace src\models;
 
-use DateTime;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
 
@@ -11,14 +10,15 @@ class Comment implements Model
     use GenericModel;
 
     public function __construct(
-        private string $content,
         private string $url,
         private int $userId,
+        private ?string $content = null,
         private ?int $id = null,
         private ?int $postId = null,
         private ?int $parentCommentId = null,
         private ?string $mediaPath = null,
-        private ?DateTime $createdAt = null,
+        private ?string $extension = null,
+        private ?DataTimeStamp $timeStamp = null,
         private ?string $username = null,
         private ?string $accountName = null,
         private ?int $numberOfComments = null,
@@ -67,7 +67,7 @@ class Comment implements Model
         $this->parentCommentId = $parentCommentId;
     }
 
-    public function getContent(): string
+    public function getContent(): ?string
     {
         return $this->content;
     }
@@ -96,16 +96,25 @@ class Comment implements Model
     {
         $this->mediaPath = $mediaPath;
     }
-
-
-    public function getCreatedAt(): ?DateTime
+    
+    public function getExtension(): ?string
     {
-        return $this->createdAt;
+        return $this->extension;
     }
 
-    public function setCreatedAt(DateTime $createdAt): void
+    public function setExtension(String $extension): void
     {
-        $this->createdAt = $createdAt;
+        $this->extension = $extension;
+    }
+
+    public function getTimeStamp(): ?DataTimeStamp
+    {
+        return $this->timeStamp;
+    }
+
+    public function setTimeStamp(DataTimeStamp $timeStamp): void
+    {
+        $this->timeStamp = $timeStamp;
     }
 
     public function getUsername(): ?string

@@ -15,15 +15,16 @@ class PostDAOImpl implements PostDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO posts (content, url ,media_path, user_id, scheduled_at) VALUES (?, ? ,?, ?, ?)";
+        $query = "INSERT INTO posts (content, url ,media_path, extension, user_id, scheduled_at) VALUES (?, ?,  ? ,?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'sssis',
+            'ssssis',
             [
                 $post->getContent(),
                 $post->getUrl(),
                 $post->getMediaPath(),
+                $post->getExtension(),
                 $post->getUserId(),
                 $post->getScheduledAt(),
             ]
@@ -58,7 +59,7 @@ class PostDAOImpl implements PostDAO
         $query =
             <<<SQL
             WITH post_data AS(
-                SELECT p.id, p.content , p.url, p.media_path , p.user_id , p.created_at, p.updated_at, u.account_name , u.username
+                SELECT p.id, p.content , p.url, p.media_path, p.extension , p.user_id , p.created_at, p.updated_at, u.account_name , u.username
                     FROM posts p
                     LEFT JOIN users u ON p.user_id  = u.id
                     WHERE p.id = ?
@@ -147,6 +148,7 @@ class PostDAOImpl implements PostDAO
             userId: $rawData['user_id'],
             id: $rawData['id'] ?? null,
             mediaPath: $rawData['media_path'],
+            extension: $rawData['extension'],
             scheduledAt: $rawData['scheduled_at'] ?? null,
             timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
             username: $rawData['username'] ?? null,
@@ -201,7 +203,7 @@ class PostDAOImpl implements PostDAO
         $query =
             <<<SQL
             WITH post_data AS (
-                SELECT p.id, p.content, p.url, p.media_path, p.created_at, p.updated_at,p.user_id,
+                SELECT p.id, p.content, p.url, p.media_path, p.extension,  p.created_at, p.updated_at,p.user_id,
                     u.account_name, u.username
                 FROM posts p
                 INNER JOIN users u ON p.user_id = u.id
@@ -223,7 +225,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.created_at, pd.updated_at ,pd.user_id,
+            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension,  pd.created_at, pd.updated_at ,pd.user_id,
                 pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
