@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.status === "success") {
-					console.log("success");
+					location.reload();
 				} else if (data.status === "error") {
 					alert(data.message);
 				}
