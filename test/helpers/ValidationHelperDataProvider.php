@@ -283,14 +283,15 @@ class ValidationHelperDataProvider
             [__DIR__ . '/../fixtures/images/208KB.jpg'], 
             [__DIR__ . '/../fixtures/images/832KB.jpeg'], 
             [__DIR__ . '/../fixtures/images/1.7MB.png'], 
-            [__DIR__ . '/../fixtures/images/175KB.gif'], 
+            [__DIR__ . '/../fixtures/images/175KB.gif'],
+            [__DIR__ . '/../fixtures/images/10KB.webp'], 
         ];
     }
 
     public static function invalidImageProvider(): array
     {
         return [
-            [__DIR__ . '/../fixtures/images/10KB.webp'], // 対応していない形式
+            // TODO: pngで試す
             [__DIR__ . '/../fixtures/images/6MB.jpg'], // 5MB以上の画像
         ];
     }

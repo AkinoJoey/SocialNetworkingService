@@ -50,6 +50,7 @@ class ValidationHelper
                 UserValueType::DESCRIPTION => self::description($value),
                 PostValueType::CONTENT => self::post($value),
                 PostValueType::MEDIA => self::media($value),
+                PostValueType::TYPE_REPLY_TO => self::postType($value),
                 default => throw new \InvalidArgumentException(sprintf("フィールドに無効なタイプが指定されています: %s、タイプは%sです", $field, $type)),
             };
 
@@ -212,7 +213,7 @@ class ValidationHelper
         $mime = $finfo->file($path);
         $byteSize = filesize($path);
 
-        $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif'];
+        $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif', 'image/webp'];
         $maxImageSize =  5 * 1024 * 1024;
 
         if (!in_array($mime, $allowedMimeTypes) || $byteSize > $maxImageSize) {
@@ -258,5 +259,15 @@ class ValidationHelper
 
 
         return $path;
+    }
+
+    public static function postType(string $type) : string {
+        $allowedMimeTypes = ['post', 'comment'];
+    
+        if(!in_array($type, $allowedMimeTypes)){
+            throw new \InvalidArgumentException("無効なタイプが入力されました。");
+        }
+
+        return $type;
     }
 }
