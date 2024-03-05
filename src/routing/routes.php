@@ -292,9 +292,6 @@ return [
         try{
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-            error_log(print_r($_POST, true));
-            error_log(print_r($_FILES, true));
-
             // 文字が空かつ、メディアがない場合はアラートを出す
             if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
                 return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
@@ -323,18 +320,16 @@ return [
                     'media' => PostValueType::MEDIA
                 ];
                 $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
-                $post->setContent($validatedData['media']);
             }
 
 
-            // TODO: メディアがある場合は保存と編集を行う
             if (isset($validatedData['media'])) {
                 $tmpPath = $validatedData['media'];
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mime = $finfo->file($tmpPath);
-                $extension = explode('/', $mime)[1];
+                $extension = '.' . explode('/', $mime)[1];
                 $basename = bin2hex(random_bytes($numberOfCharacters / 2));
-                $filename = $basename . '.' . $extension;
+                $filename = $basename . $extension;
                 $uploadDir =  __DIR__ .  "/../../public/uploads/";
                 $subdirectory = substr($filename, 0, 2) . "/";
                 $mediaPath = $uploadDir .  $subdirectory . $filename;
@@ -344,16 +339,15 @@ return [
                 error_log($uploadSuccess);
 
                 // インスタンスに保存
-                $post->setMediaPath($filename);
+                $post->setMediaPath($basename);
                 $post->setExtension($extension);
 
                 if (str_starts_with($mime, 'image/')) {
-                    $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb." . $extension;
+                    $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
                     $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
                     if(!$success) throw new Exception("エラーが発生しました");
                 } else if (str_starts_with($mime, 'video/')) {
-                    // TODO: 動画の場合は容量を減らす
                     $success = MediaHelper::compressVideo($mediaPath);
                     if (!$success) throw new Exception("エラーが発生しました");
                 }
@@ -361,12 +355,10 @@ return [
 
             // TODO: 予約投稿
 
+            $postDao = DAOFactory::getPostDAO();
+            $success = $postDao->create($post);
 
-
-            // $postDao = DAOFactory::getPostDAO();
-            // $success = $postDao->create($post);
-
-            // if (!$success) throw new Exception('Failed to create a post!');
+            if (!$success) throw new Exception('Failed to create a post!');
 
             return new JSONRenderer(['status' => 'success']);
         }catch(\InvalidArgumentException $e){
@@ -425,61 +417,118 @@ return [
         FlashData::setFlashData('success', "投稿を削除しました");
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
-    'form/comment' => Route::create('form/comment', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
+    'form/reply'=> Route::create('form/reply', function () : HTTPRenderer {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'content' => PostValueType::CONTENT,
-            'post_id' => GeneralValueType::INT
-        ];
+        error_log(print_r($_POST, true));
+        error_log(print_r($_FILES, true));
 
-        // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST);
-
-        // TODO: if($_FILE['media'])
-
-        $validatedData = array_merge($validatedRequiredData);
-
-        $postDao = DAOFactory::getPostDAO();
-
-        $currentPost = $postDao->getById($validatedData['post_id']);
-
-        $user = Authenticate::getAuthenticatedUser();
-
-        $numberOfCharacters = 18;
-        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
-
-        $comment = new Comment(
-            content: $validatedData['content'],
-            url: $randomString,
-            userId: $user->getId(),
-            postId: $validatedData['post_id'],
-            mediaPath: $validatedData['media_path'],
-        );
-
-        $commentDao = DAOFactory::getCommentDAO();
-        $success = $commentDao->create($comment);
-
-        if (!$success) throw new Exception('Failed to create a comment!');
-
-        // 自分の投稿に対して自分がコメントしていない場合は通知する
-        if ($currentPost->getUserId() !== $user->getId()) {
-            $notification = new Notification(
-                userId: $currentPost->getUserId(),
-                sourceId: $user->getId(),
-                notificationType: NotificationType::COMMENT->value,
-                commentId: $comment->getId()
-            );
-
-            $notificationDao = DAOFactory::getNotificationDAO();
-            $success = $notificationDao->create($notification);
-
-            if (!$success) throw new Exception('Failed to create a notification!');
+        // 文字が空かつ、メディアがない場合はアラートを出す
+        if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
+            return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
         }
 
-        return new RedirectRenderer(sprintf('posts?url=%s', $currentPost->getUrl()));
+        $user = Authenticate::getAuthenticatedUser();
+        //投稿のURLとメディアのファイル名の長さ 
+        $numberOfCharacters = 18;
+        $url = bin2hex(random_bytes($numberOfCharacters / 2));
+
+        $comment = new Comment(
+            url: $url,
+            userId: $user->getId()
+        );
+
+        if ($_POST['content'] !== "") {
+            $fields = [
+                'content' => PostValueType::CONTENT
+            ];
+            $validatedData = ValidationHelper::validateFields($fields, $_POST);
+            $comment->setContent($validatedData['content']);
+        }
+
+        if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
+            $fields = [
+                'media' => PostValueType::MEDIA
+            ];
+            $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
+        }
+        
+
+        if (isset($validatedData['media'])) {
+            $tmpPath = $validatedData['media'];
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($tmpPath);
+            $extension = '.' . explode('/', $mime)[1];
+            $basename = bin2hex(random_bytes($numberOfCharacters / 2));
+            $filename = $basename . $extension;
+            $uploadDir =  __DIR__ .  "/../../public/uploads/";
+            $subdirectory = substr($filename, 0, 2) . "/";
+            $mediaPath = $uploadDir .  $subdirectory . $filename;
+
+            $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
+            if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
+
+            // インスタンスに保存
+            $comment->setMediaPath($basename);
+            $comment->setExtension($extension);
+
+            if (str_starts_with($mime, 'image/')) {
+                $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
+
+                $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
+
+                if (!$success) throw new Exception("エラーが発生しました");
+            } else if (str_starts_with($mime, 'video/')) {
+                $success = MediaHelper::compressVideo($mediaPath);
+                if (!$success) throw new Exception("エラーが発生しました");
+            }
+        }
+
+        $required_fields = [
+            'post_id' => GeneralValueType::INT,
+            'type_reply_to' => PostValueType::TYPE_REPLY_TO
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+
+        $commentDao = DAOFactory::getCommentDAO();
+
+        // 投稿への返信の場合
+        if($validatedData['type_reply_to'] === 'post'){
+            $comment->setPostId($validatedData['post_id']);
+            $success = $commentDao->create($comment);
+
+            if (!$success) throw new Exception('Failed to create a comment!');
+
+            // 自分の投稿に対して自分がコメントしていない場合は通知する
+            $postDao = DAOFactory::getPostDAO();
+            $currentPost = $postDao->getById($validatedData['post_id']);
+
+            if ($currentPost->getUserId() !== $user->getId()) {
+                $notification = new Notification(
+                    userId: $currentPost->getUserId(),
+                    sourceId: $user->getId(),
+                    notificationType: NotificationType::COMMENT->value,
+                    commentId: $comment->getId()
+                );
+
+                $notificationDao = DAOFactory::getNotificationDAO();
+                $success = $notificationDao->create($notification);
+
+                if (!$success) throw new Exception('Failed to create a notification!');
+            }
+
+        }else{
+            // コメントへの返信の場合
+            $comment->setParentCommentId($validatedData['post_id']);
+            $success = $commentDao->create($comment);
+            if (!$success) throw new Exception('Failed to create a comment!');
+
+            // TODO: 余裕があったらコメントに対する返信の通知を作成
+
+        }
+
+        return new JSONRenderer(['status'=>'success']);
     })->setMiddleware(['auth']),
     'comments' => Route::create('comments', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
@@ -501,46 +550,6 @@ return [
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
         return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser]);
-    })->setMiddleware(['auth']),
-    'form/comment-to-comment' => Route::create('form/comment-to-comment', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'content' => PostValueType::CONTENT,
-            'post_id' => GeneralValueType::INT
-        ];
-        // TODO: 厳格なバリデーションを作成
-        $validatedRequiredData = ValidationHelper::validateFields($required_fields, $_POST);
-
-        // TODO: if($_FILE['media'])
-
-
-        $validatedData = array_merge($validatedRequiredData);
-
-        $commentDao = DAOFactory::getCommentDAO();
-
-        $currentComment = $commentDao->getById($validatedData['post_id']);
-
-        $user = Authenticate::getAuthenticatedUser();
-
-        $numberOfCharacters = 18;
-        $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
-
-        $comment = new Comment(
-            content: $validatedData['content'],
-            url: $randomString,
-            userId: $user->getId(),
-            parentCommentId: $validatedData['post_id'],
-            mediaPath: $validatedData['media_path'],
-        );
-
-        $success = $commentDao->create($comment);
-
-        if (!$success) throw new Exception('Failed to create a comment!');
-
-        return new RedirectRenderer(sprintf('comments?url=%s', $currentComment->getUrl()));
     })->setMiddleware(['auth']),
     'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
