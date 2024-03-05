@@ -1,4 +1,4 @@
-export function likePost(
+function likePost(
 	requestUrl,
 	formData,
 	likeBtn,
@@ -28,7 +28,7 @@ export function likePost(
 		});
 }
 
-export function deleteLikePost(
+function deleteLikePost(
 	requestUrl,
 	formData,
 	likeBtn,
@@ -57,3 +57,5 @@ export function deleteLikePost(
 			alert("An error occurred. Please try again.");
 		});
 }
+
+export { likePost, deleteLikePost };
