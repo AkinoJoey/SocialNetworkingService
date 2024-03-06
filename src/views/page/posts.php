@@ -28,7 +28,7 @@ use Carbon\Carbon;
                         <span class="sr-only">Comment settings</span>
                     </button>
                     <!-- Dropdown menu -->
-                    <div id="dropdownPost" class="hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
+                    <div id="dropdownPost" class="z-40 relative hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
                         <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconHorizontalButton">
                             <li>
                                 <button type="submit" name="delete_post_btn" data-post-id="<?= $post->getId() ?>" class="delete-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
@@ -44,12 +44,19 @@ use Carbon\Carbon;
             </p>
             <!-- media -->
             <?php if ($post->getExtension() === '.mov' || $post->getExtension() === '.mp4') : ?>
-                <video autoplay muted class="h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
+                <video autoplay muted class="w-full object-cover dark:bg-gray-500" controls with="720">
                     <source src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" type="video/mp4">
                 </video>
             <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png') : ?>
-                <a class="z-40 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
-                    <img src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension() ?>" alt="uploaded image" class="h-60 w-full object-cover dark:bg-gray-500 sm:h-96" />
+                <a class="z-30 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
+                    <?php
+                    if ($post->getExtension() === '.gif') {
+                        $src = substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension();
+                    } else {
+                        $src = substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension();
+                    }
+                    ?>
+                    <img src="/uploads/<?= $src ?>" alt="uploaded image" class="w-full object-cover dark:bg-gray-500" />
                 </a>
             <?php endif; ?>
         </div>
@@ -84,7 +91,7 @@ use Carbon\Carbon;
                         <div class="ml-3 flex w-full flex-col">
                             <textarea id="reply-content" name="content" placeholder="返信する" class="h-32 w-full resize-none rounded-xl border-gray-200 text-xl border-none focus:ring-0"></textarea>
                             <input type="hidden" name="MAX_FILE_SIZE" value="41943040" />
-                            <input class="hidden" id="reply-file-input" type="file" name="media" accept="image/png, image/gif, image/jpeg, image/jpg, image/webp, video/mp4, video/mov">
+                            <input class="hidden" id="reply-file-input" type="file" name="media" accept="image/png, image/gif, image/jpeg, image/jpg, image/webp, video/mp4, video/quicktime">
                             <div class="w-full flex justify-center rounded-full relative" id="reply-previewContainer">
                             </div>
                         </div>
@@ -135,7 +142,7 @@ use Carbon\Carbon;
                                             <span class="sr-only">Comment settings</span>
                                         </button>
                                         <!-- Dropdown menu -->
-                                        <div id="dropdownPost<?= $comment->getId() ?>" class="hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
+                                        <div id="dropdownPost<?= $comment->getId() ?>" class="z-40 relative hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
                                             <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconHorizontalButton">
                                                 <li>
                                                     <button type="submit" name="delete_comment_btn" data-post-id="<?= $comment->getId() ?>" class="delete-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
@@ -148,6 +155,23 @@ use Carbon\Carbon;
                             <p class="text-gray-500 dark:text-gray-400">
                                 <?= $comment->getContent() ?>
                             </p>
+                            <!-- media -->
+                            <?php if ($comment->getExtension() === '.mov' || $comment->getExtension() === '.mp4') : ?>
+                                <video autoplay muted class="mt-4 w-full object-cover dark:bg-gray-500" controls with="720">
+                                    <source src="/uploads/<?= substr($comment->getMediaPath(), 0, 2) . '/' . $comment->getMediaPath() . $comment->getExtension() ?>" type="video/mp4">
+                                </video>
+                            <?php elseif ($comment->getExtension() === '.gif' || $comment->getExtension() === '.jpg' || $comment->getExtension() === '.jpeg' || $comment->getExtension() === '.png') : ?>
+                                <a class="z-30 relative" href="/uploads/<?= substr($comment->getMediaPath(), 0, 2) . '/' . $comment->getMediaPath() . $comment->getExtension() ?>">
+                                    <?php
+                                    if ($comment->getExtension() === '.gif') {
+                                        $src = substr($comment->getMediaPath(), 0, 2) . '/' . $comment->getMediaPath() . $comment->getExtension();
+                                    } else {
+                                        $src = substr($comment->getMediaPath(), 0, 2) . '/' . $comment->getMediaPath() . '_thumb' . $comment->getExtension();
+                                    }
+                                    ?>
+                                    <img src="/uploads/<?= $src ?>" alt="uploaded image" class="mt-4 w-full object-cover dark:bg-gray-500" />
+                                </a>
+                            <?php endif; ?>
                             <div class="mt-4 flex items-center space-x-4">
                                 <div class="flex flex-wrap justify-between">
                                     <div class="flex space-x-2 text-sm dark:text-gray-400">

@@ -28,7 +28,7 @@ use Carbon\Carbon;
                     <span class="sr-only">Comment settings</span>
                 </button>
                 <!-- Dropdown menu -->
-                <div id="dropdownPost<?= $post->getId() ?>" class="z-10 hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
+                <div id="dropdownPost<?= $post->getId() ?>" class="z-40 relative hidden w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
                     <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconHorizontalButton">
                         <li>
                             <button type="submit" name="delete_post_btn" data-post-id="<?= $post->getId() ?>" class="delete-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
@@ -45,13 +45,20 @@ use Carbon\Carbon;
         </p>
 
         <!-- media -->
-        <?php if ($post->getExtension() === '.mov' || $post->getExtension() === '.mp4') : ?>
-            <video autoplay muted class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" controls with="720">
+        <?php if ($post->getExtension() === '.mp4') : ?>
+            <video autoplay muted class="mt-4 w-full object-cover dark:bg-gray-500" controls with="720">
                 <source src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" type="video/mp4">
             </video>
         <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png') : ?>
-            <a class="z-40 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
-                <img src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension() ?>" alt="uploaded image" class="mt-4 h-60 w-full object-cover dark:bg-gray-500 sm:h-96" />
+            <a class="z-30 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
+                <?php
+                if ($post->getExtension() === '.gif') {
+                    $src = substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension();
+                } else {
+                    $src = substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . '_thumb' . $post->getExtension();
+                }
+                ?>
+                <img src="/uploads/<?= $src ?>" alt="uploaded image" class="mt-4 w-full object-cover dark:bg-gray-500" />
             </a>
         <?php endif; ?>
     </div>
