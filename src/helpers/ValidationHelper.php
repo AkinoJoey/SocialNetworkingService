@@ -217,7 +217,7 @@ class ValidationHelper
         $maxImageSize =  5 * 1024 * 1024;
 
         if (!in_array($mime, $allowedMimeTypes) || $byteSize > $maxImageSize) {
-            throw new \InvalidArgumentException("画像は5MB以内かつ、jpg, png, gifの形式のみ対応しています");
+            throw new \InvalidArgumentException("画像は5MB以内かつ、jpg, png, gif, webp形式のみ対応しています");
         }
         return $path;
     }
