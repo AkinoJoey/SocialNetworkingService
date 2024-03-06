@@ -8,13 +8,17 @@ class ChangeContentColumnNullableToComment implements SchemaMigration
 {
     public function up(): array
     {
-        // マイグレーションロジックをここに追加してください
-        return [];
+        return [
+            "ALTER TABLE comments 
+                MODIFY content VARCHAR(280);"
+        ];
     }
 
     public function down(): array
     {
-        // ロールバックロジックを追加してください
-        return [];
+        return [
+            "ALTER TABLE comments 
+                MODIFY content VARCHAR(280) NOT NULL;"
+        ];
     }
 }

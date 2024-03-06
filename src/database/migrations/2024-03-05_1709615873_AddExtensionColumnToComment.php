@@ -10,7 +10,7 @@ class AddExtensionColumnToComment implements SchemaMigration
     {
         return [
             "ALTER TABLE comments 
-                MODIFY content VARCHAR(280);"
+                ADD COLUMN extension VARCHAR(5) AFTER media_path;"
         ];
     }
 
@@ -18,7 +18,7 @@ class AddExtensionColumnToComment implements SchemaMigration
     {
         return [
             "ALTER TABLE comments 
-                MODIFY content VARCHAR(280) NOT NULL;"
+                DROP COLUMN extension;"
         ];
     }
 }
