@@ -13,6 +13,8 @@ use src\helpers\ChatClient;
 use src\helpers\Settings;
 use src\types\NotificationType;
 use src\models\Notification;
+use src\types\GeneralValueType;
+use src\types\PostValueType;
 
 // TODO: authenticate
 class Chat implements MessageComponentInterface
@@ -76,9 +78,9 @@ class Chat implements MessageComponentInterface
     {
         // TODO: error handling
         $required_fields = [
-            'dm_thread_id' => ValueType::INT,
-            'sender_user_id' => ValueType::INT,
-            'receiver_user_id' => ValueType::INT,
+            'dm_thread_id' => GeneralValueType::INT,
+            'sender_user_id' => GeneralValueType::INT,
+            'receiver_user_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $data, true);
@@ -94,10 +96,10 @@ class Chat implements MessageComponentInterface
     private function sendMessage(array $data): void
     {
         $required_fields = [
-            'dm_thread_id' => ValueType::INT,
-            'sender_user_id' => ValueType::INT,
-            'receiver_user_id' => ValueType::INT,
-            'message' => ValueType::STRING,
+            'dm_thread_id' => GeneralValueType::INT,
+            'sender_user_id' => GeneralValueType::INT,
+            'receiver_user_id' => GeneralValueType::INT,
+            'message' => PostValueType::CONTENT //最大文字数は140文字
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $data, true);
