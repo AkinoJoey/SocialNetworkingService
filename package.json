@@ -22,6 +22,7 @@
 		"webpack-dev-server": "^4.15.1"
 	},
 	"dependencies": {
+		"flatpickr": "^4.6.13",
 		"flowbite": "^2.2.1"
 	}
 }

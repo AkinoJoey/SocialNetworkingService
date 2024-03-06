@@ -1,3 +1,6 @@
+import flatpickr from "flatpickr";
+import { Japanese } from "flatpickr/dist/l10n/ja.js";
+
 document.addEventListener("DOMContentLoaded", function () {
 	const fileInputIcon = document.getElementById("file-input-icon");
 	const createPostForm = document.getElementById("create-post-form");
@@ -112,15 +115,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
-	//　ログアウト用のモーダル
-	const logoutModalEl = document.getElementById("logout-modal");
-	const logoutModal = new Modal(logoutModalEl);
-	const logoutButtons = document.querySelectorAll(".logout-btn");
-
-	logoutButtons.forEach(function (logoutBtn) {
-		logoutBtn.addEventListener("click", function (e) {
-			e.preventDefault();
-			logoutModal.show();
-		});
-	});
+	// date
+	const config = {
+		enableTime: true,
+		dateFormat: "Y-m-d H:i",
+	};
+	flatpickr(".flatpickr", config);
 });
