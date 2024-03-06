@@ -1,5 +1,5 @@
 // ファイルプレビューを表示する関数
-function showFilePreview(event, previewContainer, textInput, fileInput) {
+function showFilePreview(event, previewContainer, textInput, fileInput, submitBtn) {
 	let file = event.target.files[0]; // 最初のファイルを取得
 
 	if (file) {
@@ -39,12 +39,12 @@ function showFilePreview(event, previewContainer, textInput, fileInput) {
 				previewContainer.removeChild(previewElement);
 				previewContainer.removeChild(removeBtn);
 				fileInput.value = "";
-				checkForm(textInput, fileInput);
+				checkForm(textInput, fileInput, submitBtn);
 			});
 
 			previewContainer.appendChild(previewElement);
 			previewContainer.appendChild(removeBtn);
-			checkForm(textInput, fileInput);
+			checkForm(textInput, fileInput, submitBtn);
 		};
 
 		reader.readAsDataURL(file); // ファイルの内容をBase64エンコードして読み込む
