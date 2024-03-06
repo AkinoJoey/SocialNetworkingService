@@ -271,8 +271,9 @@ class ValidationHelperDataProvider
     public static function invalidMediaProvider(): array
     {
         return [
-            [__DIR__ . '/../fixtures/images/10KB.webp', "画像は5MB以内かつ、jpg, png, gifの形式のみ対応しています"], // 対応していない形式
             [__DIR__ . '/../fixtures/videos/1.4MB-31sec.mp4', "30秒より長い動画はアップロードできません。"], // 30秒より長い動画
+            [__DIR__ . '/../fixtures/images/1KB.svg', "画像は5MB以内かつ、jpg, png, gif, webp形式のみ対応しています"], // 対応していない形式の画像
+
         ];
     }
 
@@ -291,8 +292,8 @@ class ValidationHelperDataProvider
     public static function invalidImageProvider(): array
     {
         return [
-            // TODO: pngで試す
             [__DIR__ . '/../fixtures/images/6MB.jpg'], // 5MB以上の画像
+            [__DIR__ . '/../fixtures/images/1KB.svg'], // 対応していない形式の画像
         ];
     }
 
@@ -311,6 +312,23 @@ class ValidationHelperDataProvider
             [__DIR__ . '/../fixtures/videos/52.2MB-3sec.mp4', "動画は40MB以内かつ、mp4, movの拡張式のみ対応しています"], // 40MB以上の動画
             [__DIR__ . '/../fixtures/videos/1.4MB-31sec.mp4', "30秒より長い動画はアップロードできません。"], // 30秒より長い動画
             
+        ];
+    }
+
+    public static function validPostTypeProvider() : array {
+        return [
+            ["post"],
+            ["comment"]
+        ];
+    }
+
+    public static function invalidPostTypeProvider() : array {
+        return[
+            [""],
+            ["/post"],
+            ["/comment"],
+            ['posts'],
+            ['comments']
         ];
     }
 }
