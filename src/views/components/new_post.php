@@ -31,9 +31,9 @@
                     <div id="file-input-icon" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
                         <i class="fas fa-image"></i>
                     </div>
-                    <div id="calender" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
+                    <button type="button" data-modal-target="schedule_modal" data-modal-toggle="schedule_modal" id="calender-icon" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
                         <i class="fas fa-calendar-alt"></i>
-                    </div>
+                    </button>
                 </div>
                 <div>
                     <button id="post-submit" type="submit" class="inline cursor-pointer rounded-full bg-blue-500 px-4 py-3 font-bold text-white hover:opacity-75 btn btn-disabled">
