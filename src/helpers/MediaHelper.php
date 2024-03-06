@@ -23,20 +23,23 @@ class MediaHelper
         return $returnCode === 0;
     }
 
-    public static function compressVideo(string $videoPath) : bool {
+    public static function convertAndCompressToMp4Video(string $videoPath) : bool {
         $path_parts = pathinfo($videoPath);
-        $tmpFilename = $path_parts['filename'] . "_tmp." . $path_parts['extension'];
+        $tmpFilename = $path_parts['filename'] . "_tmp.mp4";
         $tmpPathname = $path_parts['dirname'] . '/' . $tmpFilename;
-
-        error_log($tmpPathname);
 
         $command = "ffmpeg -i {$videoPath} -vf scale=720:-2 -c:v libx264 -crf 23 -preset medium -maxrate 1M -bufsize 2M -y {$tmpPathname}";
 
         exec($command, $output, $returnCode);
 
         if ($returnCode === 0) {
-            // tmpPathnameをオリジナルのファイル名に変更。上書き。
-            return rename($tmpPathname, $videoPath);
+            $newPathName = $path_parts['dirname'] . '/' . $path_parts['filename'] . ".mp4";
+
+            // オリジナルの動画を削除
+            if(unlink($videoPath)){
+                // 名前を変更
+                return rename($tmpPathname, $newPathName);
+            }
         } else {
             return false;
         }
