@@ -42,6 +42,8 @@ document.addEventListener("DOMContentLoaded", function () {
 	let deleteButtons = document.querySelectorAll(".delete-btn");
 	const alertModalEl = document.getElementById("alert-modal");
 	const alertModal = new Modal(alertModalEl);
+	alertModal.hide();
+
 	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
 
 	deleteButtons.forEach(function (deleteBtn) {
