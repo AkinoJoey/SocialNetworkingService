@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	// 画像アイコンをクリックしたとき
 	fileInputIcon.addEventListener("click", function () {
 		fileInput.addEventListener("change", function (event) {
-			showFilePreview(event, previewContainer, textInput, fileInput);
+			showFilePreview(event, previewContainer, textInput, fileInput, submitBtn);
 
 			checkForm(textInput, fileInput, submitBtn);
 		})
