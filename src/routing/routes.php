@@ -327,7 +327,7 @@ return [
                 $tmpPath = $validatedData['media'];
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mime = $finfo->file($tmpPath);
-                $extension = '.' . explode('/', $mime)[1];
+                $extension = explode('/', $mime)[1] === "quicktime" ? '.mov' : '.' . explode('/', $mime)[1];
                 $basename = bin2hex(random_bytes($numberOfCharacters / 2));
                 $filename = $basename . $extension;
                 $uploadDir =  __DIR__ .  "/../../public/uploads/";
@@ -342,14 +342,17 @@ return [
                 $post->setMediaPath($basename);
                 $post->setExtension($extension);
 
-                if (str_starts_with($mime, 'image/')) {
+                // gif以外はサムネを作成する
+                if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
                     $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
                     $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
                     if(!$success) throw new Exception("エラーが発生しました");
                 } else if (str_starts_with($mime, 'video/')) {
-                    $success = MediaHelper::compressVideo($mediaPath);
+                    $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
                     if (!$success) throw new Exception("エラーが発生しました");
+
+                    $post->setExtension(".mp4");
                 }
             }
 
@@ -458,7 +461,7 @@ return [
             $tmpPath = $validatedData['media'];
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mime = $finfo->file($tmpPath);
-            $extension = '.' . explode('/', $mime)[1];
+            $extension = explode('/', $mime)[1] === "quicktime"? '.mov': '.' . explode('/', $mime)[1];
             $basename = bin2hex(random_bytes($numberOfCharacters / 2));
             $filename = $basename . $extension;
             $uploadDir =  __DIR__ .  "/../../public/uploads/";
@@ -472,15 +475,18 @@ return [
             $comment->setMediaPath($basename);
             $comment->setExtension($extension);
 
-            if (str_starts_with($mime, 'image/')) {
+            if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
                 $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
                 $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
 
                 if (!$success) throw new Exception("エラーが発生しました");
             } else if (str_starts_with($mime, 'video/')) {
-                $success = MediaHelper::compressVideo($mediaPath);
+                $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
                 if (!$success) throw new Exception("エラーが発生しました");
+
+                // 動画はすべてmp4形式
+                $comment->setExtension(".mp4");
             }
         }
 
