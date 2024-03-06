@@ -21,7 +21,7 @@ use Carbon\Carbon;
         </div>
         <?php if ($post->getUserId() === $user->getId()) : ?>
             <div class="z-40">
-                <button type="button" data-dropdown-toggle="dropdownPost<?= $post->getId() ?>" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
+                <button data-dropdown-toggle="dropdownPost<?= $post->getId() ?>" class="rounded-full z-40 inline-flex items-center bg-white p-2 text-center text-sm font-medium text-gray-500 hover:bg-gray-300 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-blue-100 dark:focus:ring-gray-600" type="button">
                     <svg class="h-4 w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 3">
                         <path d="M2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm6.041 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM14 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
                     </svg>
