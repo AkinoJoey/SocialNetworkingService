@@ -1,5 +1,6 @@
 import flatpickr from "flatpickr";
 import { Japanese } from "flatpickr/dist/l10n/ja.js";
+import "flatpickr/dist/flatpickr.min.css";
 
 document.addEventListener("DOMContentLoaded", function () {
 	const fileInputIcon = document.getElementById("file-input-icon");
@@ -115,10 +116,37 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
-	// date
+	let today = new Date();
+	let scheduledAt = "";
+
+	// dateTime
 	const config = {
+		wrap: true,
 		enableTime: true,
 		dateFormat: "Y-m-d H:i",
+		locale: Japanese,
+		minDate: "today",
+		maxDate: new Date(today.setMonth(today.getMonth() + 18)), // 最大18か月後
+		minTime: new Date(today.getTime() + 5 * 60000), // 現在の時間から5分後の時間を計算
 	};
-	flatpickr(".flatpickr", config);
+
+	let fp = flatpickr(".flatpickr", config);
+	let scheduledAtContainer = document.getElementById("scheduledAt_container");
+
+	document
+		.getElementById("reserve_button")
+		.addEventListener("click", function () {
+			let selectedDates = fp.selectedDates;
+			if (selectedDates.length > 0) {
+				scheduledAt = fp.formatDate(selectedDates[0], "Y-m-d H:i:00");
+				scheduledAtContainer.innerHTML = fp.formatDate(
+					selectedDates[0],
+					"Y-m-d H:i",
+				);
+			} else {
+				scheduledAt = "";
+				scheduledAtContainer.innerHTML = "";
+			}
+		});
+
 });
