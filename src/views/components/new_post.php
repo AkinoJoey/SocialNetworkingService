@@ -27,15 +27,18 @@
             </div>
 
             <div class="flex items-center justify-between border-t px-4 py-6 text-blue-400">
-                <div class="flex pl-12 text-2xl">
+                <div class="flex text-2xl">
                     <div id="file-input-icon" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
                         <i class="fas fa-image"></i>
                     </div>
                     <button type="button" data-modal-target="schedule_modal" data-modal-toggle="schedule_modal" id="calender-icon" class="flex cursor-pointer items-center justify-center rounded-full p-3 hover:bg-blue-100">
                         <i class="fas fa-calendar-alt"></i>
                     </button>
+
                 </div>
-                <div>
+                <div class="flex items-center justify-between">
+                    <div id="scheduledAt_container" class="flex items-center justify-center rounded-full p-3 text-sm">
+                    </div>
                     <button id="post-submit" type="submit" class="inline cursor-pointer rounded-full bg-blue-500 px-4 py-3 font-bold text-white hover:opacity-75 btn btn-disabled">
                         投稿
                     </button>
