@@ -23,6 +23,7 @@ use src\models\DmThread;
 use src\models\Follow;
 use src\models\Notification;
 use src\types\NotificationType;
+use src\types\PostStatusType;
 use src\types\UserValueType;
 use src\types\PostValueType;
 
@@ -356,7 +357,11 @@ return [
                 }
             }
 
-            // TODO: 予約投稿
+            if ($_POST['scheduled_at'] !== "") {
+                $validatedDatetime = ValidationHelper::date($_POST['scheduled_at'], 'Y-m-d H:i:s');
+                $post->setScheduledAt(new DateTime($validatedDatetime));
+                $post->setStatus(PostStatusType::SCHEDULED->value);
+            }
 
             $postDao = DAOFactory::getPostDAO();
             $success = $postDao->create($post);
@@ -397,7 +402,7 @@ return [
 
         $createFormAction = "/form/comment";
 
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser]);
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path'=> 'posts']);
     })->setMiddleware(['auth']),
     'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -555,7 +560,7 @@ return [
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser]);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path'=> 'comments']);
     })->setMiddleware(['auth']),
     'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
