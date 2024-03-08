@@ -13,4 +13,5 @@ interface PostDAO
     public function getTwentyPosts(int $userId, int $offset) : array;
     public function getByUrl(string $url, int $userId): ?Post;
     public function getPostsByFollowedUsers(array $followedUserIds, int $userId, int $offset, int $limit = 20): array;
+    public function postScheduled() : bool;
 }
