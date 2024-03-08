@@ -16,7 +16,17 @@ use Carbon\Carbon;
                         <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-40 hover:underline"><?= $post->getAccountName() ?></a>
                         <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
                     </div>
-                    <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
+                    <?php if ($path === 'comments') : ?>
+                        <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
+                    <?php else : ?>
+                        <!-- 予約投稿じゃない場合 -->
+                        <?php if ($post->getScheduledAt() === null) : ?>
+                            <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
+                            <!-- 予約投稿の場合 -->
+                        <?php else : ?>
+                            <span class="text-xs dark:text-gray-400"><?= Carbon::parse($post->getScheduledAt())->diffForHumans() ?></span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php if ($post->getUserId() === $user->getId()) : ?>
