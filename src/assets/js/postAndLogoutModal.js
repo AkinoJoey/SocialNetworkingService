@@ -78,11 +78,46 @@ document.addEventListener("DOMContentLoaded", function () {
 		fileInput.click();
 	});
 
+	let today = new Date();
+	let scheduledAt = "";
+
+	// dateTime
+	const config = {
+		wrap: true,
+		enableTime: true,
+		dateFormat: "Y-m-d H:i",
+		locale: Japanese,
+		minDate: "today",
+		maxDate: new Date(today.setMonth(today.getMonth() + 18)), // 最大18か月後
+		minTime: new Date(today.getTime() + 5 * 60000), // 現在の時間から5分後の時間を計算
+	};
+
+	let fp = flatpickr(".flatpickr", config);
+	let scheduledAtContainer = document.getElementById("scheduledAt_container");
+
+	// 日付設定の決定するボタンを押した時
+	document
+		.getElementById("reserve_button")
+		.addEventListener("click", function () {
+			let selectedDates = fp.selectedDates;
+			if (selectedDates.length > 0) {
+				scheduledAt = fp.formatDate(selectedDates[0], "Y-m-d H:i:00");
+				scheduledAtContainer.innerHTML = fp.formatDate(
+					selectedDates[0],
+					"Y-m-d H:i",
+				);
+			} else {
+				scheduledAt = "";
+				scheduledAtContainer.innerHTML = "";
+			}
+		});
+
 	// 新しい投稿をしたとき
 	createPostForm.addEventListener("submit", function (e) {
 		e.preventDefault();
 		let formData = new FormData(createPostForm);
 		formData.append("media", fileInput.files[0]);
+		formData.append("scheduled_at", scheduledAt);
 
 		fetch("/form/new", {
 			method: "POST",
@@ -116,37 +151,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 
-	let today = new Date();
-	let scheduledAt = "";
-
-	// dateTime
-	const config = {
-		wrap: true,
-		enableTime: true,
-		dateFormat: "Y-m-d H:i",
-		locale: Japanese,
-		minDate: "today",
-		maxDate: new Date(today.setMonth(today.getMonth() + 18)), // 最大18か月後
-		minTime: new Date(today.getTime() + 5 * 60000), // 現在の時間から5分後の時間を計算
-	};
-
-	let fp = flatpickr(".flatpickr", config);
-	let scheduledAtContainer = document.getElementById("scheduledAt_container");
-
-	document
-		.getElementById("reserve_button")
-		.addEventListener("click", function () {
-			let selectedDates = fp.selectedDates;
-			if (selectedDates.length > 0) {
-				scheduledAt = fp.formatDate(selectedDates[0], "Y-m-d H:i:00");
-				scheduledAtContainer.innerHTML = fp.formatDate(
-					selectedDates[0],
-					"Y-m-d H:i",
-				);
-			} else {
-				scheduledAt = "";
-				scheduledAtContainer.innerHTML = "";
-			}
-		});
+	
 
 });
