@@ -1,5 +1,5 @@
 <!-- bottom nav -->
-<div class="fixed bottom-0 left-1/2 z-[60] w-full -translate-x-1/2 border-t border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700 sm:hidden">
+<div class="fixed bottom-0 left-1/2 z-40 w-full -translate-x-1/2 border-t border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-700 sm:hidden">
     <div class="mx-auto grid h-full max-w-lg grid-cols-5">
         <button data-tooltip-target="tooltip-home" type="button" class="group inline-flex flex-col items-center justify-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
             <a href="/">
