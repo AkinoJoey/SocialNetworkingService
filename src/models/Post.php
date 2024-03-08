@@ -13,6 +13,7 @@ class Post implements Model
     public function __construct(
         private string $url,
         private int $userId,
+        private string $status = 'public', //デフォルトは公開にしておく
         private ?string $content = null,
         private ?int $id = null,
         private ?string $mediaPath = null,
@@ -45,6 +46,14 @@ class Post implements Model
     public function setUserId(int $userId): void
     {
         $this->userId = $userId;
+    }
+
+    public function getStatus() : string {
+        return $this->status;
+    }
+
+    public function setStatus(string $status) : void {
+        $this->status = $status;
     }
 
     public function getContent(): ?string

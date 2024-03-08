@@ -6,6 +6,7 @@ use src\database\data_access\interfaces\PostDAO;
 use src\database\DatabaseManager;
 use src\models\DataTimeStamp;
 use src\models\Post;
+use DateTime;
 
 class PostDAOImpl implements PostDAO
 {
@@ -15,18 +16,19 @@ class PostDAOImpl implements PostDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO posts (content, url ,media_path, extension, user_id, scheduled_at) VALUES (?, ?,  ? ,?, ?, ?)";
+        $query = "INSERT INTO posts (status, content, url ,media_path, extension, user_id, scheduled_at) VALUES (?, ?, ?,  ? ,?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'ssssis',
+            'sssssis',
             [
+                $post->getStatus(),
                 $post->getContent(),
                 $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getExtension(),
                 $post->getUserId(),
-                $post->getScheduledAt(),
+                $post->getScheduledAt()->format('Y-m-d H:i:s'),
             ]
         );
 
@@ -59,10 +61,10 @@ class PostDAOImpl implements PostDAO
         $query =
             <<<SQL
             WITH post_data AS(
-                SELECT p.id, p.content , p.url, p.media_path, p.extension , p.user_id , p.created_at, p.updated_at, u.account_name , u.username
+                SELECT p.*, u.account_name , u.username
                     FROM posts p
                     LEFT JOIN users u ON p.user_id  = u.id
-                    WHERE p.id = ?
+                    WHERE p.id = ? AND p.status = 'public'
             ),
             number_of_likes AS(
                 SELECT pl.post_id, COUNT(*) AS number_of_likes
@@ -144,12 +146,13 @@ class PostDAOImpl implements PostDAO
     {
         return new Post(
             content: $rawData['content'],
+            status: $rawData['status'],
             url: $rawData['url'],
             userId: $rawData['user_id'],
             id: $rawData['id'] ?? null,
             mediaPath: $rawData['media_path'],
             extension: $rawData['extension'],
-            scheduledAt: $rawData['scheduled_at'] ?? null,
+            scheduledAt: isset($rawData['scheduled_at']) ? new DateTime($rawData['scheduled_at']): null,
             timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
             username: $rawData['username'] ?? null,
             accountName: $rawData['account_name'] ?? null,
@@ -203,11 +206,11 @@ class PostDAOImpl implements PostDAO
         $query =
             <<<SQL
             WITH post_data AS (
-                SELECT p.id, p.content, p.url, p.media_path, p.extension,  p.created_at, p.updated_at,p.user_id,
+                SELECT p.*,
                     u.account_name, u.username
                 FROM posts p
                 INNER JOIN users u ON p.user_id = u.id
-                WHERE p.user_id IN ($placeholders)
+                WHERE p.user_id IN ($placeholders) AND p.status = 'public'
             ),
             comment_data AS (
                 SELECT pc.post_id, COUNT(*) AS number_of_comments
@@ -225,7 +228,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension,  pd.created_at, pd.updated_at ,pd.user_id,
+            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id,
                 pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
@@ -243,5 +246,20 @@ class PostDAOImpl implements PostDAO
         $results = $mysqli->prepareAndFetchAll($query, $types, $params);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
+    }
+
+    public function postScheduled() : bool {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query =
+            <<<SQL
+            UPDATE posts 
+                SET status = 'public' 
+                WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND now() > scheduled_at;
+            SQL;
+
+        $result = $mysqli->prepareAndExecute($query, "", []);
+
+        return $result;
     }
 }
