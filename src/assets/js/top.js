@@ -75,4 +75,41 @@ document.addEventListener("DOMContentLoaded", function () {
 			});
 		});
 	});
+
+	// タブの切替
+	let tabs = document.querySelectorAll(".tab");
+
+	tabs.forEach(function (tab) {
+		tab.addEventListener("click", function () {
+			console.log(tab.dataset.tab);
+
+			tabs.forEach(function (t) {
+				t.classList.remove(
+					"text-white",
+					"bg-gray-900",
+					"dark:bg-gray-300",
+					"dark:text-gray-900",
+				);
+				t.classList.add(
+					"text-gray-900",
+					"hover:bg-gray-200",
+					"dark:text-white",
+					"dark:hover:bg-gray-700",
+				);
+			});
+
+			tab.classList.remove(
+				"text-gray-900",
+				"hover:bg-gray-200",
+				"dark:text-white",
+				"dark:hover:bg-gray-700",
+			);
+			tab.classList.add(
+				"text-white",
+				"bg-gray-900",
+				"dark:bg-gray-300",
+				"dark:text-gray-900",
+			);
+		});
+	});
 });
