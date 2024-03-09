@@ -37,14 +37,28 @@ return [
             return new HTMLRenderer('page/guest');
         }
 
-        // TODO: フォロワーのツイートを見られるようにする
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
-
         $postDao = DAOFactory::getPostDAO();
-        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
-        return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user]);
+        if (count($followingUserIdList) === 0) {
+            $trendPosts = $postDao->getTrendPosts();
+            return new HTMLRenderer('page/top', ['posts' => $trendPosts,  'user' => $user, 'tabActive' => 'trend']);
+        } else {
+            // ユーザーにフォローしているユーザーがいる場合はフォロー中のタイムラインを表示
+            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
+
+            $timelineHtml = "";
+
+            foreach ($postsByFollowedUsers as $post) {
+                ob_start();
+                include(__DIR__ . '/../views/components/post_card.php');
+                $postCardHtml = ob_get_clean();
+                $timelineHtml .= $postCardHtml;
+            }
+   
+            return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user, 'tabActive' => 'following']);
+        }
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
@@ -290,7 +304,7 @@ return [
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く
-        try{
+        try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             // 文字が空かつ、メディアがない場合はアラートを出す
@@ -336,7 +350,7 @@ return [
                 $mediaPath = $uploadDir .  $subdirectory . $filename;
 
                 $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
-                if(!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
+                if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
                 error_log($uploadSuccess);
 
                 // インスタンスに保存
@@ -348,7 +362,7 @@ return [
                     $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
                     $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
-                    if(!$success) throw new Exception("エラーが発生しました");
+                    if (!$success) throw new Exception("エラーが発生しました");
                 } else if (str_starts_with($mime, 'video/')) {
                     $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
                     if (!$success) throw new Exception("エラーが発生しました");
@@ -369,16 +383,15 @@ return [
             if (!$success) throw new Exception('Failed to create a post!');
 
             return new JSONRenderer(['status' => 'success']);
-        }catch(\InvalidArgumentException $e){
-            error_log($e->getMessage());
-
-            return new JSONRenderer(["status"=>"error", "message"=> $e->getMessage()]);
-        }catch(\LengthException $e){
+        } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
             return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
-        }
-        catch(Exception $e){
+        } catch (\LengthException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
+        } catch (Exception $e) {
             error_log($e->getMessage());
 
             return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
@@ -402,7 +415,7 @@ return [
 
         $createFormAction = "/form/comment";
 
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path'=> 'posts']);
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path' => 'posts']);
     })->setMiddleware(['auth']),
     'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -425,7 +438,7 @@ return [
         FlashData::setFlashData('success', "投稿を削除しました");
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
-    'form/reply'=> Route::create('form/reply', function () : HTTPRenderer {
+    'form/reply' => Route::create('form/reply', function (): HTTPRenderer {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
         error_log(print_r($_POST, true));
@@ -460,13 +473,13 @@ return [
             ];
             $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
         }
-        
+
 
         if (isset($validatedData['media'])) {
             $tmpPath = $validatedData['media'];
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mime = $finfo->file($tmpPath);
-            $extension = explode('/', $mime)[1] === "quicktime"? '.mov': '.' . explode('/', $mime)[1];
+            $extension = explode('/', $mime)[1] === "quicktime" ? '.mov' : '.' . explode('/', $mime)[1];
             $basename = bin2hex(random_bytes($numberOfCharacters / 2));
             $filename = $basename . $extension;
             $uploadDir =  __DIR__ .  "/../../public/uploads/";
@@ -505,7 +518,7 @@ return [
         $commentDao = DAOFactory::getCommentDAO();
 
         // 投稿への返信の場合
-        if($validatedData['type_reply_to'] === 'post'){
+        if ($validatedData['type_reply_to'] === 'post') {
             $comment->setPostId($validatedData['post_id']);
             $success = $commentDao->create($comment);
 
@@ -528,8 +541,7 @@ return [
 
                 if (!$success) throw new Exception('Failed to create a notification!');
             }
-
-        }else{
+        } else {
             // コメントへの返信の場合
             $comment->setParentCommentId($validatedData['post_id']);
             $success = $commentDao->create($comment);
@@ -539,7 +551,7 @@ return [
 
         }
 
-        return new JSONRenderer(['status'=>'success']);
+        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['auth']),
     'comments' => Route::create('comments', function (): HTTPRenderer {
         // TODO: 厳格なバリデーション
@@ -560,7 +572,7 @@ return [
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path'=> 'comments']);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path' => 'comments']);
     })->setMiddleware(['auth']),
     'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする

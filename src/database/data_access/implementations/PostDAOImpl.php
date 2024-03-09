@@ -152,7 +152,7 @@ class PostDAOImpl implements PostDAO
             id: $rawData['id'] ?? null,
             mediaPath: $rawData['media_path'],
             extension: $rawData['extension'],
-            scheduledAt: isset($rawData['scheduled_at']) ? new DateTime($rawData['scheduled_at']): null,
+            scheduledAt: isset($rawData['scheduled_at']) ? new DateTime($rawData['scheduled_at']) : null,
             timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
             username: $rawData['username'] ?? null,
             accountName: $rawData['account_name'] ?? null,
@@ -248,7 +248,8 @@ class PostDAOImpl implements PostDAO
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
 
-    public function postScheduled() : bool {
+    public function postScheduled(): bool
+    {
         $mysqli = DatabaseManager::getMysqliConnection();
 
         $query =
@@ -261,5 +262,51 @@ class PostDAOImpl implements PostDAO
         $result = $mysqli->prepareAndExecute($query, "", []);
 
         return $result;
+    }
+
+    public function getTrendPosts(): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query =
+            <<<SQL
+            WITH post_data AS (
+                SELECT p.*,
+                    u.account_name, u.username
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE  p.status = 'public'
+            ),
+            comment_data AS (
+                SELECT pc.post_id, COUNT(*) AS number_of_comments
+                FROM comments pc
+                GROUP BY pc.post_id
+            ),
+            like_data AS (
+                SELECT pl.post_id, COUNT(*) AS number_of_likes
+                FROM post_likes pl
+                GROUP BY pl.post_id
+            ),
+            user_likes AS (
+                SELECT pl.post_id, COUNT(*) AS is_like
+                FROM post_likes pl
+                WHERE pl.user_id = 4
+                GROUP BY pl.post_id
+            )
+            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id,
+                pd.account_name, pd.username,
+                COALESCE(cd.number_of_comments, 0) AS number_of_comments,
+                COALESCE(ld.number_of_likes, 0) AS number_of_likes,
+                COALESCE(ul.is_like, 0) AS is_like
+            FROM post_data pd
+            LEFT JOIN comment_data cd ON pd.id = cd.post_id
+            LEFT JOIN like_data ld ON pd.id = ld.post_id
+            LEFT JOIN user_likes ul ON pd.id = ul.post_id
+            ORDER BY DATE(pd.created_at) DESC,
+            number_of_likes DESC;
+            SQL;
+
+        $results = $mysqli->prepareAndFetchAll($query, "", []);
+
+        return $results === null ? [] : $this->rawDataToPosts($results);
     }
 }
