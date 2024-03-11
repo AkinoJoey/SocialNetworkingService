@@ -7,8 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	let path = location.pathname;
 
 	likeButtons.forEach(function (likeBtn) {
-		likeBtn.addEventListener("click", function (e) {
-			e.preventDefault();
+		likeBtn.addEventListener("click", function () {
 
 			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
 			let numberOfLikes = Number(numberOfLikesSpan.textContent);
@@ -56,15 +55,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	});
 
-	const alertModalEl = document.getElementById("alert-modal");
-	const alertModal = new Modal(alertModalEl);
 	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
 
 	deleteButtons.forEach(function (deleteBtn) {
-		deleteBtn.addEventListener("click", function (e) {
-			e.preventDefault();
-			alertModal.show();
-
+		deleteBtn.addEventListener("click", function () {
 			deleteExecuteBtn.addEventListener("click", function () {
 				let formData = new FormData();
 				let postId = deleteBtn.getAttribute("data-post-id");
