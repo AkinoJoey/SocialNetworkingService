@@ -1,11 +1,25 @@
+import { initDropdowns, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
 
 document.addEventListener("DOMContentLoaded", function () {
 	let likeButtons = document.querySelectorAll(".like-btn");
+	let deleteButtons = document.querySelectorAll(".delete-btn");
+	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
 
-	likeButtons.forEach(function (likeBtn) {
-		likeBtn.addEventListener("click", function (e) {
-			e.preventDefault();
+	attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+
+	function attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn) {
+		likeButtons.forEach(function (likeBtn) {
+			likeBtnClickListener(likeBtn);
+		});
+
+		deleteButtons.forEach(function (deleteBtn) {
+			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
+		});
+	}
+
+	function likeBtnClickListener(likeBtn) {
+		likeBtn.addEventListener("click", function () {
 			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
 			let numberOfLikes = Number(numberOfLikesSpan.textContent);
 			let goodIcon = likeBtn.querySelector(".good-icon");
@@ -37,27 +51,17 @@ document.addEventListener("DOMContentLoaded", function () {
 				);
 			}
 		});
-	});
+	}
 
-	let deleteButtons = document.querySelectorAll(".delete-btn");
-	const alertModalEl = document.getElementById("alert-modal");
-	const alertModal = new Modal(alertModalEl);
-	alertModal.hide();
-
-	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
-
-	deleteButtons.forEach(function (deleteBtn) {
-		deleteBtn.addEventListener("click", function (e) {
-			e.preventDefault();
-			alertModal.show();
-
+	function deleteBtnClickListener(deleteBtn, deleteExecuteBtn) {
+		deleteBtn.addEventListener("click", function () {
 			deleteExecuteBtn.addEventListener("click", function () {
 				let formData = new FormData();
 				let postId = deleteBtn.getAttribute("data-post-id");
 				formData.append("csrf_token", csrfToken);
 				formData.append("post_id", postId);
 
-				fetch("delete/post", {
+				fetch("/delete/post", {
 					method: "POST",
 					body: formData,
 				})
@@ -74,14 +78,40 @@ document.addEventListener("DOMContentLoaded", function () {
 					});
 			});
 		});
-	});
+	}
 
 	// タブの切替
 	let tabs = document.querySelectorAll(".tab");
+	let timelineContainer = document.getElementById("timeline_container");
 
 	tabs.forEach(function (tab) {
 		tab.addEventListener("click", function () {
-			console.log(tab.dataset.tab);
+
+			fetch(`/timeline/${tab.dataset.tab}`, {
+				method: "GET",
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.status === "success") {
+						timelineContainer.innerHTML = data.htmlString;
+
+						let likeButtons = document.querySelectorAll(".like-btn");
+						let deleteButtons = document.querySelectorAll(".delete-btn");
+
+						// イベントリスナーを再割り当て
+						attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+
+						// イベントリスナー再割り当て from flowbite
+						initDropdowns();
+						initModals();
+
+					} else if (data.status === "error") {
+						console.error(data.message);
+					}
+				})
+				.catch((error) => {
+					alert("An error occurred. Please try again.");
+				});
 
 			tabs.forEach(function (t) {
 				t.classList.remove(
