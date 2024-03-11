@@ -28,7 +28,7 @@ class PostDAOImpl implements PostDAO
                 $post->getMediaPath(),
                 $post->getExtension(),
                 $post->getUserId(),
-                $post->getScheduledAt()->format('Y-m-d H:i:s'),
+                $post->getScheduledAt() ? $post->getScheduledAt()->format('Y-m-d H:i:s'): null,
             ]
         );
 
@@ -264,7 +264,7 @@ class PostDAOImpl implements PostDAO
         return $result;
     }
 
-    public function getTrendPosts(): array
+    public function getTrendPosts(int $userId, int $offset, int $limit = 20): array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
         $query =
@@ -289,7 +289,7 @@ class PostDAOImpl implements PostDAO
             user_likes AS (
                 SELECT pl.post_id, COUNT(*) AS is_like
                 FROM post_likes pl
-                WHERE pl.user_id = 4
+                WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
             SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id,
@@ -302,10 +302,11 @@ class PostDAOImpl implements PostDAO
             LEFT JOIN like_data ld ON pd.id = ld.post_id
             LEFT JOIN user_likes ul ON pd.id = ul.post_id
             ORDER BY DATE(pd.created_at) DESC,
-            number_of_likes DESC;
+            number_of_likes DESC
+            LIMIT ?, ?;
             SQL;
 
-        $results = $mysqli->prepareAndFetchAll($query, "", []);
+        $results = $mysqli->prepareAndFetchAll($query, "iii", [$userId, $offset, $limit]);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
