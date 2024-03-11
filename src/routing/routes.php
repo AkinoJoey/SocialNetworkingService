@@ -42,24 +42,48 @@ return [
         $postDao = DAOFactory::getPostDAO();
 
         if (count($followingUserIdList) === 0) {
-            $trendPosts = $postDao->getTrendPosts();
+            $trendPosts = $postDao->getTrendPosts($user->getId(), 0);
             return new HTMLRenderer('page/top', ['posts' => $trendPosts,  'user' => $user, 'tabActive' => 'trend']);
         } else {
             // ユーザーにフォローしているユーザーがいる場合はフォロー中のタイムラインを表示
             $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
 
-            $timelineHtml = "";
-
-            foreach ($postsByFollowedUsers as $post) {
-                ob_start();
-                include(__DIR__ . '/../views/components/post_card.php');
-                $postCardHtml = ob_get_clean();
-                $timelineHtml .= $postCardHtml;
-            }
-   
             return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user, 'tabActive' => 'following']);
         }
     })->setMiddleware([]),
+    'timeline/following'=>Route::create('timeline/following', function () : HTTPRenderer {
+        $user = Authenticate::getAuthenticatedUser();
+        $followDao =  DAOFactory::getFollowDAO();
+        $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
+
+        $postDao = DAOFactory::getPostDAO();
+        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
+
+        $htmlString = "";
+
+        foreach ($postsByFollowedUsers as $post) {
+            ob_start();
+            $user;
+            include(__DIR__ . '/../views/components/post_card.php');
+            $postCardHtml = ob_get_clean();
+            $htmlString .= $postCardHtml;
+        }
+        return new JSONRenderer(['status'=>'success','htmlString'=>$htmlString]);
+    })->setMiddleware(['auth']),
+    'timeline/trend' => Route::create('timeline/trend', function() : HTTPRenderer {
+        $postDao = DAOFactory::getPostDAO();
+        $htmlString = "";
+        $user = Authenticate::getAuthenticatedUser();
+        $trendPosts = $postDao->getTrendPosts($user->getId(), 0);
+
+        foreach ($trendPosts as $post) {
+            ob_start();
+            include(__DIR__ . '/../views/components/post_card.php');
+            $postCardHtml = ob_get_clean();
+            $htmlString .= $postCardHtml;
+        }
+        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+    })->setMiddleware(['auth']),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
     })->setMiddleware([]),
@@ -376,6 +400,8 @@ return [
                 $post->setScheduledAt(new DateTime($validatedDatetime));
                 $post->setStatus(PostStatusType::SCHEDULED->value);
             }
+
+            error_log(print_r($validatedData,true));
 
             $postDao = DAOFactory::getPostDAO();
             $success = $postDao->create($post);
