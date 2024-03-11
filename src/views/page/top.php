@@ -15,6 +15,7 @@
 
 <script>
 	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
+	let currentTab = "<?= $tabActive ?>"
 </script>
 
 <script src="/top.bundle.js"></script>

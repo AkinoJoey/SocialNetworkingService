@@ -83,16 +83,19 @@ document.addEventListener("DOMContentLoaded", function () {
 	// タブの切替
 	let tabs = document.querySelectorAll(".tab");
 	let timelineContainer = document.getElementById("timeline_container");
+	let offsetCounter = 0;
+	let trendOffsetCounter = 0;
+	let followingOffsetCounter = 0;
 
 	tabs.forEach(function (tab) {
 		tab.addEventListener("click", function () {
-
-			fetch(`/timeline/${tab.dataset.tab}`, {
+			fetch(`/timeline/${tab.dataset.tab}?offset=${offsetCounter}`, {
 				method: "GET",
 			})
 				.then((response) => response.json())
 				.then((data) => {
 					if (data.status === "success") {
+						currentTab = tab.dataset.tab;
 						timelineContainer.innerHTML = data.htmlString;
 
 						let likeButtons = document.querySelectorAll(".like-btn");
@@ -104,7 +107,6 @@ document.addEventListener("DOMContentLoaded", function () {
 						// イベントリスナー再割り当て from flowbite
 						initDropdowns();
 						initModals();
-
 					} else if (data.status === "error") {
 						console.error(data.message);
 					}
@@ -141,5 +143,54 @@ document.addEventListener("DOMContentLoaded", function () {
 				"dark:text-gray-900",
 			);
 		});
+	});
+
+
+	window.addEventListener("scroll", function () {
+		// ドキュメントの高さ（ページの全体の高さ）
+		let documentHeight = document.documentElement.scrollHeight;
+
+		// 現在のスクロール位置
+		let scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+		// ウィンドウの高さ
+		let windowHeight = window.innerHeight;
+
+		// スクロール位置が最下部に近づいているかどうかをチェック
+		if (documentHeight - scrollTop <= windowHeight) {
+			// スクロールが最下部に到達したときの処理をここに記述
+			console.log("Reached the bottom of the page!");
+			offsetCounter += 3;
+
+			console.log(offsetCounter);
+
+			fetch(`/timeline/${currentTab}?offset=${offsetCounter}`, {
+				method: "GET",
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.status === "success") {
+						let newPosts = document.createElement('div');
+						newPosts.innerHTML = data.htmlString;
+						timelineContainer.append(newPosts);
+
+						let likeButtons = document.querySelectorAll(".like-btn");
+						let deleteButtons = document.querySelectorAll(".delete-btn");
+
+						// イベントリスナーを再割り当て
+						attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+
+						// イベントリスナー再割り当て from flowbite
+						initDropdowns();
+						initModals();
+					} else if (data.status === "error") {
+						console.error(data.message);
+					}
+				})
+				.catch((error) => {
+					alert("An error occurred. Please try again.");
+				});
+			
+		}
 	});
 });

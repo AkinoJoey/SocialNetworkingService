@@ -42,11 +42,11 @@ return [
         $postDao = DAOFactory::getPostDAO();
 
         if (count($followingUserIdList) === 0) {
-            $trendPosts = $postDao->getTrendPosts($user->getId(), 0);
+            $trendPosts = $postDao->getTrendPosts($user->getId(), 0, 3);
             return new HTMLRenderer('page/top', ['posts' => $trendPosts,  'user' => $user, 'tabActive' => 'trend']);
         } else {
             // ユーザーにフォローしているユーザーがいる場合はフォロー中のタイムラインを表示
-            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
+            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0, 3);
 
             return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user, 'tabActive' => 'following']);
         }
@@ -56,8 +56,14 @@ return [
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
 
+        $required_fields = [
+            'offset' => GeneralValueType::INT
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
         $postDao = DAOFactory::getPostDAO();
-        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0);
+        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), $validatedData['offset'], 3);
 
         $htmlString = "";
 
@@ -72,10 +78,16 @@ return [
     })->setMiddleware(['auth']),
     'timeline/trend' => Route::create('timeline/trend', function() : HTTPRenderer {
         $postDao = DAOFactory::getPostDAO();
-        $htmlString = "";
-        $user = Authenticate::getAuthenticatedUser();
-        $trendPosts = $postDao->getTrendPosts($user->getId(), 0);
+        $required_fields = [
+            'offset' => GeneralValueType::INT
+        ];
 
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+        $user = Authenticate::getAuthenticatedUser();
+        $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 3);
+
+        $htmlString = "";
         foreach ($trendPosts as $post) {
             ob_start();
             include(__DIR__ . '/../views/components/post_card.php');
