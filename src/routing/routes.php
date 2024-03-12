@@ -39,16 +39,12 @@ return [
 
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
-        $postDao = DAOFactory::getPostDAO();
 
         if (count($followingUserIdList) === 0) {
-            $trendPosts = $postDao->getTrendPosts($user->getId(), 0, 3);
-            return new HTMLRenderer('page/top', ['posts' => $trendPosts,  'user' => $user, 'tabActive' => 'trend']);
+            return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'trend']);
         } else {
-            // ユーザーにフォローしているユーザーがいる場合はフォロー中のタイムラインを表示
-            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), 0, 3);
 
-            return new HTMLRenderer('page/top', ['posts' => $postsByFollowedUsers, 'user' => $user, 'tabActive' => 'following']);
+            return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'following']);
         }
     })->setMiddleware([]),
     'timeline/following'=>Route::create('timeline/following', function () : HTTPRenderer {
