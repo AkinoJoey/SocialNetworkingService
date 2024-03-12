@@ -2,11 +2,8 @@ import { initDropdowns, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
 
 document.addEventListener("DOMContentLoaded", function () {
-	let likeButtons = document.querySelectorAll(".like-btn");
-	let deleteButtons = document.querySelectorAll(".delete-btn");
 	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
-
-	attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+	let postLikesMap = new Map();
 
 	function attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn) {
 		likeButtons.forEach(function (likeBtn) {
@@ -16,6 +13,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		deleteButtons.forEach(function (deleteBtn) {
 			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
 		});
+
+		// from flowbite
+		initDropdowns();
+		initModals();
 	}
 
 	function likeBtnClickListener(likeBtn) {
@@ -50,6 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
 					goodIcon,
 				);
 			}
+
+			// 別タブの同じ投稿を更新するためにマップにセット
+			postLikesMap.set(postId, isLike);
 		});
 	}
 
@@ -82,115 +86,107 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// タブの切替
 	let tabs = document.querySelectorAll(".tab");
-	let timelineContainer = document.getElementById("timeline_container");
-	let offsetCounter = 0;
-	let trendOffsetCounter = 0;
-	let followingOffsetCounter = 0;
+	let timelineContainers = document.querySelectorAll(".timeline-container");
+	let offsetCounterMap = new Map();
+	offsetCounterMap.set("trend", 0);
+	offsetCounterMap.set("following", 0);
+
+	fetchPost();
+
+	function fetchPost() {
+		fetch(
+			`/timeline/${currentTab}?offset=${offsetCounterMap.get(currentTab)}`,
+			{
+				method: "GET",
+			},
+		)
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.status === "success") {
+					// let newPosts = document.createElement("div");
+					// newPosts.innerHTML = data.htmlString;
+
+					// document
+					// 	.getElementById(currentTab + "_container")
+					// 	.appendChild(newPosts);
+
+					document.getElementById(currentTab + "_container").innerHTML =
+						data.htmlString;
+
+					let likeButtons = document.querySelectorAll(".like-btn");
+					let deleteButtons = document.querySelectorAll(".delete-btn");
+
+					// イベントリスナーを再割り当て
+					attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+
+					// offsetを更新
+					// TODO: 値を20にする
+					offsetCounterMap.set(
+						currentTab,
+						offsetCounterMap.get(currentTab) + 3,
+					);
+				} else if (data.status === "error") {
+					console.error(data.message);
+				}
+			})
+			.catch((error) => {
+				alert("An error occurred. Please try again.");
+			});
+	}
 
 	tabs.forEach(function (tab) {
 		tab.addEventListener("click", function () {
-			fetch(`/timeline/${tab.dataset.tab}?offset=${offsetCounter}`, {
-				method: "GET",
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					if (data.status === "success") {
-						currentTab = tab.dataset.tab;
-						timelineContainer.innerHTML = data.htmlString;
+			if (this.classList.contains("tab-active")) {
+				return;
+			}
 
-						let likeButtons = document.querySelectorAll(".like-btn");
-						let deleteButtons = document.querySelectorAll(".delete-btn");
-
-						// イベントリスナーを再割り当て
-						attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
-
-						// イベントリスナー再割り当て from flowbite
-						initDropdowns();
-						initModals();
-					} else if (data.status === "error") {
-						console.error(data.message);
-					}
-				})
-				.catch((error) => {
-					alert("An error occurred. Please try again.");
-				});
-
-			tabs.forEach(function (t) {
-				t.classList.remove(
-					"text-white",
-					"bg-gray-900",
-					"dark:bg-gray-300",
-					"dark:text-gray-900",
-				);
-				t.classList.add(
-					"text-gray-900",
-					"hover:bg-gray-200",
-					"dark:text-white",
-					"dark:hover:bg-gray-700",
-				);
+			tabs.forEach(function (tab) {
+				tab.classList.toggle("tab-active");
 			});
 
-			tab.classList.remove(
-				"text-gray-900",
-				"hover:bg-gray-200",
-				"dark:text-white",
-				"dark:hover:bg-gray-700",
-			);
-			tab.classList.add(
-				"text-white",
-				"bg-gray-900",
-				"dark:bg-gray-300",
-				"dark:text-gray-900",
-			);
+			timelineContainers.forEach(function (container) {
+				container.classList.toggle("hidden");
+			});
+
+			currentTab = tab.dataset.tab;
+
+
+			if (offsetCounterMap.get(currentTab) === 0) {
+				fetchPost();
+			}
+
+			let currentTimeline = document.getElementById(currentTab + '_container');
+			let likeButtonsToUpdate = [];
+
+			postLikesMap.keys().forEach(function (postId) {
+				likeButtonsToUpdate.push(
+					currentTimeline.querySelector(
+						`button[data-post-id='${postId}'].like-btn`,
+					),
+				);
+			})
+			
+
+			likeButtonsToUpdate.forEach(function (likeBtn) {
+				console.log(likeBtn);
+				console.log(likeBtn.getAttribute('data-post-id'));
+				console.log(likeBtn.querySelector(".number-of-likes"));
+			})
+			
 		});
 	});
 
+	// window.addEventListener("scroll", function () {
+	// 	let documentHeight = document.documentElement.scrollHeight;
 
-	window.addEventListener("scroll", function () {
-		// ドキュメントの高さ（ページの全体の高さ）
-		let documentHeight = document.documentElement.scrollHeight;
+	// 	// 現在のスクロール位置
+	// 	let scrollTop = window.scrollY || document.documentElement.scrollTop;
 
-		// 現在のスクロール位置
-		let scrollTop = window.scrollY || document.documentElement.scrollTop;
+	// 	let windowHeight = window.innerHeight;
 
-		// ウィンドウの高さ
-		let windowHeight = window.innerHeight;
-
-		// スクロール位置が最下部に近づいているかどうかをチェック
-		if (documentHeight - scrollTop <= windowHeight) {
-			// スクロールが最下部に到達したときの処理をここに記述
-			console.log("Reached the bottom of the page!");
-			offsetCounter += 3;
-
-			console.log(offsetCounter);
-
-			fetch(`/timeline/${currentTab}?offset=${offsetCounter}`, {
-				method: "GET",
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					if (data.status === "success") {
-						let newPosts = document.createElement('div');
-						newPosts.innerHTML = data.htmlString;
-						timelineContainer.append(newPosts);
-
-						let likeButtons = document.querySelectorAll(".like-btn");
-						let deleteButtons = document.querySelectorAll(".delete-btn");
-
-						// イベントリスナーを再割り当て
-						attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
-
-						// イベントリスナー再割り当て from flowbite
-						initDropdowns();
-						initModals();
-					} else if (data.status === "error") {
-						console.error(data.message);
-					}
-				})
-				.catch((error) => {
-					alert("An error occurred. Please try again.");
-				});
-			
-		}
-	});
+	// 	// スクロール位置が最下部に近づいているかどうかをチェック
+	// 	if (documentHeight - scrollTop <= windowHeight) {
+	// 		fetchPost();
+	// 	}
+	// });
 });
