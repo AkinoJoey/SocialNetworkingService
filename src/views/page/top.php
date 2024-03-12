@@ -3,11 +3,10 @@
 
 <!-- post -->
 <div class="container mx-auto mb-14 flex flex-col items-center justify-center p-4">
-	<div id="timeline_container">
-		<?php foreach ($posts as $post) : ?>
-			<?php include(__DIR__ . '/../components/post_card.php') ?>
-		<?php endforeach; ?>
+	<div id="trend_container" class="timeline-container <?php if ($tabActive !== 'trend') echo 'hidden' ?>">
 	</div>
+
+	<div id="following_container" class="timeline-container <?php if ($tabActive !== 'following') echo 'hidden' ?>">
 </div>
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
