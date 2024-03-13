@@ -298,9 +298,6 @@ return [
         $profileDao = DAOFactory::getProfileDAO();
         $profile = $profileDao->getByUserId($user->getId());
 
-        $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getPostsByFollowedUsers([], $user->getId(), 0);
-
         $followDao = DAOFactory::getFollowDAO();
         $followingList = $followDao->getFollowingUserIdList($user->getId());
         $followingCount = $followingList !== null ? count($followingList) : 0;
@@ -309,7 +306,7 @@ return [
 
         // 自分のプロフィールを見る場合
         if ($user->getId() === $authenticatedUser->getId()) {
-            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
+            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
         } else {
             $dmThreadDao = DAOFactory::getDmThreadDAO();
 
@@ -331,8 +328,32 @@ return [
 
             $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
 
-            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'posts' => $posts, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
+            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
         }
+    })->setMiddleware(['auth']),
+    'profile/posts' => Route::create('profile/posts', function () : HTTPRenderer {
+        $required_fields = [
+            'user_id' => GeneralValueType::INT,
+            'offset' => GeneralValueType::INT
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+        $postDao = DAOFactory::getPostDAO();
+        $posts = $postDao->getPostsByFollowedUsers([], $validatedData['user_id'], $validatedData['offset'], 3); //TODO: 20に変更する
+
+        $user = Authenticate::getAuthenticatedUser();
+        $htmlString = "";
+
+        foreach($posts as $post){
+            ob_start();
+            $user;
+            include(__DIR__ . '/../views/components/post_card.php');
+            $postCardHtml = ob_get_clean();
+            $htmlString .= $postCardHtml;
+        }
+
+        return new JSONRenderer(['status'=>'success', 'htmlString'=>$htmlString]);
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く

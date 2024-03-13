@@ -58,11 +58,7 @@
 
 <!-- post -->
 <div class="container mx-auto mb-14 flex flex-col items-center justify-center p-4">
-
-	<?php foreach ($posts as $post) : ?>
-		<?php include(__DIR__ . '/../components/post_card.php') ?>
-	<?php endforeach; ?>
-
+	<div id="posts_container"></div>
 </div>
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
@@ -82,5 +78,6 @@
 
 <script>
 	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
+	let userId = "<?= $user->getId() ?>"
 </script>
 <script src="/profile.bundle.js"></script>

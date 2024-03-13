@@ -1,10 +1,37 @@
+import { Dropdown, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
 	// いいねボタンの挙動
 	let likeButtons = document.querySelectorAll(".like-btn");
 
-	likeButtons.forEach(function (likeBtn) {
+	function attachEventListeners(
+		likeButtons,
+		deleteButtons,
+		deleteExecuteBtn,
+		dropdownContainers,
+	) {
+		likeButtons.forEach(function (likeBtn) {
+			likeBtnClickListener(likeBtn);
+		});
+
+		deleteButtons.forEach(function (deleteBtn) {
+			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
+		});
+
+		dropdownContainers.forEach(function (dropdownContainer) {
+			let dropdownBtn = dropdownContainer.querySelector(".dropdown-btn");
+			let dropdownMenu = dropdownContainer.querySelector(".dropdown-menu");
+			let dropdown = new Dropdown(dropdownMenu, dropdownBtn);
+			dropdown.hide();
+		});
+
+		// from flowbite
+		initModals();
+	}
+
+	function likeBtnClickListener(likeBtn) {
 		likeBtn.addEventListener("click", async function () {
 			let postId = likeBtn.getAttribute("data-post-id");
 			let formData = new FormData();
@@ -13,21 +40,39 @@ document.addEventListener("DOMContentLoaded", function () {
 			let isLike = likeBtn.getAttribute("data-isLike");
 
 			if (isLike === "1") {
-				await deleteLikePost(
-					"/form/delete-like-post",
-					formData,
-					likeBtn
-				);
+				await deleteLikePost("/form/delete-like-post", formData, likeBtn);
 			} else {
-				await likePost(
-					"/form/like-post",
-					formData,
-					likeBtn
-				);
+				await likePost("/form/like-post", formData, likeBtn);
 			}
 		});
-	});
+	}
 
+	function deleteBtnClickListener(deleteBtn, deleteExecuteBtn) {
+		deleteBtn.addEventListener("click", function () {
+			deleteExecuteBtn.addEventListener("click", function () {
+				let formData = new FormData();
+				let postId = deleteBtn.getAttribute("data-post-id");
+				formData.append("csrf_token", csrfToken);
+				formData.append("post_id", postId);
+
+				fetch("delete/post", {
+					method: "POST",
+					body: formData,
+				})
+					.then((response) => response.json())
+					.then((data) => {
+						if (data.status === "success") {
+							location.reload();
+						} else if (data.status === "error") {
+							console.error(data.message);
+						}
+					})
+					.catch((error) => {
+						alert("An error occurred. Please try again.");
+					});
+			});
+		});
+	}
 
 	if (myProfile === false) {
 		// フォローボタンの挙動
@@ -94,36 +139,50 @@ document.addEventListener("DOMContentLoaded", function () {
 					alert("An error occurred. Please try again.");
 				});
 		}
-	}	
+	}
 
-	let deleteButtons = document.querySelectorAll(".delete-btn");
-	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
+	let offsetCounter = 0;
+	let postsContainer = document.getElementById("posts_container");
 
-	deleteButtons.forEach(function (deleteBtn) {
-		deleteBtn.addEventListener("click", function () {
+	await fetchPost();
 
-			deleteExecuteBtn.addEventListener("click", function () {
-				let formData = new FormData();
-				let postId = deleteBtn.getAttribute("data-post-id");
-				formData.append("csrf_token", csrfToken);
-				formData.append("post_id", postId);
+	async function fetchPost() {
+		try {
+			const response = await fetch(
+				`/profile/posts?offset=${offsetCounter}&user_id=${userId}`,
+				{
+					method: "GET",
+				},
+			);
 
-				fetch("delete/post", {
-					method: "POST",
-					body: formData,
-				})
-					.then((response) => response.json())
-					.then((data) => {
-						if (data.status === "success") {
-							location.reload();
-						} else if (data.status === "error") {
-							console.error(data.message);
-						}
-					})
-					.catch((error) => {
-						alert("An error occurred. Please try again.");
-					});
-			});
-		});
-	});
+			const data = await response.json();
+
+			if (data.status === "success") {
+				let newPosts = document.createElement("div");
+				newPosts.innerHTML = data.htmlString;
+
+				postsContainer.appendChild(newPosts);
+
+				let likeButtons = newPosts.querySelectorAll(".like-btn");
+				let deleteButtons = newPosts.querySelectorAll(".delete-btn");
+				let dropdownContainers = newPosts.querySelectorAll(".post-dropdown");
+
+				// イベントリスナーを割り当て
+				attachEventListeners(
+					likeButtons,
+					deleteButtons,
+					deleteExecuteBtn,
+					dropdownContainers,
+				);
+
+				// offsetを更新
+				// TODO: 値を20にする
+				offsetCounter += 3;
+			} else if (data.status === "error") {
+				console.error(data.message);
+			}
+		} catch (error) {
+			alert("An error occurred. Please try again.");
+		}
+	}
 });
