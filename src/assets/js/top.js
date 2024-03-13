@@ -1,11 +1,16 @@
-import { initDropdowns, initModals } from "flowbite";
+import { Dropdown, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
-	let postLikesMap = new Map();
+	let postLikesMap = new Map(); // int postId => [string isLike, int numberOfLikes];
 
-	function attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn) {
+	function attachEventListeners(
+		likeButtons,
+		deleteButtons,
+		deleteExecuteBtn,
+		dropdownContainers,
+	) {
 		likeButtons.forEach(function (likeBtn) {
 			likeBtnClickListener(likeBtn);
 		});
@@ -14,17 +19,19 @@ document.addEventListener("DOMContentLoaded", function () {
 			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
 		});
 
+		dropdownContainers.forEach(function (dropdownContainer) {
+			let dropdownBtn = dropdownContainer.querySelector(".dropdown-btn");
+			let dropdownMenu = dropdownContainer.querySelector(".dropdown-menu");
+			let dropdown = new Dropdown(dropdownMenu, dropdownBtn);
+			dropdown.hide();
+		});
+
 		// from flowbite
-		initDropdowns();
 		initModals();
 	}
 
 	function likeBtnClickListener(likeBtn) {
-		likeBtn.addEventListener("click", function () {
-			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
-			let numberOfLikes = Number(numberOfLikesSpan.textContent);
-			let goodIcon = likeBtn.querySelector(".good-icon");
-
+		likeBtn.addEventListener("click", async function () {
 			let isLike = likeBtn.getAttribute("data-isLike");
 			let postId = likeBtn.getAttribute("data-post-id");
 
@@ -33,27 +40,17 @@ document.addEventListener("DOMContentLoaded", function () {
 			formData.append("csrf_token", csrfToken);
 
 			if (isLike === "1") {
-				deleteLikePost(
-					"/form/delete-like-post",
-					formData,
-					likeBtn,
-					numberOfLikes,
-					numberOfLikesSpan,
-					goodIcon,
-				);
+				await deleteLikePost("/form/delete-like-post", formData, likeBtn);
 			} else {
-				likePost(
-					"/form/like-post",
-					formData,
-					likeBtn,
-					numberOfLikes,
-					numberOfLikesSpan,
-					goodIcon,
-				);
+				await likePost("/form/like-post", formData, likeBtn);
 			}
 
-			// 別タブの同じ投稿を更新するためにマップにセット
-			postLikesMap.set(postId, isLike);
+			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
+			let numberOfLikes = Number(numberOfLikesSpan.textContent);
+			postLikesMap.set(postId, [
+				likeBtn.getAttribute("data-isLike"),
+				numberOfLikes,
+			]);
 		});
 	}
 
@@ -84,58 +81,60 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 
-	// タブの切替
-	let tabs = document.querySelectorAll(".tab");
-	let timelineContainers = document.querySelectorAll(".timeline-container");
 	let offsetCounterMap = new Map();
 	offsetCounterMap.set("trend", 0);
 	offsetCounterMap.set("following", 0);
 
-	fetchPost();
+	await fetchPost();
 
-	function fetchPost() {
-		fetch(
-			`/timeline/${currentTab}?offset=${offsetCounterMap.get(currentTab)}`,
-			{
-				method: "GET",
-			},
-		)
-			.then((response) => response.json())
-			.then((data) => {
-				if (data.status === "success") {
-					// let newPosts = document.createElement("div");
-					// newPosts.innerHTML = data.htmlString;
+	async function fetchPost() {
+		try {
+			const response = await fetch(
+				`/timeline/${currentTab}?offset=${offsetCounterMap.get(currentTab)}`,
+				{
+					method: "GET",
+				},
+			);
 
-					// document
-					// 	.getElementById(currentTab + "_container")
-					// 	.appendChild(newPosts);
+			const data = await response.json();
 
-					document.getElementById(currentTab + "_container").innerHTML =
-						data.htmlString;
+			if (data.status === "success") {
+				let newPosts = document.createElement("div");
+				newPosts.innerHTML = data.htmlString;
 
-					let likeButtons = document.querySelectorAll(".like-btn");
-					let deleteButtons = document.querySelectorAll(".delete-btn");
+				document
+					.getElementById(currentTab + "_container")
+					.appendChild(newPosts);
 
-					// イベントリスナーを再割り当て
-					attachEventListeners(likeButtons, deleteButtons, deleteExecuteBtn);
+				let likeButtons = newPosts.querySelectorAll(".like-btn");
+				let deleteButtons = newPosts.querySelectorAll(".delete-btn");
+				let dropdownContainers = newPosts.querySelectorAll(".post-dropdown");
 
-					// offsetを更新
-					// TODO: 値を20にする
-					offsetCounterMap.set(
-						currentTab,
-						offsetCounterMap.get(currentTab) + 3,
-					);
-				} else if (data.status === "error") {
-					console.error(data.message);
-				}
-			})
-			.catch((error) => {
-				alert("An error occurred. Please try again.");
-			});
+				// イベントリスナーを割り当て
+				attachEventListeners(
+					likeButtons,
+					deleteButtons,
+					deleteExecuteBtn,
+					dropdownContainers,
+				);
+
+				// offsetを更新
+				// TODO: 値を20にする
+				offsetCounterMap.set(currentTab, offsetCounterMap.get(currentTab) + 3);
+			} else if (data.status === "error") {
+				console.error(data.message);
+			}
+		} catch (error) {
+			alert("An error occurred. Please try again.");
+		}
 	}
 
+	// タブの切替
+	let tabs = document.querySelectorAll(".tab");
+	let timelineContainers = document.querySelectorAll(".timeline-container");
+
 	tabs.forEach(function (tab) {
-		tab.addEventListener("click", function () {
+		tab.addEventListener("click", async function () {
 			if (this.classList.contains("tab-active")) {
 				return;
 			}
@@ -150,43 +149,71 @@ document.addEventListener("DOMContentLoaded", function () {
 
 			currentTab = tab.dataset.tab;
 
-
 			if (offsetCounterMap.get(currentTab) === 0) {
-				fetchPost();
+				// 最初は最新のデータをとってくる
+				await fetchPost();
+			} else {
+				// 1度データを取ってきた後は、いいねボタンが押された情報を更新する
+				updateLikeButtonsInOpenedTab();
 			}
-
-			let currentTimeline = document.getElementById(currentTab + '_container');
-			let likeButtonsToUpdate = [];
-
-			postLikesMap.keys().forEach(function (postId) {
-				likeButtonsToUpdate.push(
-					currentTimeline.querySelector(
-						`button[data-post-id='${postId}'].like-btn`,
-					),
-				);
-			})
-			
-
-			likeButtonsToUpdate.forEach(function (likeBtn) {
-				console.log(likeBtn);
-				console.log(likeBtn.getAttribute('data-post-id'));
-				console.log(likeBtn.querySelector(".number-of-likes"));
-			})
-			
 		});
 	});
 
-	// window.addEventListener("scroll", function () {
-	// 	let documentHeight = document.documentElement.scrollHeight;
+	function updateLikeButtonsInOpenedTab() {
+		let currentTimeline = document.getElementById(currentTab + "_container");
+		let likeButtonsToUpdate = [];
 
-	// 	// 現在のスクロール位置
-	// 	let scrollTop = window.scrollY || document.documentElement.scrollTop;
+		// いいねボタンが押された投稿のボタンをすべて配列にいれる
+		postLikesMap.keys().forEach(function (postId) {
+			let likeBtn = currentTimeline.querySelector(
+				`button[data-post-id='${postId}'].like-btn`,
+			);
 
-	// 	let windowHeight = window.innerHeight;
+			if (likeBtn !== null) {
+				likeButtonsToUpdate.push(likeBtn);
+			}
+		});
 
-	// 	// スクロール位置が最下部に近づいているかどうかをチェック
-	// 	if (documentHeight - scrollTop <= windowHeight) {
-	// 		fetchPost();
-	// 	}
-	// });
+		if (likeButtonsToUpdate.length !== 0) {
+			likeButtonsToUpdate.forEach(function (likeBtn) {
+				let postLikesValue = postLikesMap.get(
+					likeBtn.getAttribute("data-post-id"),
+				);
+				let isLike = postLikesValue[0];
+
+				likeBtn.setAttribute("data-isLike", isLike);
+
+				let goodIcon = likeBtn.querySelector(".good-icon");
+
+				if (isLike === "1") {
+					goodIcon.classList.add("fill-blue-600");
+				} else if (isLike === "0") {
+					goodIcon.classList.remove("fill-blue-600");
+				}
+
+				let numberOfLikes = postLikesValue[1];
+				let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
+				numberOfLikesSpan.innerHTML = numberOfLikes;
+			});
+
+			// 更新完了後に空にする
+			postLikesMap.clear();
+			likeButtonsToUpdate.length = 0;
+		}
+	}
+
+	// 無限スクロール
+	window.addEventListener("scroll", function () {
+		let documentHeight = document.documentElement.scrollHeight;
+
+		// 現在のスクロール位置
+		let scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+		let windowHeight = window.innerHeight;
+
+		// スクロール位置が最下部に近づいているかどうかをチェック
+		if (documentHeight - scrollTop <= windowHeight) {
+			fetchPost();
+		}
+	});
 });
