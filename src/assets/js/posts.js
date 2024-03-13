@@ -7,49 +7,38 @@ document.addEventListener("DOMContentLoaded", function () {
 	let path = location.pathname;
 
 	likeButtons.forEach(function (likeBtn) {
-		likeBtn.addEventListener("click", function () {
-
-			let numberOfLikesSpan = likeBtn.querySelector(".number-of-likes");
-			let numberOfLikes = Number(numberOfLikesSpan.textContent);
-			let goodIcon = likeBtn.querySelector(".good-icon");
-			let isLike = likeBtn.getAttribute("data-isLike");
-
+		likeBtn.addEventListener("click", async function () {
 			let formData = new FormData();
 			let postId = likeBtn.getAttribute("data-post-id");
 			formData.append("csrf_token", csrfToken);
 			formData.append("post_id", postId);
 
 			let requestUrl = "";
+			let isLike = likeBtn.getAttribute("data-isLike");
 
 			if (isLike === "1") {
 				if (likeBtn.name === "post_like_btn" && path === "/posts") {
-					requestUrl = "form/delete-like-post";
+					requestUrl = "/form/delete-like-post";
 				} else {
-					requestUrl = "form/delete-like-comment";
+					requestUrl = "/form/delete-like-comment";
 				}
 
-				deleteLikePost(
+				await deleteLikePost(
 					requestUrl,
 					formData,
-					likeBtn,
-					numberOfLikes,
-					numberOfLikesSpan,
-					goodIcon,
+					likeBtn
 				);
 			} else {
 				if (likeBtn.name === "post_like_btn" && path === "/posts") {
-					requestUrl = "form/like-post";
+					requestUrl = "/form/like-post";
 				} else {
-					requestUrl = "form/like-comment";
+					requestUrl = "/form/like-comment";
 				}
 
-				likePost(
+				await likePost(
 					requestUrl,
 					formData,
-					likeBtn,
-					numberOfLikes,
-					numberOfLikesSpan,
-					goodIcon,
+					likeBtn
 				);
 			}
 		});
