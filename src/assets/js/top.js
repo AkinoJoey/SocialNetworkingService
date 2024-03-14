@@ -1,33 +1,22 @@
-import { Dropdown, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
+import { setupDropDowns } from "./setupDropDowns";
+import { setupAlertModals } from "./setupAlertModals";
 
 document.addEventListener("DOMContentLoaded", async function () {
-	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
 	let postLikesMap = new Map(); // int postId => [string isLike, int numberOfLikes];
 
 	function attachEventListeners(
 		likeButtons,
-		deleteButtons,
-		deleteExecuteBtn,
+		deleteMenuButtons,
 		dropdownContainers,
 	) {
 		likeButtons.forEach(function (likeBtn) {
 			likeBtnClickListener(likeBtn);
 		});
 
-		deleteButtons.forEach(function (deleteBtn) {
-			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
-		});
+		setupDropDowns(dropdownContainers);
 
-		dropdownContainers.forEach(function (dropdownContainer) {
-			let dropdownBtn = dropdownContainer.querySelector(".dropdown-btn");
-			let dropdownMenu = dropdownContainer.querySelector(".dropdown-menu");
-			let dropdown = new Dropdown(dropdownMenu, dropdownBtn);
-			dropdown.hide();
-		});
-
-		// from flowbite
-		initModals();
+		setupAlertModals(deleteMenuButtons);
 	}
 
 	function likeBtnClickListener(likeBtn) {
@@ -54,32 +43,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 		});
 	}
 
-	function deleteBtnClickListener(deleteBtn, deleteExecuteBtn) {
-		deleteBtn.addEventListener("click", function () {
-			deleteExecuteBtn.addEventListener("click", function () {
-				let formData = new FormData();
-				let postId = deleteBtn.getAttribute("data-post-id");
-				formData.append("csrf_token", csrfToken);
-				formData.append("post_id", postId);
-
-				fetch("/delete/post", {
-					method: "POST",
-					body: formData,
-				})
-					.then((response) => response.json())
-					.then((data) => {
-						if (data.status === "success") {
-							location.reload();
-						} else if (data.status === "error") {
-							console.error(data.message);
-						}
-					})
-					.catch((error) => {
-						alert("An error occurred. Please try again.");
-					});
-			});
-		});
-	}
 
 	let offsetCounterMap = new Map();
 	offsetCounterMap.set("trend", 0);
@@ -107,14 +70,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 					.appendChild(newPosts);
 
 				let likeButtons = newPosts.querySelectorAll(".like-btn");
-				let deleteButtons = newPosts.querySelectorAll(".delete-btn");
+				let deleteMenuButtons = newPosts.querySelectorAll(".delete-menu-btn");
 				let dropdownContainers = newPosts.querySelectorAll(".post-dropdown");
 
 				// イベントリスナーを割り当て
 				attachEventListeners(
 					likeButtons,
-					deleteButtons,
-					deleteExecuteBtn,
+					deleteMenuButtons,
 					dropdownContainers,
 				);
 

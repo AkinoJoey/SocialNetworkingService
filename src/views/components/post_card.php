@@ -37,7 +37,7 @@ use Carbon\Carbon;
                 <div class="dropdown-menu z-30 hidden absolute w-20 divide-y divide-gray-100 rounded bg-white shadow dark:divide-gray-600 dark:bg-gray-700">
                     <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconHorizontalButton">
                         <li>
-                            <button data-modal-target="alert_modal" data-modal-show="alert_modal" type="button" name="delete_post_btn" data-post-id="<?= $post->getId() ?>" class="delete-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
+                            <button type="button" data-post-id="<?= $post->getId() ?>" class="delete-menu-btn w-full block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-rose-700 font-bold">削除</button>
                         </li>
                     </ul>
                 </div>

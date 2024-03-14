@@ -1,9 +1,9 @@
 import { likePost, deleteLikePost } from "./likeButton";
 import { showFilePreview, checkForm } from "./newPost";
+import { setupAlertModals } from "./setupAlertModals";
 
 document.addEventListener("DOMContentLoaded", function () {
 	let likeButtons = document.querySelectorAll(".like-btn");
-	let deleteButtons = document.querySelectorAll(".delete-btn");
 	let path = location.pathname;
 
 	likeButtons.forEach(function (likeBtn) {
@@ -44,73 +44,12 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	});
 
-	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
 
-	deleteButtons.forEach(function (deleteBtn) {
-		deleteBtn.addEventListener("click", function () {
-			deleteExecuteBtn.addEventListener("click", function () {
-				let formData = new FormData();
-				let postId = deleteBtn.getAttribute("data-post-id");
-				formData.append("csrf_token", csrfToken);
+	let deleteMenuButtons = document.querySelectorAll(".delete-menu-btn");
 
-				if (deleteBtn.name === "delete_post_btn" && path === "/posts") {
-					formData.append("post_id", postId);
-					fetch("delete/post", {
-						method: "POST",
-						body: formData,
-					})
-						.then((response) => response.json())
-						.then((data) => {
-							if (data.status === "success") {
-								window.location.href = "/";
-							} else if (data.status === "error") {
-								console.error(data.message);
-							}
-						})
-						.catch((error) => {
-							alert("An error occurred. Please try again.");
-						});
-				} else if (
-					deleteBtn.name === "delete_post_btn" &&
-					path === "/comments"
-				) {
-					formData.append("comment_id", postId);
-					fetch("delete/comment", {
-						method: "POST",
-						body: formData,
-					})
-						.then((response) => response.json())
-						.then((data) => {
-							if (data.status === "success") {
-								window.location.href = "/";
-							} else if (data.status === "error") {
-								console.error(data.message);
-							}
-						})
-						.catch((error) => {
-							alert("An error occurred. Please try again.");
-						});
-				} else {
-					formData.append("comment_id", postId);
-					fetch("delete/comment", {
-						method: "POST",
-						body: formData,
-					})
-						.then((response) => response.json())
-						.then((data) => {
-							if (data.status === "success") {
-								location.reload();
-							} else if (data.status === "error") {
-								console.error(data.message);
-							}
-						})
-						.catch((error) => {
-							alert("An error occurred. Please try again.");
-						});
-				}
-			});
-		});
-	});
+	if (deleteMenuButtons) {
+		setupAlertModals(deleteMenuButtons);
+	}
 
 
 	const fileInputIcon = document.getElementById("reply-file-input-icon");

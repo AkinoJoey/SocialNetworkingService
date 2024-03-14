@@ -1,34 +1,23 @@
-import { Dropdown, initModals } from "flowbite";
 import { likePost, deleteLikePost } from "./likeButton";
+import { setupAlertModals } from "./setupAlertModals";
+import { setupDropDowns } from "./setupDropDowns";
 
 document.addEventListener("DOMContentLoaded", async function () {
-	let deleteExecuteBtn = document.getElementById("delete-execute-btn");
-	// いいねボタンの挙動
-	let likeButtons = document.querySelectorAll(".like-btn");
-
 	function attachEventListeners(
 		likeButtons,
-		deleteButtons,
-		deleteExecuteBtn,
+		deleteMenuButtons,
 		dropdownContainers,
 	) {
 		likeButtons.forEach(function (likeBtn) {
 			likeBtnClickListener(likeBtn);
 		});
 
-		deleteButtons.forEach(function (deleteBtn) {
-			deleteBtnClickListener(deleteBtn, deleteExecuteBtn);
-		});
+		setupDropDowns(dropdownContainers);
 
-		dropdownContainers.forEach(function (dropdownContainer) {
-			let dropdownBtn = dropdownContainer.querySelector(".dropdown-btn");
-			let dropdownMenu = dropdownContainer.querySelector(".dropdown-menu");
-			let dropdown = new Dropdown(dropdownMenu, dropdownBtn);
-			dropdown.hide();
-		});
-
-		// from flowbite
-		initModals();
+		// ドロップダウンの中に削除メニューボタンがある場合は、投稿削除のアラートモーダルの初期化。イベントリスナーの設定
+		if (deleteMenuButtons) {
+			setupAlertModals(deleteMenuButtons);
+		}
 	}
 
 	function likeBtnClickListener(likeBtn) {
@@ -44,33 +33,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 			} else {
 				await likePost("/form/like-post", formData, likeBtn);
 			}
-		});
-	}
-
-	function deleteBtnClickListener(deleteBtn, deleteExecuteBtn) {
-		deleteBtn.addEventListener("click", function () {
-			deleteExecuteBtn.addEventListener("click", function () {
-				let formData = new FormData();
-				let postId = deleteBtn.getAttribute("data-post-id");
-				formData.append("csrf_token", csrfToken);
-				formData.append("post_id", postId);
-
-				fetch("delete/post", {
-					method: "POST",
-					body: formData,
-				})
-					.then((response) => response.json())
-					.then((data) => {
-						if (data.status === "success") {
-							location.reload();
-						} else if (data.status === "error") {
-							console.error(data.message);
-						}
-					})
-					.catch((error) => {
-						alert("An error occurred. Please try again.");
-					});
-			});
 		});
 	}
 
@@ -164,16 +126,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 				postsContainer.appendChild(newPosts);
 
 				let likeButtons = newPosts.querySelectorAll(".like-btn");
-				let deleteButtons = newPosts.querySelectorAll(".delete-btn");
+				let deleteMenuButtons = newPosts.querySelectorAll(".delete-menu-btn");
 				let dropdownContainers = newPosts.querySelectorAll(".post-dropdown");
 
 				// イベントリスナーを割り当て
-				attachEventListeners(
-					likeButtons,
-					deleteButtons,
-					deleteExecuteBtn,
-					dropdownContainers,
-				);
+				attachEventListeners(likeButtons, deleteMenuButtons, dropdownContainers);
 
 				// offsetを更新
 				// TODO: 値を20にする
@@ -185,4 +142,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 			alert("An error occurred. Please try again.");
 		}
 	}
+
+	// 無限スクロール
+	window.addEventListener("scroll", function () {
+		let documentHeight = document.documentElement.scrollHeight;
+
+		// 現在のスクロール位置
+		let scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+		let windowHeight = window.innerHeight;
+
+		// スクロール位置が最下部に近づいているかどうかをチェック
+		if (documentHeight - scrollTop <= windowHeight) {
+			fetchPost();
+		}
+	});
 });
