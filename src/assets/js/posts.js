@@ -3,47 +3,54 @@ import { showFilePreview, checkForm } from "./newPost";
 import { setupAlertModals } from "./setupAlertModals";
 import { setupDropDowns } from "./setupDropDowns";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 	let likeButtons = document.querySelectorAll(".like-btn");
+	let deleteMenuButtons = document.querySelectorAll(".delete-menu-btn");
+	let dropdownContainers = document.querySelectorAll(".post-dropdown");
 	let path = location.pathname;
 
-	likeButtons.forEach(function (likeBtn) {
-		likeBtn.addEventListener("click", async function () {
-			let formData = new FormData();
-			let postId = likeBtn.getAttribute("data-post-id");
-			formData.append("csrf_token", csrfToken);
-			formData.append("post_id", postId);
+	attachEventListeners(likeButtons, deleteMenuButtons, dropdownContainers);
 
-			let requestUrl = "";
-			let isLike = likeBtn.getAttribute("data-isLike");
+	function attachEventListeners(
+		likeButtons,
+		deleteMenuButtons,
+		dropdownContainers,
+	) {
+		likeButtons.forEach(function (likeBtn) {
+			likeBtn.addEventListener("click", async function () {
+				let formData = new FormData();
+				let postId = likeBtn.getAttribute("data-post-id");
+				formData.append("csrf_token", csrfToken);
+				formData.append("post_id", postId);
 
-			if (isLike === "1") {
-				if (likeBtn.name === "post_like_btn" && path === "/posts") {
-					requestUrl = "/form/delete-like-post";
+				let requestUrl = "";
+				let isLike = likeBtn.getAttribute("data-isLike");
+
+				if (isLike === "1") {
+					if (likeBtn.name === "post_like_btn" && path === "/posts") {
+						requestUrl = "/form/delete-like-post";
+					} else {
+						requestUrl = "/form/delete-like-comment";
+					}
+
+					await deleteLikePost(requestUrl, formData, likeBtn);
 				} else {
-					requestUrl = "/form/delete-like-comment";
-				}
+					if (likeBtn.name === "post_like_btn" && path === "/posts") {
+						requestUrl = "/form/like-post";
+					} else {
+						requestUrl = "/form/like-comment";
+					}
 
-				await deleteLikePost(requestUrl, formData, likeBtn);
-			} else {
-				if (likeBtn.name === "post_like_btn" && path === "/posts") {
-					requestUrl = "/form/like-post";
-				} else {
-					requestUrl = "/form/like-comment";
+					await likePost(requestUrl, formData, likeBtn);
 				}
-
-				await likePost(requestUrl, formData, likeBtn);
-			}
+			});
 		});
-	});
 
-	let dropdownContainers = document.querySelectorAll(".post-dropdown");
-	setupDropDowns(dropdownContainers);
+		setupDropDowns(dropdownContainers);
 
-	let deleteMenuButtons = document.querySelectorAll(".delete-menu-btn");
-
-	if (deleteMenuButtons) {
-		setupAlertModals(deleteMenuButtons);
+		if (deleteMenuButtons) {
+			setupAlertModals(deleteMenuButtons);
+		}
 	}
 
 	const fileInputIcon = document.getElementById("reply-file-input-icon");
@@ -92,5 +99,67 @@ document.addEventListener("DOMContentLoaded", function () {
 			.catch((error) => {
 				alert("An error occurred. Please try again.");
 			});
+	});
+
+	let offsetCounter = 0;
+	let commentsContainer = document.getElementById("comments_container");
+
+	await fetchComments();
+
+	async function fetchComments() {
+		let typeReplyTo = location.pathname.slice(1, location.pathname.length - 1);
+
+		try {
+			const response = await fetch(
+				`/posts/comments?type_reply_to=${typeReplyTo}&post_id=${postId}&offset=${offsetCounter}`,
+				{
+					method: "GET",
+				},
+			);
+
+			const data = await response.json();
+
+			if (data.status === "success") {
+				let newComments = document.createElement("div");
+				newComments.innerHTML = data.htmlString;
+
+				commentsContainer.appendChild(newComments);
+
+				let likeButtons = newComments.querySelectorAll(".like-btn");
+				let deleteMenuButtons =
+					newComments.querySelectorAll(".delete-menu-btn");
+				let dropdownContainers = newComments.querySelectorAll(".post-dropdown");
+
+				// イベントリスナーを割り当て
+				attachEventListeners(
+					likeButtons,
+					deleteMenuButtons,
+					dropdownContainers,
+				);
+
+				// offsetを更新
+				// TODO: 値を20にする
+				offsetCounter += 3;
+			} else if (data.status === "error") {
+				console.error(data.message);
+			}
+		} catch (error) {
+			alert("An error occurred. Please try again.");
+		}
+	}
+
+	// 無限スクロール
+	window.addEventListener("scroll", function () {
+		let documentHeight = document.documentElement.scrollHeight;
+
+		// 現在のスクロール位置
+		let scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+		let windowHeight = window.innerHeight;
+
+		// スクロール位置が最下部に近づいているかどうかをチェック
+		if (documentHeight - scrollTop <= windowHeight) {
+			fetchComments();
+		}
 	});
 });
