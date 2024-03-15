@@ -4,7 +4,7 @@
 		<div class="flex flex-col">
 			<div class="w-full flex flex-row">
 				<div class="w-1/3">
-					<img src="https://source.unsplash.com/75x75/?portrait" alt="" class="flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" />
+					<img src="<?= $profile->getProfileImagePath() ?? '/images/user_default_portrait.png' ?>" alt="" class="flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" width="75px" height="75px" />
 				</div>
 				<!-- TODO: 10Kみたいな表示にする -->
 				<div class="w-2/3 flex justify-around">
