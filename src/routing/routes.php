@@ -468,9 +468,7 @@ return [
         $commentDao = DAOFactory::getCommentDAO();
         $comments = $commentDao->getCommentsToPost($post->getId(), $currentUser->getId(), 0);
 
-        $createFormAction = "/form/comment";
-
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path' => 'posts']);
+        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'user' => $currentUser, 'path' => 'posts']);
     })->setMiddleware(['auth']),
     'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -622,12 +620,10 @@ return [
 
         $childComments = $commentDao->getChildComments($parentComment->getId(), $currentUser->getId(),  0);
 
-        $createFormAction = "/form/comment-to-comment";
-
         $commentLikeDao = DAOFactory::getCommentLikeDAO();
         $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments, 'createFormAction' => $createFormAction, 'user' => $currentUser, 'path' => 'comments']);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments,  'user' => $currentUser, 'path' => 'comments']);
     })->setMiddleware(['auth']),
     'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
@@ -636,14 +632,14 @@ return [
 
         // TODO: 厳格なバリデーション
         $required_fields = [
-            'comment_id' => GeneralValueType::INT,
+            'post_id' => GeneralValueType::INT,
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
         $commentDao = DAOFactory::getCommentDAO();
 
         $user = Authenticate::getAuthenticatedUser();
-        $success = $commentDao->delete($validatedData['comment_id'], $user->getId());
+        $success = $commentDao->delete($validatedData['post_id'], $user->getId());
         if (!$success) throw new Exception('Failed to delete a comment!');
 
         FlashData::setFlashData('success', "コメントを削除しました");
