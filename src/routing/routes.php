@@ -461,14 +461,43 @@ return [
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $currentUser = Authenticate::getAuthenticatedUser();
+        $user = Authenticate::getAuthenticatedUser();
         $postDao = DAOFactory::getPostDAO();
-        $post = $postDao->getByUrl($validatedData['url'], $currentUser->getId());
+        $post = $postDao->getByUrl($validatedData['url'], $user->getId());
+
+        return new HTMLRenderer('page/posts', ['post' => $post, 'user' => $user, 'path' => 'posts']);
+    })->setMiddleware(['auth']),
+    'posts/comments'=>Route::create('posts/comments', function() : HTTPRenderer {
+        $required_fields = [
+            'type_reply_to' => PostValueType::TYPE_REPLY_TO,
+            'post_id' => GeneralValueType::INT,
+            'offset' => GeneralValueType::INT
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+        $user = Authenticate::getAuthenticatedUser();
 
         $commentDao = DAOFactory::getCommentDAO();
-        $comments = $commentDao->getCommentsToPost($post->getId(), $currentUser->getId(), 0);
 
-        return new HTMLRenderer('page/posts', ['post' => $post,  'comments' => $comments, 'user' => $currentUser, 'path' => 'posts']);
+        if ($validatedData['type_reply_to'] === 'post') {
+            $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
+        }else if($validatedData['type_reply_to'] === 'comment'){
+            $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
+        }
+
+
+        $htmlString = "";
+
+        foreach($comments as $comment){
+            ob_start();
+            $user;
+            include(__DIR__ . '/../views/components/comment.php');
+            $commentHtml = ob_get_clean();
+            $htmlString .= $commentHtml;
+        }
+
+        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
     })->setMiddleware(['auth']),
     'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -613,17 +642,12 @@ return [
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
-        $currentUser = Authenticate::getAuthenticatedUser();
+        $user = Authenticate::getAuthenticatedUser();
 
         $commentDao = DAOFactory::getCommentDAO();
-        $parentComment = $commentDao->getByUrl($validatedData['url'], $currentUser->getId());
+        $parentComment = $commentDao->getByUrl($validatedData['url'], $user->getId());
 
-        $childComments = $commentDao->getChildComments($parentComment->getId(), $currentUser->getId(),  0);
-
-        $commentLikeDao = DAOFactory::getCommentLikeDAO();
-        $numberOfPostLike = $commentLikeDao->getNumberOfLikes($parentComment->getId());
-
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'numberOfPostLike' => $numberOfPostLike, 'comments' => $childComments,  'user' => $currentUser, 'path' => 'comments']);
+        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'user' => $user, 'path' => 'comments']);
     })->setMiddleware(['auth']),
     'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
         // TODO: 投稿者だけが削除できるようにする
