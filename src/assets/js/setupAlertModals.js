@@ -30,7 +30,10 @@ function deleteMenuBtnClickListener(deleteMenuBtn, deleteExecuteBtn, alertModal)
 			formData.append("csrf_token", csrfToken);
 			formData.append("post_id", postId);
 
-			fetch("delete/post", {
+			let postType = deleteMenuBtn.getAttribute("data-post-type").toLowerCase();
+			let requestUrl = `/delete/${postType}`;
+
+			fetch(requestUrl, {
 				method: "POST",
 				body: formData,
 			})
