@@ -1,6 +1,7 @@
 import { likePost, deleteLikePost } from "./likeButton";
 import { showFilePreview, checkForm } from "./newPost";
 import { setupAlertModals } from "./setupAlertModals";
+import { setupDropDowns } from "./setupDropDowns";
 
 document.addEventListener("DOMContentLoaded", function () {
 	let likeButtons = document.querySelectorAll(".like-btn");
@@ -23,11 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					requestUrl = "/form/delete-like-comment";
 				}
 
-				await deleteLikePost(
-					requestUrl,
-					formData,
-					likeBtn
-				);
+				await deleteLikePost(requestUrl, formData, likeBtn);
 			} else {
 				if (likeBtn.name === "post_like_btn" && path === "/posts") {
 					requestUrl = "/form/like-post";
@@ -35,15 +32,13 @@ document.addEventListener("DOMContentLoaded", function () {
 					requestUrl = "/form/like-comment";
 				}
 
-				await likePost(
-					requestUrl,
-					formData,
-					likeBtn
-				);
+				await likePost(requestUrl, formData, likeBtn);
 			}
 		});
 	});
 
+	let dropdownContainers = document.querySelectorAll(".post-dropdown");
+	setupDropDowns(dropdownContainers);
 
 	let deleteMenuButtons = document.querySelectorAll(".delete-menu-btn");
 
@@ -51,12 +46,11 @@ document.addEventListener("DOMContentLoaded", function () {
 		setupAlertModals(deleteMenuButtons);
 	}
 
-
 	const fileInputIcon = document.getElementById("reply-file-input-icon");
 	let fileInput = document.getElementById("reply-file-input");
 	let previewContainer = document.getElementById("reply-previewContainer");
 	let textInput = document.getElementById("reply-content");
-	let submitBtn = document.getElementById('reply-submit');
+	let submitBtn = document.getElementById("reply-submit");
 
 	// 画像アイコンをクリックしたとき
 	fileInputIcon.addEventListener("click", function () {
@@ -64,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			showFilePreview(event, previewContainer, textInput, fileInput, submitBtn);
 
 			checkForm(textInput, fileInput, submitBtn);
-		})
+		});
 
 		fileInput.click();
 	});
@@ -81,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		let formData = new FormData(replyForm);
 		let type = location.pathname === "/posts" ? "post" : "comment";
 		formData.append("type_reply_to", type);
-		formData.append('media', fileInput.files[0]);
+		formData.append("media", fileInput.files[0]);
 
 		fetch("/form/reply", {
 			method: "POST",
