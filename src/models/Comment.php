@@ -23,7 +23,8 @@ class Comment implements Model
         private ?string $accountName = null,
         private ?int $numberOfComments = null,
         private ?int $numberOfLikes = null,
-        private ?int $isLike = null
+        private ?int $isLike = null,
+        private ?string $profileImagePath = null
     ) {
     }
 
@@ -140,5 +141,10 @@ class Comment implements Model
     public function getIsLike(): ?int
     {
         return $this->isLike;
+    }
+
+    public function getProfileImagePath(): ?string
+    {
+        return $this->profileImagePath;
     }
 }

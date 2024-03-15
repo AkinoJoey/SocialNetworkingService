@@ -24,7 +24,8 @@ class Post implements Model
         private ?string $accountName = null,
         private ?int $numberOfComments = null,
         private ?int $numberOfLikes = null,
-        private ?int $isLike = null
+        private ?int $isLike = null,
+        private ?string $profileImagePath = null
     ) {
     }
 
@@ -48,11 +49,13 @@ class Post implements Model
         $this->userId = $userId;
     }
 
-    public function getStatus() : string {
+    public function getStatus(): string
+    {
         return $this->status;
     }
 
-    public function setStatus(string $status) : void {
+    public function setStatus(string $status): void
+    {
         $this->status = $status;
     }
 
@@ -139,5 +142,10 @@ class Post implements Model
     public function getIsLike(): ?int
     {
         return $this->isLike;
+    }
+
+    public function getProfileImagePath(): ?string
+    {
+        return $this->profileImagePath;
     }
 }
