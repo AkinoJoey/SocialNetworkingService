@@ -28,7 +28,7 @@ class PostDAOImpl implements PostDAO
                 $post->getMediaPath(),
                 $post->getExtension(),
                 $post->getUserId(),
-                $post->getScheduledAt() ? $post->getScheduledAt()->format('Y-m-d H:i:s'): null,
+                $post->getScheduledAt() ? $post->getScheduledAt()->format('Y-m-d H:i:s') : null,
             ]
         );
 
@@ -66,6 +66,12 @@ class PostDAOImpl implements PostDAO
                     LEFT JOIN users u ON p.user_id  = u.id
                     WHERE p.id = ? AND p.status = 'public'
             ),
+            number_of_comments AS(
+                SELECT pc.post_id, COUNT(*) AS number_of_comments
+                    FROM comments pc
+                    WHERE pc.post_id = ?
+                    GROUP BY pc.post_id
+            ),
             number_of_likes AS(
                 SELECT pl.post_id, COUNT(*) AS number_of_likes
                     FROM post_likes pl 
@@ -78,13 +84,14 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ? AND pl.post_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.* ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like
+            SELECT pd.*, COALESCE(noc.number_of_comments, 0) AS number_of_comments ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like
                 FROM post_data pd
+                LEFT JOIN number_of_comments noc ON pd.id = noc.post_id
                 LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
                 LEFT JOIN user_likes ul ON pd.id = ul.post_id;
             SQL;
 
-        $result = $mysqli->prepareAndFetchAll($query, 'iiii', [$postId, $postId, $userId, $postId])[0] ?? null;
+        $result = $mysqli->prepareAndFetchAll($query, 'iiiii', [$postId, $postId, $postId, $userId, $postId])[0] ?? null;
 
         if ($result === null) return null;
 
