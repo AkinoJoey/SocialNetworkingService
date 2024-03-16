@@ -5,21 +5,24 @@ namespace src\models;
 use src\models\interfaces\Model;
 use src\models\traits\GenericModel;
 
-class Profile implements Model{
+class Profile implements Model
+{
     use GenericModel;
 
     public function __construct(
         private int $userId,
         private ?int $id = null,
         private ?int $age = null,
-        private ?string $location = null ,
+        private ?string $location = null,
         private ?string $description = null,
         private ?string $profileImagePath = null,
+        private ?string $extension = null,
         private ?DataTimeStamp $timeStamp = null,
     ) {
     }
 
-    public function getUserId() : int {
+    public function getUserId(): int
+    {
         return $this->userId;
     }
 
@@ -53,7 +56,7 @@ class Profile implements Model{
         return $this->location;
     }
 
-    public function setLocation(int $location): void
+    public function setLocation(string $location): void
     {
         $this->location = $location;
     }
@@ -63,7 +66,7 @@ class Profile implements Model{
         return $this->description;
     }
 
-    public function setDescription(int $description): void
+    public function setDescription(string $description): void
     {
         $this->description = $description;
     }
@@ -73,9 +76,19 @@ class Profile implements Model{
         return $this->profileImagePath;
     }
 
-    public function setProfileImagePath(int $profileImagePath): void
+    public function setProfileImagePath(string  $profileImagePath): void
     {
         $this->profileImagePath = $profileImagePath;
+    }
+
+    public function getExtension(): ?string
+    {
+        return $this->extension;
+    }
+
+    public function setExtension(string $extension): void
+    {
+        $this->extension = $extension;
     }
 
     public function getTimeStamp(): ?DataTimeStamp

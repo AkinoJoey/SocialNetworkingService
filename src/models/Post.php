@@ -25,7 +25,8 @@ class Post implements Model
         private ?int $numberOfComments = null,
         private ?int $numberOfLikes = null,
         private ?int $isLike = null,
-        private ?string $profileImagePath = null
+        private ?string $profileImagePath = null,
+        private ?string $profileImageExtension = null
     ) {
     }
 
@@ -147,5 +148,10 @@ class Post implements Model
     public function getProfileImagePath(): ?string
     {
         return $this->profileImagePath;
+    }
+
+    public function getProfileImageExtension(): ?string
+    {
+        return $this->profileImageExtension;
     }
 }

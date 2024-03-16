@@ -15,16 +15,17 @@ class ProfileDAOImpl implements ProfileDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "INSERT INTO profiles (age ,location, description, profile_image_path, user_id) VALUES (?, ?, ?, ?, ?)";
+        $query = "INSERT INTO profiles (age ,location, description, profile_image_path, extension,  user_id) VALUES (?, ?, ?, ?,  ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'isssi',
+            'issssi',
             [
                 $profile->getAge(),
                 $profile->getLocation(),
                 $profile->getDescription(),
                 $profile->getProfileImagePath(),
+                $profile->getExtension(),
                 $profile->getUserId()
             ]
         );
@@ -85,6 +86,7 @@ class ProfileDAOImpl implements ProfileDAO
             location: $rawData['location'],
             description: $rawData['description'],
             profileImagePath: $rawData['profile_image_path'],
+            extension: $rawData['extension'],
             timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at'])
         );
     }
@@ -104,18 +106,20 @@ class ProfileDAOImpl implements ProfileDAO
                     age = ?,
                     location = ?,
                     description = ?,
-                    profile_image_path = ?
+                    profile_image_path = ?,
+                    extension = ?
                 WHERE id = ?
             SQL;
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'isssi',
+            'issssi',
             [
                 $profile->getAge(),
                 $profile->getLocation(),
                 $profile->getDescription(),
                 $profile->getProfileImagePath(),
+                $profile->getExtension(),
                 $profile->getId()
             ]
         );

@@ -84,7 +84,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ? AND pl.post_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.*, COALESCE(noc.number_of_comments, 0) AS number_of_comments ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like,pr.profile_image_path ,
+            SELECT pd.*, COALESCE(noc.number_of_comments, 0) AS number_of_comments ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like,pr.profile_image_path, pr.extension AS profile_image_extension,
                 FROM post_data pd
                 LEFT JOIN number_of_comments noc ON pd.id = noc.post_id
                 LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
@@ -166,7 +166,9 @@ class PostDAOImpl implements PostDAO
             accountName: $rawData['account_name'] ?? null,
             numberOfComments: $rawData['number_of_comments'] ?? null,
             numberOfLikes: $rawData['number_of_likes'] ?? null,
-            isLike: $rawData['is_like'] ?? null
+            isLike: $rawData['is_like'] ?? null,
+            profileImagePath: $rawData['profile_image_path'] ?? null,
+            profileImageExtension: $rawData['profile_image_extension']
         );
     }
 
@@ -236,8 +238,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id,
-             ,pd.account_name, pd.username,
+            SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id, pr.profile_image_path, pr.extension AS profile_image_extension ,pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
                 COALESCE(ul.is_like, 0) AS is_like
@@ -245,7 +246,7 @@ class PostDAOImpl implements PostDAO
             LEFT JOIN comment_data cd ON pd.id = cd.post_id
             LEFT JOIN like_data ld ON pd.id = ld.post_id
             LEFT JOIN user_likes ul ON pd.id = ul.post_id
-            -- LEFT JOIN profiles pr on pd.user_id = pr.user_id
+            LEFT JOIN profiles pr on pd.user_id = pr.user_id
             ORDER BY pd.created_at DESC LIMIT ?, ?;
             SQL;
 
@@ -302,7 +303,7 @@ class PostDAOImpl implements PostDAO
                 GROUP BY pl.post_id
             )
             SELECT pd.id, pd.content, pd.url, pd.media_path, pd.extension, pd.status,  pd.created_at, pd.updated_at ,pd.user_id,
-                pr.profile_image_path ,pd.account_name, pd.username,
+                pr.profile_image_path, pr.extension AS profile_image_extension ,pd.account_name, pd.username,
                 COALESCE(cd.number_of_comments, 0) AS number_of_comments,
                 COALESCE(ld.number_of_likes, 0) AS number_of_likes,
                 COALESCE(ul.is_like, 0) AS is_like
