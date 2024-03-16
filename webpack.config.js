@@ -9,7 +9,8 @@ module.exports = {
 		notifications: "./src/assets/js/notifications.js",
 		top: "./src/assets/js/top.js",
 		loggedInUser: "./src/assets/js/postAndLogoutModal.js",
-		searchUser: "./src/assets/js/searchUser.js"
+		searchUser: "./src/assets/js/searchUser.js",
+		profileEdit: "./src/assets/js/profileEdit.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
