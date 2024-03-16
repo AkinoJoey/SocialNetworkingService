@@ -26,6 +26,7 @@ use src\types\NotificationType;
 use src\types\PostStatusType;
 use src\types\UserValueType;
 use src\types\PostValueType;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -47,7 +48,7 @@ return [
             return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'following']);
         }
     })->setMiddleware([]),
-    'timeline/following'=>Route::create('timeline/following', function () : HTTPRenderer {
+    'timeline/following' => Route::create('timeline/following', function (): HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
         $followDao =  DAOFactory::getFollowDAO();
         $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
@@ -70,9 +71,9 @@ return [
             $postCardHtml = ob_get_clean();
             $htmlString .= $postCardHtml;
         }
-        return new JSONRenderer(['status'=>'success','htmlString'=>$htmlString]);
+        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
     })->setMiddleware(['auth']),
-    'timeline/trend' => Route::create('timeline/trend', function() : HTTPRenderer {
+    'timeline/trend' => Route::create('timeline/trend', function (): HTTPRenderer {
         $postDao = DAOFactory::getPostDAO();
         $required_fields = [
             'offset' => GeneralValueType::INT
@@ -202,45 +203,91 @@ return [
     })->setMiddleware(['auth']),
     'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
         // TODO: エラーのtry-catch
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
-        $nullableFields = [
-            'id' => GeneralValueType::INT,
-            'username' => UserValueType::USERNAME,
-            'age' => UserValueType::AGE,
-            'location' => GeneralValueType::STRING,
-            'description' => UserValueType::DESCRIPTION
-        ];
+            // error_log(print_r($_POST, true));
 
-        $validatedData = ValidationHelper::validateFields($nullableFields, $_POST);
+            // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
+            $required_fields = [
+                'username' => UserValueType::USERNAME
+            ];
 
-        $user = Authenticate::getAuthenticatedUser();
-        // Profileオブジェクトを作成
-        $profile = new Profile(
-            userId: $user->getId(),
-            id: $validatedData['id'],
-            age: $validatedData['age'],
-            location: $validatedData['location'],
-            description: $validatedData['description']
-        );
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
 
-        $profileDao = DAOFactory::getProfileDAO();
-        if (isset($validatedData['id'])) $success = $profileDao->update($profile);
-        else $success = $profileDao->create($profile);
+            $profile = new Profile(
+                userId: $user->getId(),
+            );
 
-        if (!$success) throw new Exception('Database update failed!');
+            if (isset($_POST['id'])) {
+                $id = ValidationHelper::integer($_POST['id']);
+                $validatedData['id'] = $id;
+                $profile->setId($id);
+            }
 
-        $userDao = DAOFactory::getUserDAO();
+            if (isset($_POST['age'])) {
+                $age = ValidationHelper::age($_POST['age']);
+                $profile->setAge($age);
+            }
 
-        $user->setUsername($validatedData['username']);
+            if (isset($_POST['location'])) {
+                $location = ValidationHelper::location($_POST['location']);
+                $profile->setLocation($location);
+            }
 
-        $updatedSuccess = $userDao->update($user);
+            if (isset($_POST['description'])) {
+                $description = ValidationHelper::description($_POST['description']);
+                $profile->setDescription($description);
+            }
 
-        if (!$updatedSuccess) throw new Exception('Failed to update user!');
+            if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
+                $media = ValidationHelper::media($_FILES['media']['tmp_name']);
+                $validatedData['media'] = $media;
+            }
 
-        return new RedirectRenderer(sprintf('profile?username=%s', $user->getUsername()));
-    }),
+
+            if (isset($validatedData['media'])) {
+                $tmpPath = $validatedData['media'];
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($tmpPath);
+                $extension = '.' . explode('/', $mime)[1];
+                //メディアのファイル名の長さ 
+                $numberOfCharacters = 18;
+                $basename = bin2hex(random_bytes($numberOfCharacters / 2));
+                $filename = $basename . $extension;
+                $uploadDir =  __DIR__ .  "/../../public/uploads/";
+                $subdirectory = substr($filename, 0, 2) . "/";
+                $mediaPath = $uploadDir .  $subdirectory . $filename;
+
+                $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
+                if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
+
+                // インスタンスに保存
+                $profile->setProfileImagePath($basename);
+                $profile->setExtension($extension);
+            }
+
+            $profileDao = DAOFactory::getProfileDAO();
+            if (isset($validatedData['id'])) $success = $profileDao->update($profile);
+            else $success = $profileDao->create($profile);
+
+            if (!$success) throw new Exception('Database update failed!');
+
+            $userDao = DAOFactory::getUserDAO();
+
+            $user->setUsername($validatedData['username']);
+
+            $updatedSuccess = $userDao->update($user);
+
+            if (!$updatedSuccess) throw new Exception('Failed to update user!');
+
+            FlashData::setFlashData('success', 'プロフィールを更新しました');
+            return new JSONRenderer(['status' => 'success']);
+        }catch(Exception $e){
+            error_log($e->getMessage());
+        }
+    })->setMiddleware(['auth']),
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
     })->setMiddleware(['guest']),
@@ -331,7 +378,7 @@ return [
             return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
         }
     })->setMiddleware(['auth']),
-    'profile/posts' => Route::create('profile/posts', function () : HTTPRenderer {
+    'profile/posts' => Route::create('profile/posts', function (): HTTPRenderer {
         $required_fields = [
             'user_id' => GeneralValueType::INT,
             'offset' => GeneralValueType::INT
@@ -345,7 +392,7 @@ return [
         $user = Authenticate::getAuthenticatedUser();
         $htmlString = "";
 
-        foreach($posts as $post){
+        foreach ($posts as $post) {
             ob_start();
             $user;
             include(__DIR__ . '/../views/components/post_card.php');
@@ -353,7 +400,7 @@ return [
             $htmlString .= $postCardHtml;
         }
 
-        return new JSONRenderer(['status'=>'success', 'htmlString'=>$htmlString]);
+        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
     })->setMiddleware(['auth']),
     'form/new' => Route::create('form/new', function (): HTTPRenderer {
         // TODO: try-catch文を書く
@@ -430,7 +477,7 @@ return [
                 $post->setStatus(PostStatusType::SCHEDULED->value);
             }
 
-            error_log(print_r($validatedData,true));
+            error_log(print_r($validatedData, true));
 
             $postDao = DAOFactory::getPostDAO();
             $success = $postDao->create($post);
@@ -467,7 +514,7 @@ return [
 
         return new HTMLRenderer('page/posts', ['post' => $post, 'user' => $user, 'path' => 'posts']);
     })->setMiddleware(['auth']),
-    'posts/comments'=>Route::create('posts/comments', function() : HTTPRenderer {
+    'posts/comments' => Route::create('posts/comments', function (): HTTPRenderer {
         $required_fields = [
             'type_reply_to' => PostValueType::TYPE_REPLY_TO,
             'post_id' => GeneralValueType::INT,
@@ -482,14 +529,14 @@ return [
 
         if ($validatedData['type_reply_to'] === 'post') {
             $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
-        }else if($validatedData['type_reply_to'] === 'comment'){
+        } else if ($validatedData['type_reply_to'] === 'comment') {
             $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
         }
 
 
         $htmlString = "";
 
-        foreach($comments as $comment){
+        foreach ($comments as $comment) {
             ob_start();
             $user;
             include(__DIR__ . '/../views/components/comment.php');
