@@ -225,6 +225,30 @@ class ValidationHelperDataProvider
         ];
     }
 
+    public static function validLocationProvider(): array
+    {
+        return [
+            // 有効な場所
+            ['東京'],
+            ['New York'],
+            ['London'],
+            ['Paris'],
+            ['Berlin'],
+            [''],
+            [' '],
+            [str_repeat('あ',30)]
+        ];
+    }
+
+    public static function invalidLocationProvider(): array
+    {
+        return [
+            // 31文字の無効な場所
+            [str_repeat('a', 31)],
+        ];
+    }
+
+
     public static function validDescriptionProvider(): array
     {
         return [

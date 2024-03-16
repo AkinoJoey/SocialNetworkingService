@@ -47,6 +47,7 @@ class ValidationHelper
                 UserValueType::EMAIL => self::email($value),
                 UserValueType::PASSWORD => self::password($value),
                 UserValueType::AGE => self::age($value),
+                UserValueType::LOCATION => self::location($value),
                 UserValueType::DESCRIPTION => self::description($value),
                 PostValueType::CONTENT => self::post($value),
                 PostValueType::MEDIA => self::media($value),
@@ -167,6 +168,19 @@ class ValidationHelper
         return $age;
     }
 
+    public static function location(string $location): string
+    {
+        self::unicodeString($location);
+
+        $maxLen = 30;
+
+        if(mb_strlen($location) > $maxLen){
+            throw new \LengthException("場所に入力できる文字数は30文字までです");
+        }
+
+        return $location;
+    }
+
     public static function description(string $description): string
     {
         self::unicodeString($description);
@@ -261,10 +275,11 @@ class ValidationHelper
         return $path;
     }
 
-    public static function postType(string $type) : string {
+    public static function postType(string $type): string
+    {
         $allowedMimeTypes = ['post', 'comment'];
-    
-        if(!in_array($type, $allowedMimeTypes)){
+
+        if (!in_array($type, $allowedMimeTypes)) {
             throw new \InvalidArgumentException("無効なタイプが入力されました。");
         }
 

@@ -151,6 +151,20 @@ class ValidationHelperTest extends TestCase
         ValidationHelper::age($age);
     }
 
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validLocationProvider')]
+    public function testValidLocation(string $location): void
+    {
+        $this->assertSame($location, ValidationHelper::location($location));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidLocationProvider')]
+    public function testInvalidLocation(string $location): void
+    {
+        $this->expectException(\LengthException::class);
+        $this->expectExceptionMessage("場所に入力できる文字数は30文字までです");
+        ValidationHelper::location($location);
+    }
+
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'validDescriptionProvider')]
     public function testValidDescription(string $description): void
     {
