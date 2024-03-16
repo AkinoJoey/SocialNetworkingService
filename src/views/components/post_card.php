@@ -9,7 +9,7 @@ use Carbon\Carbon;
     <div class="flex justify-between items-center ">
         <div class="flex space-x-4">
             <a href="/profile?username=<?= $post->getUsername() ?>" class="z-30">
-                <img alt="" src=<?= $post->getProfileImagePath() ?? '/images/user_default_portrait.png' ?> class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
+                <img alt="" src="<?= $post->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($post->getProfileImagePath(), 0, 2) . '/' .  $post->getProfileImagePath() . $post->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
             </a>
             <div class="flex flex-col space-y-1">
                 <div class="flex">

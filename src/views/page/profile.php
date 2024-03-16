@@ -4,7 +4,7 @@
 		<div class="flex flex-col">
 			<div class="w-full flex flex-row">
 				<div class="w-1/3">
-					<img src="<?= $profile->getProfileImagePath() ?? '/images/user_default_portrait.png' ?>" alt="" class="flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" width="75px" height="75px" />
+					<img src="<?= $profile->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($profile->getProfileImagePath(), 0, 2) . '/' .  $profile->getProfileImagePath() . $profile->getExtension() ?>" alt="" class="flex-shrink-0 self-center rounded-full border dark:border-gray-700 dark:bg-gray-500 lg:justify-self-start" width="75px" height="75px" />
 				</div>
 				<!-- TODO: 10Kみたいな表示にする -->
 				<div class="w-2/3 flex justify-around">
@@ -33,9 +33,12 @@
 		</div>
 		<?php if ($user->getId() === $authenticatedUser->getId()) : ?>
 			<div class="align-center flex justify-center space-x-4 pt-4">
-				<button class="btn btn-active">
-					<a href="/profile/edit">プロフィールを編集</a>
-				</button>
+				<a href="/profile/edit">
+					<button class="btn btn-active">
+						プロフィールを編集
+					</button>
+				</a>
+				<!-- TODO: アラートモーダルを出す -->
 				<button type="button" class="logout-btn btn btn-active">
 					ログアウト
 				</button>
