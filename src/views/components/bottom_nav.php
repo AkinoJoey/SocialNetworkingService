@@ -14,9 +14,19 @@
             <span class="sr-only">検索</span>
         </a>
         <a href="/notifications" class="group inline-flex flex-col items-center justify-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <svg class="h-6 w-6 text-gray-500 transition duration-75 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                <path d="M17.1 12.6v-1.8A5.4 5.4 0 0 0 13 5.6V3a1 1 0 0 0-2 0v2.4a5.4 5.4 0 0 0-4 5.5v1.8c0 2.4-1.9 3-1.9 4.2 0 .6 0 1.2.5 1.2h13c.5 0 .5-.6.5-1.2 0-1.2-1.9-1.8-1.9-4.2ZM8.8 19a3.5 3.5 0 0 0 6.4 0H8.8Z" />
-            </svg>
+            <div class="indicator">
+                <?php
+                $numberOfNotification = $numberOfNotification > 99 ? '99+' : $numberOfNotification;
+                ?>
+                <?php if ($numberOfNotification !== 0) : ?>
+                    <span class="indicator-item badge badge-sm badge-secondary"><?= $numberOfNotification ?></span>
+                <?php endif; ?>
+                <svg class="h-6 w-6 text-gray-500 transition duration-75 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <path d="M17.1 12.6v-1.8A5.4 5.4 0 0 0 13 5.6V3a1 1 0 0 0-2 0v2.4a5.4 5.4 0 0 0-4 5.5v1.8c0 2.4-1.9 3-1.9 4.2 0 .6 0 1.2.5 1.2h13c.5 0 .5-.6.5-1.2 0-1.2-1.9-1.8-1.9-4.2ZM8.8 19a3.5 3.5 0 0 0 6.4 0H8.8Z" />
+                </svg>
+
+            </div>
+
             <span class="sr-only">通知</span>
         </a>
         <a href="/messages" class="group inline-flex flex-col items-center justify-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -26,10 +36,10 @@
             <span class="sr-only">メッセージ</span>
         </a>
         <a href="/profile<?= '?username=' . $user->getUsername(); ?>" class="group inline-flex flex-col items-center justify-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <svg class="h-6 w-6 flex-shrink-0 text-gray-500 transition duration-75 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd" />
-                </svg>
-                <span class="sr-only">プロフィール</span>
+            <svg class="h-6 w-6 flex-shrink-0 text-gray-500 transition duration-75 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd" />
+            </svg>
+            <span class="sr-only">プロフィール</span>
         </a>
     </div>
 </div>
