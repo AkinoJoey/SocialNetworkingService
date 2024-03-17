@@ -114,13 +114,12 @@ class DmMessageDAOImpl implements DmMessageDAO
                 WHERE sender_user_id = ? OR receiver_user_id = ?
                 GROUP BY dm_thread_id
             )
-            SELECT dm.id, dm.message, dm.iv, dm.dm_thread_id, dm.created_at , u.account_name as from_user_account_name, dm.sender_user_id , dm.receiver_user_id , dt.url
+            SELECT dm.id, dm.message, dm.iv, dm.dm_thread_id, dm.created_at , u.account_name as from_user_account_name,p.profile_image_path, p.extension, dm.sender_user_id , dm.receiver_user_id , dt.url
             FROM dm_messages dm
-            JOIN latest_messages latest 
-            ON dm.dm_thread_id = latest.dm_thread_id AND dm.created_at = latest.latest_created_at
-            left join users u 
-            ON CASE WHEN dm.sender_user_id = ? THEN dm.receiver_user_id ELSE dm.sender_user_id END = u.id
-            left join dm_threads dt on dm.dm_thread_id = dt.id
+            JOIN latest_messages latest ON dm.dm_thread_id = latest.dm_thread_id AND dm.created_at = latest.latest_created_at
+            LEFT JOIN users u ON CASE WHEN dm.sender_user_id = ? THEN dm.receiver_user_id ELSE dm.sender_user_id END = u.id
+            LEFT JOIN profiles p ON u.id = p.user_id
+            LEFT JOIN dm_threads dt on dm.dm_thread_id = dt.id
             LIMIT ?;
             SQL;
 
@@ -152,7 +151,9 @@ class DmMessageDAOImpl implements DmMessageDAO
             id: $rowData['id'],
             createdAt: new DateTime($rowData['created_at']),
             from_user_account_name: $rowData['from_user_account_name'],
-            url: $rowData['url']
+            url: $rowData['url'],
+            profileImagePath: $rowData['profile_image_path'],
+            profileImageExtension: $rowData['extension']
         );
     }
 }
