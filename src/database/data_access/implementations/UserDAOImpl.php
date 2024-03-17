@@ -40,7 +40,7 @@ class UserDAOImpl implements UserDAO
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = "SELECT * FROM users WHERE id = ?";
+        $query = "SELECT u.*, p.profile_image_path , p.extension FROM users u LEFT JOIN profiles p ON u.id = p.user_id WHERE u.id = ?";
 
         $result = $mysqli->prepareAndFetchAll($query, 'i', [$id])[0] ?? null;
 
@@ -81,7 +81,9 @@ class UserDAOImpl implements UserDAO
             id: $rawData['id'],
             username: $rawData['username'],
             emailVerified: $rawData['email_verified'],
-            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at'])
+            timeStamp: new DataTimeStamp($rawData['created_at'], $rawData['updated_at']),
+            profileImagePath: $rawData['profile_image_path'] ?? null,
+            profileImageExtension: $rawData['extension'] ?? null
         );
     }
 
@@ -177,9 +179,10 @@ class UserDAOImpl implements UserDAO
                 FROM follows f 
                 GROUP BY f.follower_user_id
             )
-            SELECT u.*
+            SELECT u.*, pr.profile_image_path, pr.extension
                 FROM users u 
                 LEFT JOIN number_of_followers nof ON u.id = nof.follower_user_id
+                LEFT JOIN profiles pr ON u.id = pr.user_id
                 ORDER BY nof.number_of_followers DESC LIMIT ?;
             SQL;
 

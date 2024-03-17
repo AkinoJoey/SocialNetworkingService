@@ -16,6 +16,8 @@ class User implements Model
         private ?int $id = null,
         private bool $emailVerified = false,
         private ?DataTimeStamp $timeStamp = null,
+        private ?string $profileImagePath = null,
+        private ?string $profileImageExtension = null
     ) {
     }
 
@@ -77,5 +79,15 @@ class User implements Model
     public function getEmailVerified(): bool
     {
         return $this->emailVerified;
+    }
+
+    public function getProfileImagePath(): ?string
+    {
+        return $this->profileImagePath;
+    }
+
+    public function getProfileImageExtension(): ?string
+    {
+        return $this->profileImageExtension;
     }
 }

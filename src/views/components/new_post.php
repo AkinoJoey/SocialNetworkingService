@@ -14,7 +14,7 @@
             <input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
             <div class="flex p-4">
                 <div>
-                    <img class="w-14 rounded-full" src="https://source.unsplash.com/100x100/?portrait" />
+                    <img class="w-14 rounded-full" src="<?= $user->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($user->getProfileImagePath(), 0, 2) . '/' .  $user->getProfileImagePath() . $user->getProfileImageExtension() ?>" />
                 </div>
 
                 <div class="ml-3 flex w-full flex-col">

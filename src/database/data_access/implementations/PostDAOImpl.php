@@ -84,7 +84,7 @@ class PostDAOImpl implements PostDAO
                 WHERE pl.user_id = ? AND pl.post_id = ?
                 GROUP BY pl.post_id
             )
-            SELECT pd.*, COALESCE(noc.number_of_comments, 0) AS number_of_comments ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like,pr.profile_image_path, pr.extension AS profile_image_extension,
+            SELECT pd.*, COALESCE(noc.number_of_comments, 0) AS number_of_comments ,COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) AS is_like,pr.profile_image_path, pr.extension AS profile_image_extension
                 FROM post_data pd
                 LEFT JOIN number_of_comments noc ON pd.id = noc.post_id
                 LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
@@ -168,7 +168,7 @@ class PostDAOImpl implements PostDAO
             numberOfLikes: $rawData['number_of_likes'] ?? null,
             isLike: $rawData['is_like'] ?? null,
             profileImagePath: $rawData['profile_image_path'] ?? null,
-            profileImageExtension: $rawData['profile_image_extension']
+            profileImageExtension: $rawData['profile_image_extension'] ?? null
         );
     }
 

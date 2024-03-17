@@ -19,7 +19,9 @@ class DmMessage implements Model{
         private ?string $iv = null,
         private ?DateTime $createdAt = null,
         private ?string $from_user_account_name = null,
-        private ?string $url = null
+        private ?string $url = null,
+        private ?string $profileImagePath = null,
+        private ?string $profileImageExtension = null
     ) {
     }
 
@@ -93,5 +95,15 @@ class DmMessage implements Model{
 
     public function getUrl() : ?string {
         return $this->url;
+    }
+
+    public function getProfileImagePath(): ?string
+    {
+        return $this->profileImagePath;
+    }
+
+    public function getProfileImageExtension(): ?string
+    {
+        return $this->profileImageExtension;
     }
 }

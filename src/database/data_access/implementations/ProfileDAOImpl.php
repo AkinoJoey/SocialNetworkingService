@@ -106,19 +106,21 @@ class ProfileDAOImpl implements ProfileDAO
                     age = ?,
                     location = ?,
                     description = ?,
-                    profile_image_path = ?,
-                    extension = ?
+                    profile_image_path = CASE WHEN ? IS NULL THEN profile_image_path ELSE ? END,
+                    extension = CASE WHEN ? IS NULL THEN extension ELSE ? END
                 WHERE id = ?
             SQL;
 
         $result = $mysqli->prepareAndExecute(
             $query,
-            'issssi',
+            'issssssi',
             [
                 $profile->getAge(),
                 $profile->getLocation(),
                 $profile->getDescription(),
                 $profile->getProfileImagePath(),
+                $profile->getProfileImagePath(),
+                $profile->getExtension(),
                 $profile->getExtension(),
                 $profile->getId()
             ]

@@ -75,7 +75,9 @@ class NotificationDAOImpl implements NotificationDAO
             username: $rawData['username'] ?? null,
             commentUrl: $rawData['comment_url'] ?? null,
             postUrl: $rawData['post_url'] ?? null,
-            threadUrl: $rawData['thread_url'] ?? null
+            threadUrl: $rawData['thread_url'] ?? null,
+            profileImagePath: $rawData['profile_image_path'] ?? null,
+            profileImageExtension: $rawData['extension'] ?? null
         );
     }
 
@@ -166,10 +168,11 @@ class NotificationDAOImpl implements NotificationDAO
         $query =
             <<<SQL
             WITH user_data AS(
-                SELECT n.id, u.account_name , u.username 
+                SELECT n.id, u.account_name , u.username , p.profile_image_path, p.extension
                     FROM notifications n
                     JOIN users u ON n.source_id  = u.id
-                    WHERE user_id = ?
+                    LEFT JOIN profiles p ON n.source_id = p.user_id
+                    WHERE n.user_id = ?
                 ), comment_data AS(
                 SELECT n.id, c.url
                     FROM notifications n 
@@ -186,7 +189,7 @@ class NotificationDAOImpl implements NotificationDAO
                     JOIN dm_threads dt ON n.dm_thread_id = dt.id
                     WHERE user_id1 = ? OR user_id2 = ?
                 )
-                SELECT n.*, ud.account_name, ud.username, cd.url as comment_url, pd.url as post_url, td.url as thread_url
+                SELECT n.*, ud.account_name, ud.username, ud.profile_image_path, ud.extension, cd.url as comment_url, pd.url as post_url, td.url as thread_url
                     FROM notifications n 
                     LEFT JOIN user_data ud ON n.id = ud.id
                     LEFT JOIN comment_data cd ON n.id = cd.id

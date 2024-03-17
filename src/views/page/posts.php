@@ -9,7 +9,7 @@ use Carbon\Carbon;
         <div class="flex space-x-4 justify-between items-center">
             <div class="flex space-x-4">
                 <a href="/profile?username=<?= $post->getUsername() ?>" class="z-30">
-                    <img alt="" src="https://source.unsplash.com/100x100/?portrait" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
+                    <img alt="" src="<?= $post->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($post->getProfileImagePath(), 0, 2) . '/' .  $post->getProfileImagePath() . $post->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
                 </a>
                 <div class="flex flex-col space-y-1">
                     <div class="flex">
@@ -85,7 +85,7 @@ use Carbon\Carbon;
                     <input type="hidden" name="post_id" value="<?= $post->getId()  ?>">
                     <div class="flex p-2">
                         <div>
-                            <img class="h-8 w-8 rounded-full" src="https://source.unsplash.com/100x100/?portrait" />
+                            <img class="h-8 w-8 rounded-full" src="<?= $user->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($user->getProfileImagePath(), 0, 2) . '/' .  $user->getProfileImagePath() . $user->getProfileImageExtension() ?>" />
                         </div>
 
                         <div class="ml-3 flex w-full flex-col">

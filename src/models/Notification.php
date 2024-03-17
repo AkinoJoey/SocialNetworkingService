@@ -22,7 +22,9 @@ class Notification implements Model{
         private ?string $username = null,
         private ?string $commentUrl = null,
         private ?string $postUrl = null,
-        private ?string $threadUrl = null
+        private ?string $threadUrl = null,
+        private ?string $profileImagePath = null,
+        private ?string $profileImageExtension = null
     ) {
     }
 
@@ -130,5 +132,15 @@ class Notification implements Model{
 
     public function getThreadUrl() : ?string {
         return $this->threadUrl;
+    }
+
+    public function getProfileImagePath(): ?string
+    {
+        return $this->profileImagePath;
+    }
+
+    public function getProfileImageExtension(): ?string
+    {
+        return $this->profileImageExtension;
     }
 }

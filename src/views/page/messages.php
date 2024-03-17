@@ -1,3 +1,6 @@
+<?php
+    use Carbon\Carbon;
+?>
 <!-- message list -->
 <div class="container mx-auto mb-14 flex items-center justify-center p-4">
     <div class="w-full max-w-2xl divide-y divide-gray-100 rounded-lg bg-white shadow dark:divide-gray-700 dark:bg-gray-800 sm:m-12 sm:w-8/12 lg:mx-40">
@@ -9,7 +12,7 @@
                 <a href="direct?url=<?= $message->getUrl() ?>" data-message-id="<?= $message->getId() ?>" class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
                     <div class="flex w-full items-center">
                         <div class="mr-2">
-                            <img class="rounded-full w-16" src="https://source.unsplash.com/100x100/?portrait" alt="Jese image" />
+                            <img class="rounded-full w-16" src="<?= $message->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($message->getProfileImagePath(), 0, 2) . '/' .  $message->getProfileImagePath() . $message->getProfileImageExtension() ?>" alt="user avatar" />
                         </div>
                         <div class="w-3/4">
                             <div class="flex h-full flex-col justify-center">
@@ -19,7 +22,7 @@
                                     <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><?= ($message->getSenderUserId() == $user->getId()) ? 'You' : $message->getFromUserAccountName() ?>: <?= $message->getMessage() ?></p>
                                 </div>
                                 <div class="text-xs text-blue-600 dark:text-blue-500">
-                                    a few moments ago
+                                    <?= Carbon::parse($message->getCreatedAt())->diffForHumans() ?>
                                 </div>
                             </div>
                         </div>
