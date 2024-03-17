@@ -14,7 +14,7 @@
                         <div class="flex items-center space-x-2">
                             <img id="user_portrait" src="<?= $profile->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($profile->getProfileImagePath(), 0, 2) . '/' .  $profile->getProfileImagePath() . $profile->getExtension() ?>" alt="" class="w-16 h-16 rounded-full bg-gray-50 hover:cursor-pointer hover:opacity-50">
                             <input type="hidden" name="MAX_FILE_SIZE" value="41943040" />
-                            <input class="hidden" id="file-input" type="file" name="media" accept="image/png, image/gif, image/jpeg, image/jpg, image/webp">
+                            <input class="hidden" id="file-input" type="file" name="media" accept="image/png, image/jpeg, image/jpg, image/webp">
                         </div>
                     </div>
                     <div class="sm:col-span-2">
