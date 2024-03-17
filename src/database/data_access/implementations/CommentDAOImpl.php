@@ -135,7 +135,9 @@ class CommentDAOImpl implements CommentDAO
             accountName: $rawData['account_name'] ?? null,
             numberOfComments: $rawData['number_of_comments'] ?? null,
             numberOfLikes: $rawData['number_of_likes'] ?? null,
-            isLike: $rawData['is_like'] ?? null
+            isLike: $rawData['is_like'] ?? null,
+            profileImagePath: $rawData['profile_image_path'] ?? null,
+            profileImageExtension: $rawData['profile_image_extension'] ?? null
         );
     }
 
@@ -187,11 +189,12 @@ class CommentDAOImpl implements CommentDAO
                 WHERE cl.user_id = ? AND cl.comment_id IN ($placeholders)
                 GROUP BY cl.comment_id
             )
-            select cd.*, COALESCE(ns.number_of_comments, 0) AS number_of_comments, COALESCE(nl.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) as is_like
+            select cd.*, p.profile_image_path, p.extension AS profile_image_extension, COALESCE(ns.number_of_comments, 0) AS number_of_comments, COALESCE(nl.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) as is_like
                 from comments_data cd
                 LEFT JOIN number_of_comments ns ON cd.id = ns.parent_comment_id
                 LEFT JOIN number_of_likes nl ON cd.id = nl.comment_id
                 LEFT JOIN user_likes ul ON cd.id = ul.comment_id
+                LEFT JOIN profiles p on cd.user_id = p.user_id
                 WHERE cd.parent_comment_id = ? LIMIT ?, ?;
             SQL;
 
@@ -235,11 +238,12 @@ class CommentDAOImpl implements CommentDAO
                 WHERE cl.user_id = ? AND cl.comment_id IN ($placeholders)
                 GROUP BY cl.comment_id
             )
-            select cd.*, COALESCE(ns.number_of_comments, 0) AS number_of_comments, COALESCE(nl.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) as is_like
+            select cd.*, p.profile_image_path, p.extension AS profile_image_extension, COALESCE(ns.number_of_comments, 0) AS number_of_comments, COALESCE(nl.number_of_likes, 0) AS number_of_likes, COALESCE(ul.is_like, 0) as is_like
                 from comments_data cd
                 LEFT JOIN number_of_comments ns ON cd.id = ns.parent_comment_id
                 LEFT JOIN number_of_likes nl ON cd.id = nl.comment_id
                 LEFT JOIN user_likes ul ON cd.id = ul.comment_id
+                LEFT JOIN profiles p ON cd.user_id = p.user_id
                 WHERE cd.post_id = ? LIMIT ?, ?;
             SQL;
 
