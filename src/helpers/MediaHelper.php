@@ -14,9 +14,9 @@ class MediaHelper
 
         return true;
     }
-    public static function createThumbnail(string $imagePath, string $thumbnailPath): bool
+    public static function createThumbnail(string $imagePath, string $thumbnailPath, string $size): bool
     {
-        $command = "magick {$imagePath} -thumbnail 720x720 {$thumbnailPath}";
+        $command = "magick {$imagePath} -thumbnail {$size} {$thumbnailPath}";
 
         exec($command, $output, $returnCode);
 
