@@ -32,20 +32,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		console.log(...formData.entries());
 
-		// fetch("/form/profile/edit", {
-		// 	method: "POST",
-		// 	body: formData,
-		// })
-		// 	.then((response) => response.json())
-		// 	.then((data) => {
-		// 		if (data.status === "success") {
-		// 			window.location.href = `/profile?username=${username}`;
-		// 		} else if (data.status === "error") {
-		// 			alert(data.message);
-		// 		}
-		// 	})
-		// 	.catch((error) => {
-		// 		alert("An error occurred. Please try again.");
-		// 	});
+		fetch("/form/profile/edit", {
+			method: "POST",
+			body: formData,
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.status === "success") {
+					window.location.href = `/profile?username=${username}`;
+				} else if (data.status === "error") {
+					alert(data.message);
+				}
+			})
+			.catch((error) => {
+				alert("An error occurred. Please try again.");
+			});
 	});
 });
