@@ -4,13 +4,11 @@ namespace src\helpers;
 
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
-use src\types\ValueType;
 use src\helpers\ValidationHelper;
 use src\database\data_access\DAOFactory;
 use src\models\DmMessage;
 use Exception;
 use src\helpers\ChatClient;
-use src\helpers\Settings;
 use src\types\NotificationType;
 use src\models\Notification;
 use src\types\GeneralValueType;
