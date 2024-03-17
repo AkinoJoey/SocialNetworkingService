@@ -138,8 +138,14 @@ return [
             // データベースにユーザーを作成しようとします
             $success = $userDao->create($user, $validatedData['password']);
 
-            if (!$success) throw new Exception('Failed to create new user!');
-
+            // 空のプロフィールを作成しておく
+            if ($success) {
+                $profileDao = DAOFactory::getProfileDAO();
+                $profile = new Profile($user->getId());
+                $profileDao->create($profile);
+            } else {
+                throw new Exception('Failed to create new user!');
+            }
             // ユーザーログイン
             Authenticate::loginAsUser($user);
 
@@ -203,46 +209,36 @@ return [
     })->setMiddleware(['auth']),
     'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
         // TODO: エラーのtry-catch
-        try{
+        try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-            // error_log(print_r($_POST, true));
-
-            // TODO: 厳格なバリデーション。usernameは一意かどうか確認する.英数字のみ
             $required_fields = [
+                'id' => GeneralValueType::INT,
                 'username' => UserValueType::USERNAME
             ];
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-            $user = Authenticate::getAuthenticatedUser();
 
-            $profile = new Profile(
-                userId: $user->getId(),
-            );
+            $profileDao = DAOFactory::getProfileDAO();
+            $profile = $profileDao->getById($validatedData['id']);
 
-            if (isset($_POST['id'])) {
-                $id = ValidationHelper::integer($_POST['id']);
-                $validatedData['id'] = $id;
-                $profile->setId($id);
-            }
-
-            if (isset($_POST['age'])) {
+            if (isset($_POST['age']) && $_POST['age'] !== '') {
                 $age = ValidationHelper::age($_POST['age']);
                 $profile->setAge($age);
             }
 
-            if (isset($_POST['location'])) {
+            if (isset($_POST['location']) && $_POST['location'] !== '') {
                 $location = ValidationHelper::location($_POST['location']);
                 $profile->setLocation($location);
             }
 
-            if (isset($_POST['description'])) {
+            if (isset($_POST['description']) && $_POST['description'] !== '') {
                 $description = ValidationHelper::description($_POST['description']);
                 $profile->setDescription($description);
             }
 
             if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
-                $media = ValidationHelper::media($_FILES['media']['tmp_name']);
+                $media = ValidationHelper::image($_FILES['media']['tmp_name'], 'avatar');
                 $validatedData['media'] = $media;
             }
 
@@ -263,19 +259,33 @@ return [
                 $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
                 if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
 
+                // 画像を編集
+                if (str_starts_with($mime, 'image/')) {
+                    $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
+
+                    $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, "400x400");
+                    if ($success) {
+                        //　名前をオリジナルに変更
+                        rename($thumbnailPath, $mediaPath);
+
+                        // 元のアバターを削除
+                        $oldAvatarPath = $profile->getProfileImagePath();
+                        if (isset($oldAvatarPath)) {
+                            unlink($uploadDir . substr($oldAvatarPath, 0, 2) . '/' .  $oldAvatarPath . $profile->getExtension());
+                        }
+                    }
+                    if (!$success) throw new Exception("エラーが発生しました");
+                }
                 // インスタンスに保存
                 $profile->setProfileImagePath($basename);
                 $profile->setExtension($extension);
             }
 
-            $profileDao = DAOFactory::getProfileDAO();
-            if (isset($validatedData['id'])) $success = $profileDao->update($profile);
-            else $success = $profileDao->create($profile);
-
+            $profileDao->update($profile);
             if (!$success) throw new Exception('Database update failed!');
 
             $userDao = DAOFactory::getUserDAO();
-
+            $user = Authenticate::getAuthenticatedUser();
             $user->setUsername($validatedData['username']);
 
             $updatedSuccess = $userDao->update($user);
@@ -284,8 +294,9 @@ return [
 
             FlashData::setFlashData('success', 'プロフィールを更新しました');
             return new JSONRenderer(['status' => 'success']);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         }
     })->setMiddleware(['auth']),
     'login' => Route::create('login', function (): HTTPRenderer {
@@ -461,7 +472,7 @@ return [
                 if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
                     $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
-                    $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
+                    $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, "720x720");
                     if (!$success) throw new Exception("エラーが発生しました");
                 } else if (str_starts_with($mime, 'video/')) {
                     $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
@@ -500,19 +511,23 @@ return [
         }
     })->setMiddleware(['auth']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
-        // TODO: 厳格なバリデーション
-        // TODO: データベースにないURLのクエリだった場合は404を出す
-        $required_fields = [
-            'url' => GeneralValueType::STRING,
-        ];
+        try {
+            // TODO: 厳格なバリデーション
+            // TODO: データベースにないURLのクエリだった場合は404を出す
+            $required_fields = [
+                'url' => GeneralValueType::STRING,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $user = Authenticate::getAuthenticatedUser();
-        $postDao = DAOFactory::getPostDAO();
-        $post = $postDao->getByUrl($validatedData['url'], $user->getId());
+            $user = Authenticate::getAuthenticatedUser();
+            $postDao = DAOFactory::getPostDAO();
+            $post = $postDao->getByUrl($validatedData['url'], $user->getId());
 
-        return new HTMLRenderer('page/posts', ['post' => $post, 'user' => $user, 'path' => 'posts']);
+            return new HTMLRenderer('page/posts', ['post' => $post, 'user' => $user, 'path' => 'posts']);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+        }
     })->setMiddleware(['auth']),
     'posts/comments' => Route::create('posts/comments', function (): HTTPRenderer {
         $required_fields = [
@@ -625,7 +640,7 @@ return [
             if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
                 $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
-                $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath);
+                $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, "720x720");
 
                 if (!$success) throw new Exception("エラーが発生しました");
             } else if (str_starts_with($mime, 'video/')) {
