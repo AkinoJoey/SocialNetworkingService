@@ -304,20 +304,23 @@ class ValidationHelperDataProvider
     public static function validImageProvider(): array
     {
         return [
-            [__DIR__ . '/../fixtures/images/4.8MB.jpg'], 
-            [__DIR__ . '/../fixtures/images/208KB.jpg'], 
-            [__DIR__ . '/../fixtures/images/832KB.jpeg'], 
-            [__DIR__ . '/../fixtures/images/1.7MB.png'], 
-            [__DIR__ . '/../fixtures/images/175KB.gif'],
-            [__DIR__ . '/../fixtures/images/10KB.webp'], 
+            [__DIR__ . '/../fixtures/images/4.8MB.jpg', 'post'], 
+            [__DIR__ . '/../fixtures/images/208KB.jpg', 'post'], 
+            [__DIR__ . '/../fixtures/images/832KB.jpeg', 'post'], 
+            [__DIR__ . '/../fixtures/images/1.7MB.png', 'post'], 
+            [__DIR__ . '/../fixtures/images/175KB.gif', 'post'],
+            [__DIR__ . '/../fixtures/images/10KB.webp', 'post'],
+            [__DIR__ . '/../fixtures/images/1.7MB.png', 'avatar'],
+            [__DIR__ . '/../fixtures/images/10KB.webp', 'avatar'], 
         ];
     }
 
     public static function invalidImageProvider(): array
     {
         return [
-            [__DIR__ . '/../fixtures/images/6MB.jpg'], // 5MB以上の画像
-            [__DIR__ . '/../fixtures/images/1KB.svg'], // 対応していない形式の画像
+            [__DIR__ . '/../fixtures/images/6MB.jpg', 'post'], // 5MB以上の画像
+            [__DIR__ . '/../fixtures/images/1KB.svg', 'post'], // 対応していない形式の画像
+            [__DIR__ . '/../fixtures/images/175KB.gif', 'avatar'],
         ];
     }
 

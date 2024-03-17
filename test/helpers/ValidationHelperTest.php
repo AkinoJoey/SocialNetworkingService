@@ -208,17 +208,17 @@ class ValidationHelperTest extends TestCase
     }
 
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'validImageProvider')]
-    public function testValidImage(string $path): void
+    public function testValidImage(string $path, $type): void
     {
-        $this->assertSame($path, ValidationHelper::image($path));
+        $this->assertSame($path, ValidationHelper::image($path, $type));
     }
 
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidImageProvider')]
-    public function testInvalidImage(string $path): void
+    public function testInvalidImage(string $path, $type): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("画像は5MB以内かつ、jpg, png, gif, webp形式のみ対応しています");
-        ValidationHelper::image($path);
+        ValidationHelper::image($path,$type);
     }
 
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'validVideoProvider')]
