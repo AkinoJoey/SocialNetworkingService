@@ -221,13 +221,17 @@ class ValidationHelper
         return $path;
     }
 
-    public static function image(string $path): string
+    public static function image(string $path, string $type = 'post'): string
     {
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($path);
         $byteSize = filesize($path);
 
-        $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif', 'image/webp'];
+        if($type === 'post'){
+            $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif', 'image/webp'];
+        }else if($type === 'avatar'){
+            $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        }
         $maxImageSize =  5 * 1024 * 1024;
 
         if (!in_array($mime, $allowedMimeTypes) || $byteSize > $maxImageSize) {
