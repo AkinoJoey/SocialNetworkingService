@@ -101,11 +101,11 @@ document.addEventListener("DOMContentLoaded", function () {
 		.addEventListener("click", function () {
 			let selectedDates = fp.selectedDates;
 			if (selectedDates.length > 0) {
-				scheduledAt = fp.formatDate(selectedDates[0], "Y-m-d H:i:00");
 				scheduledAtContainer.innerHTML = fp.formatDate(
 					selectedDates[0],
 					"Y-m-d H:i",
 				);
+				scheduledAt = scheduledAtContainer.textContent + ":00"
 			} else {
 				scheduledAt = "";
 				scheduledAtContainer.innerHTML = "";
@@ -119,21 +119,23 @@ document.addEventListener("DOMContentLoaded", function () {
 		formData.append("media", fileInput.files[0]);
 		formData.append("scheduled_at", scheduledAt);
 
-		fetch("/form/new", {
-			method: "POST",
-			body: formData,
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				if (data.status === "success") {
-					location.reload();
-				} else if (data.status === "error") {
-					alert(data.message);
-				}
-			})
-			.catch((error) => {
-				alert("An error occurred. Please try again.");
-			});
+		
+
+		// fetch("/form/new", {
+		// 	method: "POST",
+		// 	body: formData,
+		// })
+		// 	.then((response) => response.json())
+		// 	.then((data) => {
+		// 		if (data.status === "success") {
+		// 			location.reload();
+		// 		} else if (data.status === "error") {
+		// 			alert(data.message);
+		// 		}
+		// 	})
+		// 	.catch((error) => {
+		// 		alert("An error occurred. Please try again.");
+		// 	});
 	});
 
 	textInput.addEventListener("input", function () {
@@ -150,7 +152,4 @@ document.addEventListener("DOMContentLoaded", function () {
 			submitBtn.classList.add("btn", "btn-disabled");
 		}
 	}
-
-	
-
 });
