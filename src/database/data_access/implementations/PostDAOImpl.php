@@ -321,4 +321,13 @@ class PostDAOImpl implements PostDAO
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
+
+    public function getScheduledPosts(int $userId): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "SELECT * FROM posts WHERE status = 'scheduled' AND user_id = ?";
+
+        $results = $mysqli->prepareAndFetchAll($query, 'i', [$userId]);
+        return $results === null ? [] : $this->rawDataToPosts($results);
+    }
 }
