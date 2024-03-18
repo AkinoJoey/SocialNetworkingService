@@ -15,6 +15,7 @@ use src\types\GeneralValueType;
 use src\types\PostValueType;
 
 // TODO: authenticate
+// TODO: 141文字以上ならアラートを出す
 class Chat implements MessageComponentInterface
 {
     protected $threads = []; // [threadId => [resourceId => ChatClient, resourceId=>ChatClient]]
