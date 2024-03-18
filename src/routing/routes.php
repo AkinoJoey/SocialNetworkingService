@@ -977,5 +977,13 @@ return [
         $users = $userDao->getTopFollowedUsers();
 
         return new HTMLRenderer('page/search_user', ['users' => $users]);
+    })->setMiddleware(['auth']),
+    'scheduled_posts'=>Route::create('scheduled_post', function () : HTTPRenderer {
+        $user = Authenticate::getAuthenticatedUser();
+
+        $postDao = DAOFactory::getPostDAO();
+        $scheduledPosts = $postDao->getScheduledPosts($user->getId());
+        
+        return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts'=>$scheduledPosts]);
     })->setMiddleware(['auth'])
 ];
