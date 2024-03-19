@@ -482,15 +482,20 @@ return [
                 }
             }
 
+            $postDao = DAOFactory::getPostDAO();
+
             if ($_POST['scheduled_at'] !== "") {
                 $validatedDatetime = ValidationHelper::date($_POST['scheduled_at'], 'Y-m-d H:i:s');
-                $post->setScheduledAt(new DateTime($validatedDatetime));
-                $post->setStatus(PostStatusType::SCHEDULED->value);
+
+                $maxScheduledPosts = 20; // 最大20件まで予約投稿ができる
+                if($postDao->countScheduledPosts($user->getId()) < $maxScheduledPosts){
+                    $post->setScheduledAt(new DateTime($validatedDatetime));
+                    $post->setStatus(PostStatusType::SCHEDULED->value);
+                }else{
+                    return new JSONRenderer(['status'=>'error', 'message'=>'予約投稿ができる件数は最大20件です']);
+                }
             }
 
-            error_log(print_r($validatedData, true));
-
-            $postDao = DAOFactory::getPostDAO();
             $success = $postDao->create($post);
 
             if (!$success) throw new Exception('Failed to create a post!');
