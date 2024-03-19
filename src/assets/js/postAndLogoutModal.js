@@ -79,7 +79,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	let today = new Date();
-	let scheduledAt = "";
 
 	// dateTime
 	const config = {
@@ -105,9 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					selectedDates[0],
 					"Y-m-d H:i",
 				);
-				scheduledAt = scheduledAtContainer.textContent + ":00"
 			} else {
-				scheduledAt = "";
 				scheduledAtContainer.innerHTML = "";
 			}
 		});
@@ -117,25 +114,25 @@ document.addEventListener("DOMContentLoaded", function () {
 		e.preventDefault();
 		let formData = new FormData(createPostForm);
 		formData.append("media", fileInput.files[0]);
+
+		let scheduledAt = scheduledAtContainer.textContent + ":00"
 		formData.append("scheduled_at", scheduledAt);
 
-		
-
-		// fetch("/form/new", {
-		// 	method: "POST",
-		// 	body: formData,
-		// })
-		// 	.then((response) => response.json())
-		// 	.then((data) => {
-		// 		if (data.status === "success") {
-		// 			location.reload();
-		// 		} else if (data.status === "error") {
-		// 			alert(data.message);
-		// 		}
-		// 	})
-		// 	.catch((error) => {
-		// 		alert("An error occurred. Please try again.");
-		// 	});
+		fetch("/form/new", {
+			method: "POST",
+			body: formData,
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.status === "success") {
+					location.reload();
+				} else if (data.status === "error") {
+					alert(data.message);
+				}
+			})
+			.catch((error) => {
+				alert("An error occurred. Please try again.");
+			});
 	});
 
 	textInput.addEventListener("input", function () {
