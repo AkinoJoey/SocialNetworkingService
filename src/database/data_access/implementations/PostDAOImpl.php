@@ -330,4 +330,15 @@ class PostDAOImpl implements PostDAO
         $results = $mysqli->prepareAndFetchAll($query, 'i', [$userId]);
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
+
+    public function countScheduledPosts(int $userId): ?int
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "SELECT COUNT(*) AS number_of_scheduled_posts FROM posts WHERE status = 'scheduled' AND user_id = ?";
+
+        $result = $mysqli->prepareAndFetchAll($query, 'i', [$userId])[0] ?? null;
+        if($result === null) return null;
+
+        return $result['number_of_scheduled_posts'];
+    }
 }
