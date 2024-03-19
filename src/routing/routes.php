@@ -74,7 +74,6 @@ return [
         return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
     })->setMiddleware(['auth']),
     'timeline/trend' => Route::create('timeline/trend', function (): HTTPRenderer {
-        $postDao = DAOFactory::getPostDAO();
         $required_fields = [
             'offset' => GeneralValueType::INT
         ];
@@ -82,6 +81,7 @@ return [
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
         $user = Authenticate::getAuthenticatedUser();
+        $postDao = DAOFactory::getPostDAO();
         $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 3);
 
         $htmlString = "";
@@ -93,6 +93,26 @@ return [
         }
         return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
     })->setMiddleware(['auth']),
+    'timeline/guest' => Route::create("timeline/guest", function (): HTTPRenderer {
+        $required_fields = [
+            'offset' => GeneralValueType::INT
+        ];
+
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+        $postDao = DAOFactory::getPostDAO();
+        $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 3); //TODO: 20にする
+
+        $htmlString = "";
+        foreach ($posts as $post) {
+            ob_start();
+            include(__DIR__ . '/../views/components/post_card_for_guest.php');
+            $postCardHtml = ob_get_clean();
+            $htmlString .= $postCardHtml;
+        }
+
+        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+    })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
     })->setMiddleware([]),
@@ -488,11 +508,11 @@ return [
                 $validatedDatetime = ValidationHelper::date($_POST['scheduled_at'], 'Y-m-d H:i:s');
 
                 $maxScheduledPosts = 20; // 最大20件まで予約投稿ができる
-                if($postDao->countScheduledPosts($user->getId()) < $maxScheduledPosts){
+                if ($postDao->countScheduledPosts($user->getId()) < $maxScheduledPosts) {
                     $post->setScheduledAt(new DateTime($validatedDatetime));
                     $post->setStatus(PostStatusType::SCHEDULED->value);
-                }else{
-                    return new JSONRenderer(['status'=>'error', 'message'=>'予約投稿ができる件数は最大20件です']);
+                } else {
+                    return new JSONRenderer(['status' => 'error', 'message' => '予約投稿ができる件数は最大20件です']);
                 }
             }
 
@@ -983,12 +1003,12 @@ return [
 
         return new HTMLRenderer('page/search_user', ['users' => $users]);
     })->setMiddleware(['auth']),
-    'scheduled_posts'=>Route::create('scheduled_post', function () : HTTPRenderer {
+    'scheduled_posts' => Route::create('scheduled_post', function (): HTTPRenderer {
         $user = Authenticate::getAuthenticatedUser();
 
         $postDao = DAOFactory::getPostDAO();
         $scheduledPosts = $postDao->getScheduledPosts($user->getId());
-        
-        return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts'=>$scheduledPosts]);
+
+        return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts]);
     })->setMiddleware(['auth'])
 ];
