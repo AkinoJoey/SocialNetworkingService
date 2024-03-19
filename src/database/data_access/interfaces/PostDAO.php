@@ -15,6 +15,7 @@ interface PostDAO
     public function getPostsByFollowedUsers(array $followedUserIds, int $userId, int $offset, int $limit = 20): array;
     public function postScheduled() : bool;
     public function getTrendPosts(int $userId, int $offset, int $limit = 20) : array;
+    public function getTrendPostsForGuest(int $offset, int $limit = 20) : array;
     public function getScheduledPosts(int $userId) : array;
     public function countScheduledPosts(int $userId) : ?int;
 }
