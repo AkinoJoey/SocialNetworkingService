@@ -38,8 +38,7 @@
 						プロフィールを編集
 					</button>
 				</a>
-				<!-- TODO: アラートモーダルを出す -->
-				<button type="button" class="logout-btn btn btn-active">
+				<button data-modal-target="logout_modal" data-modal-show="logout_modal" type="button" class="logout-btn btn btn-active">
 					ログアウト
 				</button>
 			</div>
