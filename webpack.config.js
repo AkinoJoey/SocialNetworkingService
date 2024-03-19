@@ -11,7 +11,8 @@ module.exports = {
 		loggedInUser: "./src/assets/js/postAndLogoutModal.js",
 		searchUser: "./src/assets/js/searchUser.js",
 		profileEdit: "./src/assets/js/profileEdit.js",
-		scheduledPosts: "./src/assets/js/scheduledPosts.js"
+		scheduledPosts: "./src/assets/js/scheduledPosts.js",
+		guest: "./src/assets/js/guest.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
