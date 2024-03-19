@@ -13,8 +13,7 @@
 				<div>
 					<div class="mb-2 flex justify-between">
 						<label for="password" class="text-sm">パスワード</label>
-						<!-- TODO: パスワードを忘れ場合の挙動を実装 -->
-						<a rel="noopener noreferrer" href="#" class="text-xs text-gray-600 hover:underline">パスワードを忘れた場合</a>
+						<a href="/forgot_password" rel="noopener noreferrer" href="#" class="text-xs text-gray-600 hover:underline">パスワードを忘れた場合</a>
 					</div>
 					<input type="password" name="password" id="password" autocomplete="current-password" class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-800" />
 				</div>
