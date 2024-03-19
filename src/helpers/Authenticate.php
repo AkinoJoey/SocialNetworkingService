@@ -151,4 +151,70 @@ class Authenticate
             throw new Exception("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         }
     }
+
+    public static function sendForgotPasswordEmail(User $user, string $url): bool
+    {
+        // 例外を有効にして PHPMailer を起動します。
+        $mail = new PHPMailer(true);
+
+        try {
+            // サーバの設定
+            $mail->isSMTP();                                      // SMTPを使用するようにメーラーを設定します。
+            $mail->Host       = Settings::env('MAIL_HOST');                 // GmailのSMTPサーバ
+            $mail->SMTPAuth   = true;                             // SMTP認証を有効にします。
+            $mail->Username   = Settings::env('MAIL_USER');       // SMTPユーザー名
+            $mail->Password   = Settings::env('MAIL_PASSWORD');   // SMTPパスワード
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;   // 必要に応じてTLS暗号化を有効にします。
+            $mail->Port       = 587;                              // 接続先のTCPポート
+            $mail->CharSet = 'UTF-8';
+
+            // 受信者
+            $mail->setFrom($mail->Username, 'ten'); // 送信者設定
+            $mail->addAddress($user->getEmail(), 'My User');          // 受信者を追加します。
+
+            $mail->Subject = "パスワードのリセット";
+
+            // HTMLコンテンツ
+            $mail->isHTML(); // メール形式をHTMLに設定します。
+            $body = <<<MAIL
+            <h2>パスワードのリセット</h2>
+
+            <p>以下のリンクからパスワードをリセットしてください。</p>
+
+            <a href="http://{$url}">http://{$url}</a>
+
+            <p>もしURLをクリックしてもリンクが開かない場合は、URLをコピーしてブラウザに貼り付けてくてださい。</p>
+
+            <p>このメールの有効期間は30分です。</p>
+
+            <p>ten</p>
+
+            MAIL;
+            $mail->Body =  $body;
+
+            // 本文は、相手のメールプロバイダーがHTMLをサポートしていない場合に備えて、シンプルなテキストで構成されています。
+
+            $altBody = <<<MAIL
+            メールアドレスを確認してください
+
+            以下のリンクからパスワードをリセットしてください。
+
+            http://{$url}
+
+            もしURLをクリックしてもリンクが開かない場合は、URLをコピーしてブラウザに貼り付けてくてださい。
+            
+            このメールの有効期間は30分です。
+
+            ten
+            MAIL;
+
+            $mail->AltBody = $altBody;
+
+            $success =  $mail->send();
+
+            return $success;
+        } catch (Exception $e) {
+            throw new Exception("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        }
+    }
 }
