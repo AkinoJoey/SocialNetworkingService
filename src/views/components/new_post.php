@@ -6,9 +6,9 @@
                 <i class="fas fa-times text-xl"></i>
             </button>
 
-            <p class="inline cursor-pointer rounded-full px-4 py-3 font-bold hover:bg-blue-100">
-                未送信ポスト
-            </p>
+            <a href="/scheduled_posts" class="inline cursor-pointer rounded-full px-4 py-3 font-bold hover:bg-blue-100">
+                予定投稿一覧
+            </a>
         </div>
         <form enctype="multipart/form-data" id="create-post-form">
             <input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
