@@ -18,7 +18,7 @@ class Authenticate
     public static function loginAsUser(User $user): bool
     {
         if ($user->getId() === null) throw new \Exception('Cannot login a user with no ID.');
-        if (isset($_SESSION[self::USER_ID_SESSION_KEY])) throw new \Exception('User is already logged in. Logout before continuing.');
+        if (isset($_SESSION[self::USER_ID_SESSION_KEY])) throw new \Exception('既にログイン済みです');
 
         $_SESSION[self::USER_ID_SESSION_KEY] = $user->getId();
         return true;
@@ -58,6 +58,33 @@ class Authenticate
         return self::$authenticatedUser;
     }
 
+    public static function storePasswordResetTokenInSession($token, $user): void
+    {
+        $_SESSION[$token] = $user;
+    }
+
+    public static function deletePasswordResetTokenFromSession($token): bool
+    {
+        if(isset($_SESSION[$token])){
+            unset($_SESSION[$token]);
+            return true;
+        }else{
+            throw new Exception("存在しないトークン");
+            
+        }
+    }
+
+    public static function getPasswordResetUserFromSession($token): User
+    {
+        $user = $_SESSION[$token];
+
+        if (!isset($user)) {
+            throw new \Exception('存在しないトークン');
+        }
+
+        return $user;
+    }
+
     /**
      * @throws AuthenticationFailureException
      */
@@ -67,15 +94,21 @@ class Authenticate
         self::$authenticatedUser = $userDAO->getByEmail($email);
 
         // ユーザーが見つからない場合はnullを返します
-        if (self::$authenticatedUser === null) throw new AuthenticationFailureException("Could not retrieve user by specified email %s " . $email);
+        if (self::$authenticatedUser === null) throw new AuthenticationFailureException("Eメールが登録されていません");
 
         // データベースからハッシュ化されたパスワードを取得します
         $hashedPassword = $userDAO->getHashedPasswordById(self::$authenticatedUser->getId());
 
-        if (password_verify($password, $hashedPassword)) {
-            self::loginAsUser(self::$authenticatedUser);
-            return self::$authenticatedUser;
-        } else throw new AuthenticationFailureException("Invalid password.");
+        if (!password_verify($password, $hashedPassword)) {
+            throw new AuthenticationFailureException("パスワードが一致しません");
+        }
+
+        if (!self::$authenticatedUser->getEmailVerified()) {
+            throw new AuthenticationFailureException('ログインにはEメールの認証が必要です');
+        }
+
+        self::loginAsUser(self::$authenticatedUser);
+        return self::$authenticatedUser;
     }
 
     public static function sendVerificationEmail(User $user, string $url): bool
