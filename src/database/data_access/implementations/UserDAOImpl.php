@@ -116,7 +116,7 @@ class UserDAOImpl implements UserDAO
         return $this->getRawById($id)['password'] ?? null;
     }
 
-    public function update(User $user): bool
+    public function update(User $user, string $password = null): bool
     {
         if ($user->getId() === null) throw new \Exception('User specified has no ID.');
 
@@ -125,7 +125,6 @@ class UserDAOImpl implements UserDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        // TODO: usernameを追加する
         $query =
             <<<SQL
             UPDATE users
@@ -144,7 +143,7 @@ class UserDAOImpl implements UserDAO
             [
                 $user->getAccountName(),
                 $user->getEmail(),
-                $this->getHashedPasswordById($user->getId()),
+                $password === null ? $this->getHashedPasswordById($user->getId()) : password_hash($password, PASSWORD_DEFAULT),
                 $user->getUsername(),
                 $user->getEmailVerified(),
                 $user->getId()
@@ -172,7 +171,7 @@ class UserDAOImpl implements UserDAO
     {
         $mysqli = DatabaseManager::getMysqliConnection();
 
-        $query = 
+        $query =
             <<<SQL
             WITH number_of_followers AS(	
             SELECT f.follower_user_id , count(*) AS number_of_followers
@@ -200,5 +199,14 @@ class UserDAOImpl implements UserDAO
         }
 
         return $users;
+    }
+
+    public function delete(int $id): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "DELETE FROM users WHERE id = ?";
+
+        $result = $mysqli->prepareAndExecute($query, 'i', [$id]);
+        return $result;
     }
 }
