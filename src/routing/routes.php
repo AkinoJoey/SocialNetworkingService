@@ -30,12 +30,17 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
-        // TODO: ゲスト用とユーザー用で振り分ける
         $user = Authenticate::getAuthenticatedUser();
 
         // ゲストの場合
         if ($user === null) {
             return new HTMLRenderer('page/guest');
+        }
+
+        // Eメール認証が済んでいない場合はログインページに遷移する
+        if (!$user->getEmailVerified()) {
+            FlashData::setFlashData('error', "Eメールの認証が完了していません");
+            return new RedirectRenderer('login');
         }
 
         $followDao =  DAOFactory::getFollowDAO();
@@ -115,7 +120,7 @@ return [
     })->setMiddleware([]),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
-    })->setMiddleware([]),
+    })->setMiddleware(['guest']),
     'signup' => Route::create('signup', function (): HTTPRenderer {
         return new HTMLRenderer('page/signup');
     })->setMiddleware(['guest']),
@@ -170,7 +175,8 @@ return [
             Authenticate::loginAsUser($user);
 
             // 期限を30分に設定
-            $lasts = 1 * 60 * 30;
+            // $lasts = 1 * 60 * 30;
+            $lasts = 1 * 60;
             $param = [
                 'id' => $user->getId(),
                 'user' => hash('sha256', $user->getEmail()),
@@ -181,7 +187,7 @@ return [
             })->getSignedURL($param);
             Authenticate::sendVerificationEmail($user, $signedUrl);
 
-            FlashData::setFlashData('success', 'Account successfully created. Please check your email!');
+            FlashData::setFlashData('success', 'アカウントを作成しました。Eメールを確認してください');
             return new RedirectRenderer('login');
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
@@ -321,7 +327,7 @@ return [
     })->setMiddleware(['auth']),
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
-    })->setMiddleware(['guest']),
+    })->setMiddleware(['register']),
     'form/login' => Route::create('form/login', function (): HTTPRenderer {
         try {
 
@@ -342,7 +348,7 @@ return [
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', 'Eメールもしくはパスワードが間違っています');
+            FlashData::setFlashData('error', $e->getMessage());
             return new RedirectRenderer('login');
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
@@ -355,7 +361,7 @@ return [
             FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('login');
         }
-    })->setMiddleware(['guest']),
+    })->setMiddleware([]),
     'logout' => Route::create('logout', function (): HTTPRenderer {
         Authenticate::logoutUser();
         FlashData::setFlashData('success', 'ログアウトしました');
@@ -1011,11 +1017,11 @@ return [
 
         return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts]);
     })->setMiddleware(['auth']),
-    'forgot_password' => Route::create('forgot_password', function () : HTTPRenderer {
-        
+    'forgot_password' => Route::create('forgot_password', function (): HTTPRenderer {
+
         return new HTMLRenderer('page/forgot_password');
     })->setMiddleware(['guest']),
-    'form/forgot_password'=> Route::create('form/forgot_password', function () : HTTPRenderer {
+    'form/forgot_password' => Route::create('form/forgot_password', function (): HTTPRenderer {
         // TODO: try-catch
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
@@ -1025,48 +1031,70 @@ return [
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
-
         $userDao = DAOFactory::getUserDAO();
         $user = $userDao->getByEmail($validatedData['email']);
 
         // データベースにEメールが存在しない場合
-        if($user === null){
+        if ($user === null) {
             FlashData::setFlashData('error', '登録されていないEメールです');
             return new RedirectRenderer('forgot_password');
+        }
+
+        // Eメールが認証されていない場合
+        if(!$user->getEmailVerified()){
+            FlashData::setFlashData('error', '認証されていないEメールです');
+            return new RedirectRenderer('login');
         }
 
         // 期限を30分に設定
         $lasts = 1 * 60 * 30;
         $param = [
-            'id' => $user->getId(),
-            'user' => hash('sha256', $user->getEmail()),
             'expiration' => time() + $lasts
         ];
 
         // 存在する場合はパスワードリセット用のEメールを送信する
-        $signedUrl = Route::create('verify/forgot_password', function(){})->getSignedURL($param);
-
+        $route =  Route::create('verify/forgot_password', function () {});
+        $signedUrl = $route->getSignedURL($param);
         Authenticate::sendForgotPasswordEmail($user, $signedUrl);
+
+        // セッションにトークンとユーザーを保存する
+        $signatureForPassword = $route->getSignature($signedUrl);
+        Authenticate::storePasswordResetTokenInSession($signatureForPassword, $user);        
 
         FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
         return new RedirectRenderer('login');
     })->setMiddleware(['guest']),
-    'verify/forgot_password'=> Route::create('verify/forgot_password', function () : HTTPRenderer {
+    'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
+
+        $user = Authenticate::getPasswordResetUserFromSession($_GET['signature']);
+        Authenticate::loginAsUser($user);
+
+        // TODO: パスワードリセット後に削除すべき
+        Authenticate::deletePasswordResetTokenFromSession($_GET['signature']);
+
+        return new HTMLRenderer('page/verify_forgot_password');
+    })->setMiddleware(['signature']),
+    'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+
         $required_fields = [
-            'id' => GeneralValueType::INT,
-            'user' => GeneralValueType::STRING,
+            'password' => UserValueType::PASSWORD,
+            'confirm_password' => UserValueType::PASSWORD,
         ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
-        $user = Authenticate::getAuthenticatedUser();
-
-        // ユーザーの詳細とパラメーターが一致しているか確認
-        if ($user === null || $user->getId() !== $validatedData['id'] || hash('sha256', $user->getEmail()) !== $validatedData['user']) {
-            FlashData::setFlashData('error', '無効なURLです。');
-            return new RedirectRenderer('signup');
+        if ($validatedData['confirm_password'] !== $validatedData['password']) {
+            FlashData::setFlashData('error', 'パスワードが一致しません');
+            return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致しません']);
         }
 
-        return new RedirectRenderer('login');
-    })->setMiddleware(['signature']),
+        $userDao = DAOFactory::getUserDAO();
+        $user = Authenticate::getAuthenticatedUser();
+        $userDao->update($user, $validatedData['password']);
+
+        FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
+        Authenticate::logoutUser();
+        return new JSONRenderer(['status' => 'success']);
+    })->setMiddleware(['auth', 'verify']),
 ];
