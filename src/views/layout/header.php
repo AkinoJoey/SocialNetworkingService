@@ -11,7 +11,7 @@
 
 <body>
 	<div class="container mx-auto p-4">
-		<?php if ($user) : ?>
+		<?php if (isset($user) && $user->getEmailVerified()) : ?>
 			<?php include(__DIR__ . '/../components/sidebar.php') ?>
 			<?php include(__DIR__ . '/../components/bottom_nav.php') ?>
 			<?php include(__DIR__ . '/../components/new_post.php') ?>
