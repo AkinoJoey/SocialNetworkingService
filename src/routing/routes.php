@@ -1066,12 +1066,6 @@ return [
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
 
-        $user = Authenticate::getPasswordResetUserFromSession($_GET['signature']);
-        Authenticate::loginAsUser($user);
-
-        // TODO: パスワードリセット後に削除すべき
-        Authenticate::deletePasswordResetTokenFromSession($_GET['signature']);
-
         return new HTMLRenderer('page/verify_forgot_password');
     })->setMiddleware(['signature']),
     'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
@@ -1089,12 +1083,17 @@ return [
             return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致しません']);
         }
 
+        // TODO: signatureを取得してそれで
+        // $user = Authenticate::getPasswordResetUserFromSession($_GET['signature']);
         $userDao = DAOFactory::getUserDAO();
-        $user = Authenticate::getAuthenticatedUser();
-        $userDao->update($user, $validatedData['password']);
+        $success = $userDao->update($user, $validatedData['password']);
 
+        if(!$success){
+            throw new Exception('パスワードの更新に失敗しました');
+        }
+
+        Authenticate::deletePasswordResetTokenFromSession($_GET['signature']);
         FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
-        Authenticate::logoutUser();
         return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth', 'verify']),
+    })->setMiddleware(['guest']),
 ];
