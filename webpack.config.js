@@ -12,7 +12,8 @@ module.exports = {
 		searchUser: "./src/assets/js/searchUser.js",
 		profileEdit: "./src/assets/js/profileEdit.js",
 		scheduledPosts: "./src/assets/js/scheduledPosts.js",
-		guest: "./src/assets/js/guest.js"
+		guest: "./src/assets/js/guest.js",
+		verifyForgotPassword: "./src/assets/js/verifyForgotPassword.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
