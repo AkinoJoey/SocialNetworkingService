@@ -2,6 +2,8 @@
 
 namespace src\middleware;
 
+use src\database\data_access\DAOFactory;
+use src\helpers\Authenticate;
 use src\helpers\ValidationHelper;
 use src\response\FlashData;
 use src\response\HTTPRenderer;
@@ -24,16 +26,28 @@ class SignatureValidationMiddleware implements Middleware
         if ($route->isSignedURLValid($_SERVER['HTTP_HOST'] . $currentPath)) {
             // 有効期限があるかどうかを確認し、有効期限がある場合は有効期限が切れていないことを確認します。
             if (isset($_GET['expiration']) && ValidationHelper::integer($_GET['expiration']) < time()) {
-                FlashData::setFlashData('error', "The URL has expired.");
-                return new RedirectRenderer('random/part');
+                FlashData::setFlashData('error', "URLの期限が切れています");
+
+                // サインアップ後に期限切れの場合はログアウトさせて、データベースからユーザーを削除後、ログインページにリダイレクト
+                if ($pathWithoutQuery === '/verify/email') {
+                    $user = Authenticate::getAuthenticatedUser();
+                    Authenticate::logoutUser();
+                    $userDao = DAOFactory::getUserDAO();
+                    $userDao->delete($user->getId());
+                }
+
+                if ($pathWithoutQuery === '/verify/forgot_password') {
+                    Authenticate::deletePasswordResetTokenFromSession($_GET['signature']);
+                    return new RedirectRenderer('login');
+                }
             }
 
             // 署名が有効であれば、ミドルウェアチェインを進めます。
             return $next();
         } else {
-            // 署名が有効でない場合、ランダムな部分にリダイレクトします。
-            FlashData::setFlashData('error', sprintf("Invalid URL (%s).", $pathWithoutQuery));
-            return new RedirectRenderer('random/part');
+            // 署名が有効でない場合、ログインページににリダイレクトします。
+            FlashData::setFlashData('error', sprintf("無効なURL (%s).", $pathWithoutQuery));
+            return new RedirectRenderer('login');
         }
     }
 }
