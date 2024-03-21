@@ -1042,7 +1042,7 @@ return [
         }
 
         // Eメールが認証されていない場合
-        if(!$user->getEmailVerified()){
+        if (!$user->getEmailVerified()) {
             FlashData::setFlashData('error', '認証されていないEメールです');
             return new RedirectRenderer('login');
         }
@@ -1054,7 +1054,8 @@ return [
         ];
 
         // 存在する場合はパスワードリセット用のEメールを送信する
-        $route =  Route::create('verify/forgot_password', function () {});
+        $route =  Route::create('verify/forgot_password', function () {
+        });
         $signedUrl = $route->getSignedURL($param);
         Authenticate::sendForgotPasswordEmail($user, $signedUrl);
 
@@ -1065,7 +1066,6 @@ return [
             token: pack('H*', $signature) //バイナリーに変換
         );
 
-        error_log($signature);
         $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
         $success = $passwordResetTokenDao->create($passwordResetToken);
 
@@ -1078,7 +1078,7 @@ return [
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
         $required_fields = [
-            'signature'=> GeneralValueType::STRING
+            'signature' => GeneralValueType::STRING
         ];
 
         $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
@@ -1086,45 +1086,46 @@ return [
         $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
         $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
 
-        error_log($validatedData['signature']);
-        error_log(print_r($passwordResetToken, true));
 
-        
-        return new HTMLRenderer('page/verify_forgot_password', ['user_id'=> $passwordResetToken->getUserId()]);
+        return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
     })->setMiddleware(['signature']),
     'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
-        $required_fields = [
-            'user_id' => GeneralValueType::INT,
-            'password' => UserValueType::PASSWORD,
-            'confirm_password' => UserValueType::PASSWORD,
-        ];
+            $required_fields = [
+                'user_id' => GeneralValueType::INT,
+                'password' => UserValueType::PASSWORD,
+                'confirm_password' => UserValueType::PASSWORD,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
-        if ($validatedData['confirm_password'] !== $validatedData['password']) {
-            FlashData::setFlashData('error', 'パスワードが一致しません');
-            return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致しません']);
+            if ($validatedData['confirm_password'] !== $validatedData['password']) {
+                FlashData::setFlashData('error', 'パスワードが一致しません');
+                return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致しません']);
+            }
+
+            $userDao = DAOFactory::getUserDAO();
+            $user = $userDao->getById($validatedData['user_id']);
+            $userUpdateSuccess = $userDao->update($user, $validatedData['password']);
+
+            if (!$userUpdateSuccess) {
+                throw new Exception('パスワードの更新に失敗しました');
+            }
+
+            $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+            $resetTokenDeleted = $passwordResetTokenDao->deleteByUserId(intval($validatedData['user_id']));
+
+
+            if (!$resetTokenDeleted) {
+                throw new Exception("パスワードリセットトークの削除に失敗しました");
+            }
+
+            FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
+            return new JSONRenderer(['status' => 'success']);
+        }catch(Exception $e){
+            error_log($e->getMessage());
         }
-
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getById($validatedData['user_id']);        
-        $userUpdateSuccess = $userDao->update($user, $validatedData['password']);
-
-        if(!$userUpdateSuccess){
-            throw new Exception('パスワードの更新に失敗しました');
-        }
-
-        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
-        $resetTokenDeleted = $passwordResetTokenDao->deleteByUserId($validatedData['user_id']);
-
-        
-        if(!$resetTokenDeleted){
-            throw new Exception("パスワードリセットトークの削除に失敗しました");
-        }
-
-        FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
-        return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['guest']),
 ];
