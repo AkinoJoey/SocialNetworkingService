@@ -22,6 +22,7 @@ use src\models\DmMessage;
 use src\models\DmThread;
 use src\models\Follow;
 use src\models\Notification;
+use src\models\PasswordResetToken;
 use src\types\NotificationType;
 use src\types\PostStatusType;
 use src\types\UserValueType;
@@ -1057,21 +1058,45 @@ return [
         $signedUrl = $route->getSignedURL($param);
         Authenticate::sendForgotPasswordEmail($user, $signedUrl);
 
-        // セッションにトークンとユーザーを保存する
-        $signatureForPassword = $route->getSignature($signedUrl);
-        Authenticate::storePasswordResetTokenInSession($signatureForPassword, $user);        
+        // テーブルにトークンとユーザーを保存する
+        $signature = $route->getSignature($signedUrl);
+        $passwordResetToken = new PasswordResetToken(
+            userId: $user->getId(),
+            token: pack('H*', $signature) //バイナリーに変換
+        );
+
+        error_log($signature);
+        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+        $success = $passwordResetTokenDao->create($passwordResetToken);
+
+        if(!$success){
+            throw new Exception("パスワードリセットトークンの作成に失敗しました");
+        }
 
         FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
         return new RedirectRenderer('login');
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
+        $required_fields = [
+            'signature'=> GeneralValueType::STRING
+        ];
 
-        return new HTMLRenderer('page/verify_forgot_password');
+        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+        $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
+
+        error_log($validatedData['signature']);
+        error_log(print_r($passwordResetToken, true));
+
+        
+        return new HTMLRenderer('page/verify_forgot_password', ['user_id'=> $passwordResetToken->getUserId()]);
     })->setMiddleware(['signature']),
     'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
         $required_fields = [
+            'user_id' => GeneralValueType::INT,
             'password' => UserValueType::PASSWORD,
             'confirm_password' => UserValueType::PASSWORD,
         ];
@@ -1083,16 +1108,22 @@ return [
             return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致しません']);
         }
 
-        // TODO: signatureを取得してそれで
-        // $user = Authenticate::getPasswordResetUserFromSession($_GET['signature']);
         $userDao = DAOFactory::getUserDAO();
-        $success = $userDao->update($user, $validatedData['password']);
+        $user = $userDao->getById($validatedData['user_id']);        
+        $userUpdateSuccess = $userDao->update($user, $validatedData['password']);
 
-        if(!$success){
+        if(!$userUpdateSuccess){
             throw new Exception('パスワードの更新に失敗しました');
         }
 
-        Authenticate::deletePasswordResetTokenFromSession($_GET['signature']);
+        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+        $resetTokenDeleted = $passwordResetTokenDao->deleteByUserId($validatedData['user_id']);
+
+        
+        if(!$resetTokenDeleted){
+            throw new Exception("パスワードリセットトークの削除に失敗しました");
+        }
+
         FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
         return new JSONRenderer(['status' => 'success']);
     })->setMiddleware(['guest']),
