@@ -35,6 +35,10 @@ class SignatureValidationMiddleware implements Middleware
                     $userDao = DAOFactory::getUserDAO();
                     $userDao->delete($user->getId());
                 }
+
+                if($pathWithoutQuery === '/verify/forgot_password'){
+                    // TODO: 期限切れのパスワードリセットトークンコマンドを実行
+                }
             }
 
             // 署名が有効であれば、ミドルウェアチェインを進めます。
