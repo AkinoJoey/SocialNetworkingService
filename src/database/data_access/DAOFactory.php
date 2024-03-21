@@ -18,10 +18,12 @@ use src\database\data_access\implementations\DmMessageDAOImpl;
 use src\database\data_access\implementations\DmThreadDAOImpl;
 use src\database\data_access\implementations\FollowDAOImpl;
 use src\database\data_access\implementations\NotificationDAOImpl;
+use src\database\data_access\implementations\PasswordResetTokenDAOImpl;
 use src\database\data_access\interfaces\DmMessageDAO;
 use src\database\data_access\interfaces\DmThreadDAO;
 use src\database\data_access\interfaces\FollowDAO;
 use src\database\data_access\interfaces\NotificationDAO;
+use src\database\data_access\interfaces\PasswordResetTokenDAO;
 
 class DAOFactory
 {
@@ -35,7 +37,8 @@ class DAOFactory
         return new ProfileDAOImpl();
     }
 
-    public static function getPostDAO() : PostDAO {
+    public static function getPostDAO(): PostDAO
+    {
         return new PostDAOImpl();
     }
 
@@ -44,27 +47,38 @@ class DAOFactory
         return new CommentDAOImpl();
     }
 
-    public static function getPostLikeDAO() : PostLikeDAO {
+    public static function getPostLikeDAO(): PostLikeDAO
+    {
         return new PostLikeDAOImpl();
     }
 
-    public static function getCommentLikeDAO() : CommentLikeDAO {
+    public static function getCommentLikeDAO(): CommentLikeDAO
+    {
         return new CommentLikeDAOImpl();
     }
 
-    public static function getFollowDAO() : FollowDAO {
+    public static function getFollowDAO(): FollowDAO
+    {
         return new FollowDAOImpl();
     }
 
-    public static function getDmThreadDAO() : DmThreadDAO {
+    public static function getDmThreadDAO(): DmThreadDAO
+    {
         return new DmThreadDAOImpl();
     }
 
-    public static function getDmMessageDAO() : DmMessageDAO {
+    public static function getDmMessageDAO(): DmMessageDAO
+    {
         return new DmMessageDAOImpl();
     }
 
-    public static function getNotificationDAO() : NotificationDAO {
+    public static function getNotificationDAO(): NotificationDAO
+    {
         return new NotificationDAOImpl();
+    }
+
+    public static function getPasswordResetTokenDAO(): PasswordResetTokenDAO
+    {
+        return new PasswordResetTokenDAOImpl();
     }
 }
