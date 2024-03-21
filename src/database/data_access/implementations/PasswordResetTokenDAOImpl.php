@@ -75,4 +75,14 @@ class PasswordResetTokenDAOImpl implements PasswordResetTokenDAO
         $result = $mysqli->prepareAndExecute($query, 'i', [$id]);
         return $result;
     }
+
+    // 30分が期限
+    public function deleteExpired(): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "DELETE FROM password_reset_tokens WHERE created_at < NOW() - INTERVAL 30 MINUTE;";
+        $result = $mysqli->prepareAndExecute($query, '', []);
+
+        return $result;
+    }
 }

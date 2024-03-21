@@ -10,4 +10,5 @@ interface PasswordResetTokenDAO
     public function getByToken(string $token) : ?PasswordResetToken;
     public function getByUserId(int $userId) : ?PasswordResetToken;
     public function deleteByUserId(int $id) : bool;
+    public function deleteExpired() : bool;
 }
