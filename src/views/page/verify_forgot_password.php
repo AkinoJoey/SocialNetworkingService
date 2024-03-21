@@ -5,7 +5,7 @@
         </div>
         <form id="password_form" class="space-y-12" data-bitwarden-watching="1">
             <input type="hidden" name="csrf_token" value="<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>">
-            <input type="hidden" name="signature" >
+            <input type="hidden" name="user_id" value="<?= $userId?>" >
             <div class="space-y-4">
                 <div>
                     <div class="mb-2 flex justify-between">
