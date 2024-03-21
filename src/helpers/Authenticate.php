@@ -58,33 +58,6 @@ class Authenticate
         return self::$authenticatedUser;
     }
 
-    public static function storePasswordResetTokenInSession($token, $user): void
-    {
-        $_SESSION[$token] = $user;
-    }
-
-    public static function deletePasswordResetTokenFromSession($token): bool
-    {
-        if(isset($_SESSION[$token])){
-            unset($_SESSION[$token]);
-            return true;
-        }else{
-            throw new Exception("存在しないトークン");
-            
-        }
-    }
-
-    public static function getPasswordResetUserFromSession($token): User
-    {
-        $user = $_SESSION[$token];
-
-        if (!isset($user)) {
-            throw new \Exception('存在しないトークン');
-        }
-
-        return $user;
-    }
-
     /**
      * @throws AuthenticationFailureException
      */
