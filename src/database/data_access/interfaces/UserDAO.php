@@ -15,4 +15,5 @@ interface UserDAO
     public function getUserListForSearch(string $keyword, int $limit = 100) : array;
     public function getTopFollowedUsers(int $limit = 100) : array;
     public function delete(int $id) : bool;
+    public function deleteExpiredEmailVerificationUsers() : bool;
 }
