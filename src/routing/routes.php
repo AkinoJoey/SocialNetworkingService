@@ -511,7 +511,7 @@ return [
 
             $postDao = DAOFactory::getPostDAO();
 
-            if ($_POST['scheduled_at'] !== "") {
+            if (isset($_POST['scheduled_at'])) {
                 $validatedDatetime = ValidationHelper::date($_POST['scheduled_at'], 'Y-m-d H:i:s');
 
                 $maxScheduledPosts = 20; // 最大20件まで予約投稿ができる
