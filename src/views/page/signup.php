@@ -1,5 +1,5 @@
-<div class="container mx-auto flex items-center justify-center px-4 mb-16 mt-4 sm:my-0">
-	<div class="flex max-w-md flex-col rounded-md bg-gray-50 p-6 text-gray-800 sm:p-10">
+<div class="container mx-auto flex items-center justify-center mt-24">
+	<div class="flex flex-col w-96 rounded-md bg-gray-50 p-6 text-gray-800">
 		<div class="text-center">
 			<h1 class="my-3 text-4xl font-bold">アカウントを作成</h1>
 		</div>
