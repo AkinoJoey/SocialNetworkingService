@@ -6,4 +6,6 @@ return [
     src\commands\programs\SeedDao::class,
     src\commands\programs\CommandGeneration::class,
     src\commands\programs\PostScheduled::class,
+    src\commands\programs\DeleteExpiredPasswordResetTokens::class,
+    src\commands\programs\DeleteExpiredEmailVerificationUsers::class,
 ];
