@@ -26,19 +26,23 @@ class SignatureValidationMiddleware implements Middleware
         if ($route->isSignedURLValid($_SERVER['HTTP_HOST'] . $currentPath)) {
             // 有効期限があるかどうかを確認し、有効期限がある場合は有効期限が切れていないことを確認します。
             if (isset($_GET['expiration']) && ValidationHelper::integer($_GET['expiration']) < time()) {
-                FlashData::setFlashData('error', "URLの期限が切れています");
+                $userDao = DAOFactory::getUserDAO();
 
-                // サインアップ後に期限切れの場合はログアウトさせて、データベースからユーザーを削除後、ログインページにリダイレクト
+                // サインアップ後に期限切れの場合はログアウトさせて、データベースからユーザーを削除
                 if ($pathWithoutQuery === '/verify/email') {
                     $user = Authenticate::getAuthenticatedUser();
-                    Authenticate::logoutUser();
-                    $userDao = DAOFactory::getUserDAO();
+                    if($user !== null){
+                        Authenticate::logoutUser();
+                    }
                     $userDao->delete($user->getId());
                 }
 
                 if($pathWithoutQuery === '/verify/forgot_password'){
-                    // TODO: 期限切れのパスワードリセットトークンコマンドを実行
+                    $userDao->deleteExpiredEmailVerificationUsers();
                 }
+                
+                FlashData::setFlashData('error', "URLの期限が切れています");
+                return new RedirectRenderer('login');
             }
 
             // 署名が有効であれば、ミドルウェアチェインを進めます。
