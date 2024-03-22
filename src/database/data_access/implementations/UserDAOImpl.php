@@ -209,4 +209,13 @@ class UserDAOImpl implements UserDAO
         $result = $mysqli->prepareAndExecute($query, 'i', [$id]);
         return $result;
     }
+
+    public function deleteExpiredEmailVerificationUsers(): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "DELETE FROM users WHERE email_verified = 0 AND created_at < NOW() - INTERVAL 30 MINUTE;";
+        $result = $mysqli->prepareAndExecute($query, '', []);
+
+        return $result;
+    }
 }
