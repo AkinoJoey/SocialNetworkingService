@@ -264,7 +264,7 @@ $RECYCLE.BIN/
 /storage/
 /public/uploads
 
-### cron ###
-/cron/error_log.txt
+### log ###
+/log/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,windows,linux,macos,composer,visualstudiocode
