@@ -31,94 +31,130 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
+        try {
+            $user = Authenticate::getAuthenticatedUser();
 
-        // ゲストの場合
-        if ($user === null) {
-            return new HTMLRenderer('page/guest');
-        }
+            // ゲストの場合
+            if ($user === null) {
+                return new HTMLRenderer('page/guest');
+            }
 
-        // Eメール認証が済んでいない場合はログインページに遷移する
-        if (!$user->getEmailVerified()) {
-            FlashData::setFlashData('error', "Eメールの認証が完了していません");
-            return new RedirectRenderer('login');
-        }
+            // Eメール認証が済んでいない場合はログインページに遷移する
+            if (!$user->getEmailVerified()) {
+                FlashData::setFlashData('error', "Eメールの認証が完了していません");
+                return new RedirectRenderer('login');
+            }
 
-        $followDao =  DAOFactory::getFollowDAO();
-        $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
+            $followDao =  DAOFactory::getFollowDAO();
+            $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
 
-        if (count($followingUserIdList) === 0) {
-            return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'trend']);
-        } else {
+            if (count($followingUserIdList) === 0) {
+                return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'trend']);
+            } else {
 
-            return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'following']);
+                return new HTMLRenderer('page/top', ['user' => $user, 'tabActive' => 'following']);
+            }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
         }
     })->setMiddleware([]),
     'timeline/following' => Route::create('timeline/following', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
-        $followDao =  DAOFactory::getFollowDAO();
-        $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
+        try {
+            $user = Authenticate::getAuthenticatedUser();
+            $followDao =  DAOFactory::getFollowDAO();
+            $followingUserIdList = $followDao->getFollowingUserIdList($user->getId());
 
-        $required_fields = [
-            'offset' => GeneralValueType::INT
-        ];
+            $required_fields = [
+                'offset' => GeneralValueType::INT
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $postDao = DAOFactory::getPostDAO();
-        $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), $validatedData['offset'], 3);
+            $postDao = DAOFactory::getPostDAO();
+            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), $validatedData['offset'], 3);
 
-        $htmlString = "";
+            $htmlString = "";
 
-        foreach ($postsByFollowedUsers as $post) {
-            ob_start();
-            $user;
-            include(__DIR__ . '/../views/components/post_card.php');
-            $postCardHtml = ob_get_clean();
-            $htmlString .= $postCardHtml;
+            foreach ($postsByFollowedUsers as $post) {
+                ob_start();
+                $user;
+                include(__DIR__ . '/../views/components/post_card.php');
+                $postCardHtml = ob_get_clean();
+                $htmlString .= $postCardHtml;
+            }
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['verify']),
     'timeline/trend' => Route::create('timeline/trend', function (): HTTPRenderer {
-        $required_fields = [
-            'offset' => GeneralValueType::INT
-        ];
+        try {
+            $required_fields = [
+                'offset' => GeneralValueType::INT
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $user = Authenticate::getAuthenticatedUser();
-        $postDao = DAOFactory::getPostDAO();
-        $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 3);
+            $user = Authenticate::getAuthenticatedUser();
+            $postDao = DAOFactory::getPostDAO();
+            $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 3);
 
-        $htmlString = "";
-        foreach ($trendPosts as $post) {
-            ob_start();
-            include(__DIR__ . '/../views/components/post_card.php');
-            $postCardHtml = ob_get_clean();
-            $htmlString .= $postCardHtml;
+            $htmlString = "";
+            foreach ($trendPosts as $post) {
+                ob_start();
+                include(__DIR__ . '/../views/components/post_card.php');
+                $postCardHtml = ob_get_clean();
+                $htmlString .= $postCardHtml;
+            }
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['verify']),
     'timeline/guest' => Route::create("timeline/guest", function (): HTTPRenderer {
-        $required_fields = [
-            'offset' => GeneralValueType::INT
-        ];
+        try {
+            $required_fields = [
+                'offset' => GeneralValueType::INT
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 3); //TODO: 20にする
+            $postDao = DAOFactory::getPostDAO();
+            $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 3); //TODO: 20にする
 
-        $htmlString = "";
-        foreach ($posts as $post) {
-            ob_start();
-            include(__DIR__ . '/../views/components/post_card_for_guest.php');
-            $postCardHtml = ob_get_clean();
-            $htmlString .= $postCardHtml;
+            $htmlString = "";
+            foreach ($posts as $post) {
+                ob_start();
+                include(__DIR__ . '/../views/components/post_card_for_guest.php');
+                $postCardHtml = ob_get_clean();
+                $htmlString .= $postCardHtml;
+            }
+
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-
-        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
-    })->setMiddleware([]),
+    })->setMiddleware(['guest']),
     'guest' => Route::create('guest', function (): HTTPRenderer {
         return new HTMLRenderer('page/guest');
     })->setMiddleware(['guest']),
@@ -126,9 +162,8 @@ return [
         return new HTMLRenderer('page/signup');
     })->setMiddleware(['guest']),
     'form/signup' => Route::create('form/signup', function (): HTTPRenderer {
-        // TODO: エラーのtry-catch
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             $required_fields = [
                 'account_name' => UserValueType::ACCOUNT_NAME,
@@ -139,7 +174,6 @@ return [
 
             $userDao = DAOFactory::getUserDAO();
 
-            // TODO: 厳格なバリデーションを作成
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
@@ -175,7 +209,7 @@ return [
             // ユーザーログイン
             Authenticate::loginAsUser($user);
 
-            // 期限を30分に設定
+            // TODO: 期限を30分に設定
             // $lasts = 1 * 60 * 30;
             $lasts = 1 * 60;
             $param = [
@@ -193,7 +227,12 @@ return [
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', 'Invalid Data.');
+            FlashData::setFlashData('error', $e->getMessage());
+            return new RedirectRenderer('signup');
+        } catch (\LengthException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', $e->getMessage());
             return new RedirectRenderer('signup');
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -203,41 +242,59 @@ return [
         }
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
-        $required_fields = [
-            'id' => GeneralValueType::INT,
-            'user' => GeneralValueType::STRING,
-        ];
+        try {
+            $required_fields = [
+                'id' => GeneralValueType::INT,
+                'user' => GeneralValueType::STRING,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $user = Authenticate::getAuthenticatedUser();
+            $user = Authenticate::getAuthenticatedUser();
 
-        // ユーザーの詳細とパラメーターが一致しているか確認
-        if ($user === null || $user->getId() !== $validatedData['id'] || hash('sha256', $user->getEmail()) !== $validatedData['user']) {
-            FlashData::setFlashData('error', '無効なURLです。');
+            // ユーザーの詳細とパラメーターが一致しているか確認
+            if ($user === null || $user->getId() !== $validatedData['id'] || hash('sha256', $user->getEmail()) !== $validatedData['user']) {
+                FlashData::setFlashData('error', '無効なURLです。');
+                return new RedirectRenderer('signup');
+            }
+
+            // email_verifiedを更新
+            $user->setEmailVerified(true);
+            $userDao = DAOFactory::getUserDAO();
+            $userDao->update($user);
+
+            FlashData::setFlashData('success', 'Eメールの確認に成功しました。');
+            return new RedirectRenderer('profile/edit');
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', '無効なデータが入力されました');
+            return new RedirectRenderer('signup');
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('signup');
         }
-
-        // email_verifiedを更新
-        $user->setEmailVerified(true);
-        $userDao = DAOFactory::getUserDAO();
-        $userDao->update($user);
-
-        FlashData::setFlashData('success', 'Eメールの確認に成功しました。');
-        return new RedirectRenderer('profile/edit');
     })->setMiddleware(['signature']),
     'profile/edit' => Route::create('profile/edit', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
-
-        $profileDao = DAOFactory::getProfileDAO();
-        $profile = $profileDao->getByUserId($user->getId());
-
-        return new HTMLRenderer('page/profile_form', ['user' => $user, 'profile' => $profile]);
-    })->setMiddleware(['auth']),
-    'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
-        // TODO: エラーのtry-catch
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            $user = Authenticate::getAuthenticatedUser();
+
+            $profileDao = DAOFactory::getProfileDAO();
+            $profile = $profileDao->getByUserId($user->getId());
+
+            return new HTMLRenderer('page/profile_form', ['user' => $user, 'profile' => $profile]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['verify']),
+    'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             $required_fields = [
                 'id' => GeneralValueType::INT,
@@ -321,18 +378,22 @@ return [
 
             FlashData::setFlashData('success', 'プロフィールを更新しました');
             return new JSONRenderer(['status' => 'success']);
-        } catch (Exception $e) {
+        } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
             return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\LengthException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['verify']),
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
     })->setMiddleware(['register']),
     'form/login' => Route::create('form/login', function (): HTTPRenderer {
         try {
-
-            // TODO: Eメール認証していないとログインできないようにする
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
@@ -354,7 +415,7 @@ return [
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', '無効なデータです');
+            FlashData::setFlashData('error', $e->getMessage());
             return new RedirectRenderer('login');
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -362,58 +423,72 @@ return [
             FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('login');
         }
-    })->setMiddleware([]),
+    })->setMiddleware(['guest']),
     'logout' => Route::create('logout', function (): HTTPRenderer {
         Authenticate::logoutUser();
         FlashData::setFlashData('success', 'ログアウトしました');
         return new RedirectRenderer('login');
     })->setMiddleware(['auth']),
     'profile' => Route::create('profile', function (): HTTPRenderer {
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'username' => UserValueType::USERNAME
-        ];
+        try {
+            $required_fields = [
+                'username' => UserValueType::USERNAME
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getByUsername($validatedData['username']);
-        $authenticatedUser = Authenticate::getAuthenticatedUser();
+            $userDao = DAOFactory::getUserDAO();
+            $user = $userDao->getByUsername($validatedData['username']);
+            $authenticatedUser = Authenticate::getAuthenticatedUser();
 
-        $profileDao = DAOFactory::getProfileDAO();
-        $profile = $profileDao->getByUserId($user->getId());
+            $profileDao = DAOFactory::getProfileDAO();
+            $profile = $profileDao->getByUserId($user->getId());
 
-        $followDao = DAOFactory::getFollowDAO();
-        $followingList = $followDao->getFollowingUserIdList($user->getId());
-        $followingCount = $followingList !== null ? count($followingList) : 0;
-        $followerList = $followDao->getFollowerUserIdList($user->getId());
-        $followerCount = $followerList !== null ? count($followerList) : 0;
+            $followDao = DAOFactory::getFollowDAO();
+            $followingList = $followDao->getFollowingUserIdList($user->getId());
+            $followingCount = $followingList !== null ? count($followingList) : 0;
+            $followerList = $followDao->getFollowerUserIdList($user->getId());
+            $followerCount = $followerList !== null ? count($followerList) : 0;
 
-        // 自分のプロフィールを見る場合
-        if ($user->getId() === $authenticatedUser->getId()) {
-            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
-        } else {
-            $dmThreadDao = DAOFactory::getDmThreadDAO();
+            // 自分のプロフィールを見る場合
+            if ($user->getId() === $authenticatedUser->getId()) {
+                return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount]);
+            } else {
+                $dmThreadDao = DAOFactory::getDmThreadDAO();
 
-            // dm用のURLが作成されていない場合は作成する
-            $dmThread = $dmThreadDao->getByUserIds($user->getId(), $authenticatedUser->getId());
+                // dm用のURLが作成されていない場合は作成する
+                $dmThread = $dmThreadDao->getByUserIds($user->getId(), $authenticatedUser->getId());
 
-            if ($dmThread === null) {
-                $numberOfCharacters = 18;
-                $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
-                $dmThread = new DmThread(
-                    url: $randomString,
-                    userId1: $user->getId(),
-                    userId2: $authenticatedUser->getId()
-                );
+                if ($dmThread === null) {
+                    $numberOfCharacters = 18;
+                    $randomString = bin2hex(random_bytes($numberOfCharacters / 2));
+                    $dmThread = new DmThread(
+                        url: $randomString,
+                        userId1: $user->getId(),
+                        userId2: $authenticatedUser->getId()
+                    );
 
-                $success = $dmThreadDao->create($dmThread);
-                if (!$success) throw new Exception('Failed to create a dm thread!');
+                    $success = $dmThreadDao->create($dmThread);
+                    if (!$success) throw new Exception('Failed to create a dm thread!');
+                }
+
+                $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
+
+                return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
             }
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
 
-            $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
-
-            return new HTMLRenderer('page/profile', ['user' => $user, 'profile' => $profile, 'authenticatedUser' => $authenticatedUser, 'followingCount' => $followingCount, 'followerCount' => $followerCount, 'isFollow' => $isFollow, 'dmUrl' => $dmThread->getUrl()]);
+            FlashData::setFlashData('error', $e->getMessage());
+            return new HTMLRenderer('');
+        } catch (\LengthException $e) {
+            error_log($e->getMessage());
+            FlashData::setFlashData('error', $e->getMessage());
+            return new HTMLRenderer('');
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new HTMLRenderer('');
         }
     })->setMiddleware(['auth']),
     'profile/posts' => Route::create('profile/posts', function (): HTTPRenderer {
@@ -1069,7 +1144,7 @@ return [
         $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
         $success = $passwordResetTokenDao->create($passwordResetToken);
 
-        if(!$success){
+        if (!$success) {
             throw new Exception("パスワードリセットトークンの作成に失敗しました");
         }
 
@@ -1090,7 +1165,7 @@ return [
         return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
     })->setMiddleware(['signature']),
     'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
-        try{
+        try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
 
             $required_fields = [
@@ -1124,7 +1199,7 @@ return [
 
             FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
             return new JSONRenderer(['status' => 'success']);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             error_log($e->getMessage());
         }
     })->setMiddleware(['guest']),
