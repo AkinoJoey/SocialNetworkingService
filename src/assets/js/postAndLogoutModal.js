@@ -115,8 +115,13 @@ document.addEventListener("DOMContentLoaded", function () {
 		let formData = new FormData(createPostForm);
 		formData.append("media", fileInput.files[0]);
 
-		let scheduledAt = scheduledAtContainer.textContent + ":00"
-		formData.append("scheduled_at", scheduledAt);
+		if (scheduledAtContainer.textContent.trim() !== "") {
+			let scheduledAt = scheduledAtContainer.textContent + ":00";
+			formData.append("scheduled_at", scheduledAt);
+		}
+
+		console.log(...formData.entries());
+
 
 		fetch("/form/new", {
 			method: "POST",
