@@ -31,7 +31,7 @@ if (isset($routes[$path])) {
 
         // チェーンの最後のcallableは、HTTPRendererを返す現在の$route callableとなります。
         $renderer = $middlewareHandler->run($route->getCallback());
-        
+
         // ヘッダーを設定します。
         foreach ($renderer->getFields() as $name => $value) {
             // ヘッダーに対する単純な検証を実行します。
@@ -51,11 +51,13 @@ if (isset($routes[$path])) {
         }
     } catch (Exception $e) {
         http_response_code(500);
-        print("Internal error, please contact the admin.<br>");
+        $renderer = new \src\response\render\HTMLRenderer('page/500');
+        print($renderer->getContent());
         if ($DEBUG) print($e->getMessage());
     }
 } else {
     // マッチするルートがない場合、404エラーを表示します。
     http_response_code(404);
-    echo "404 Not Found: The requested route was not found on this server.";
+    $renderer = new \src\response\render\HTMLRenderer('page/404');
+    print($renderer->getContent());
 }
