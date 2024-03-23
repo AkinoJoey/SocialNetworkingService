@@ -104,6 +104,7 @@ class ValidationHelper
     public static function password(string $password): string
     {
         $isValid = is_string($password) && strlen($password) >= 8 && // Minimum 8 characters
+            strlen($password) <= 30 && // Max 30 characters
             preg_match('/[A-Z]/', $password) && // 少なくとも1文字の大文字
             preg_match('/[a-z]/', $password) && // 少なくとも1文字の小文字
             preg_match('/\d/', $password) && // 少なくとも1桁
