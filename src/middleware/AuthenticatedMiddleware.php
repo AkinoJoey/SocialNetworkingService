@@ -13,7 +13,7 @@ class AuthenticatedMiddleware implements Middleware
     {
         error_log('Running authentication check...');
         if (!Authenticate::isLoggedIn()) {
-            FlashData::setFlashData('error', 'Must login to view this page.');
+            FlashData::setFlashData('error', 'ログインが必要なページです');
             return new RedirectRenderer('login');
         }
 
