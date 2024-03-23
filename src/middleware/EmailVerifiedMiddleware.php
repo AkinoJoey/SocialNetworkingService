@@ -13,7 +13,7 @@ class EmailVerifiedMiddleware implements Middleware
     {
         error_log('Running verification check...');
         if (!Authenticate::isEmailVerified()) {
-            FlashData::setFlashData('error', 'Must verify email to view this page.');
+            FlashData::setFlashData('error', 'Eメール認証が必要なページです');
             return new RedirectRenderer('');
         }
 
