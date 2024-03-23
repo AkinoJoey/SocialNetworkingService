@@ -21,14 +21,15 @@ class SeedDao extends AbstractCommand
 
     function runAllSeeds(): void
     {
-        $directoryPath = __DIR__ . '/../../Database/SeedsDao';
+        $directoryPath = __DIR__ . '/../../database/seeds_dao';
 
-        $files = scandir($directoryPath);
+        // $files = scandir($directoryPath);
+        $files = ['UserDaoSeeder.php', 'ProfileDaoSeeder.php'];
 
         foreach ($files as $file) {
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
                 // ファイル名からクラス名を抽出します。
-                $className = 'Database\SeedsDao\\' . pathinfo($file, PATHINFO_FILENAME);
+                $className = 'src\database\seeds_dao\\' . pathinfo($file, PATHINFO_FILENAME);
 
                 // シードファイルをインクルードします。
                 include_once $directoryPath . '/' . $file;
