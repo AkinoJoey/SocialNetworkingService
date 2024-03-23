@@ -15,6 +15,7 @@ use Carbon\Carbon;
                         <div class="flex h-full flex-col justify-center">
                             <div class="mb-1.5 text-sm">
                                 <p class="scheduled-post-content text-sm mt-1 text-gray-600 dark:text-gray-400"><?= $post->getContent() ?></p>
+                                <div class="media-item" data-media-path="<?= $post->getMediaPath() === null ? null : '/uploads/' . substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" data-media-extension="<?= $post->getExtension() ?? null?>"></div>
                             </div>
                             <div class="text-xs text-blue-600 dark:text-blue-500">
                                 <span class="scheduled-at"><?= Carbon::parse($post->getScheduledAt())->format('Y-m-d H:i') ?></span>に投稿予定
@@ -31,6 +32,8 @@ use Carbon\Carbon;
 </div>
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
+<?php include(__DIR__ . '/../components/scheduled_post_preview.php') ?>
+
 <script>
     let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
 </script>
