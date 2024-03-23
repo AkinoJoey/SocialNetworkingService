@@ -18,7 +18,6 @@ use src\response\render\JSONRenderer;
 use src\models\Comment;
 use src\models\PostLike;
 use src\models\CommentLike;
-use src\models\DmMessage;
 use src\models\DmThread;
 use src\models\Follow;
 use src\models\Notification;
@@ -27,7 +26,6 @@ use src\types\NotificationType;
 use src\types\PostStatusType;
 use src\types\UserValueType;
 use src\types\PostValueType;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 return [
     '' => Route::create('', function (): HTTPRenderer {
@@ -94,7 +92,7 @@ return [
 
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-    })->setMiddleware(['verify']),
+    })->setMiddleware(['auth', 'verify']),
     'timeline/trend' => Route::create('timeline/trend', function (): HTTPRenderer {
         try {
             $required_fields = [
@@ -124,7 +122,7 @@ return [
 
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-    })->setMiddleware(['verify']),
+    })->setMiddleware(['auth', 'verify']),
     'timeline/guest' => Route::create("timeline/guest", function (): HTTPRenderer {
         try {
             $required_fields = [
@@ -291,7 +289,7 @@ return [
             FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('');
         }
-    })->setMiddleware(['verify']),
+    })->setMiddleware(['auth', 'verify']),
     'form/profile/edit' => Route::create('form/profile/edit', function (): HTTPRenderer {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
@@ -388,13 +386,13 @@ return [
             error_log($e->getMessage());
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-    })->setMiddleware(['verify']),
+    })->setMiddleware(['auth', 'verify']),
     'login' => Route::create('login', function (): HTTPRenderer {
         return new HTMLRenderer('page/login');
     })->setMiddleware(['register']),
     'form/login' => Route::create('form/login', function (): HTTPRenderer {
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             $required_fields = [
                 'email' => UserValueType::EMAIL,
@@ -490,35 +488,44 @@ return [
             FlashData::setFlashData('error', 'エラーが発生しました');
             return new HTMLRenderer('');
         }
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['auth', 'verify']),
     'profile/posts' => Route::create('profile/posts', function (): HTTPRenderer {
-        $required_fields = [
-            'user_id' => GeneralValueType::INT,
-            'offset' => GeneralValueType::INT
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
-
-        $postDao = DAOFactory::getPostDAO();
-        $posts = $postDao->getPostsByFollowedUsers([], $validatedData['user_id'], $validatedData['offset'], 3); //TODO: 20に変更する
-
-        $user = Authenticate::getAuthenticatedUser();
-        $htmlString = "";
-
-        foreach ($posts as $post) {
-            ob_start();
-            $user;
-            include(__DIR__ . '/../views/components/post_card.php');
-            $postCardHtml = ob_get_clean();
-            $htmlString .= $postCardHtml;
-        }
-
-        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
-    })->setMiddleware(['auth']),
-    'form/new' => Route::create('form/new', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            $required_fields = [
+                'user_id' => GeneralValueType::INT,
+                'offset' => GeneralValueType::INT
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+            $postDao = DAOFactory::getPostDAO();
+            $posts = $postDao->getPostsByFollowedUsers([], $validatedData['user_id'], $validatedData['offset'], 3); //TODO: 20に変更する
+
+            $user = Authenticate::getAuthenticatedUser();
+            $htmlString = "";
+
+            foreach ($posts as $post) {
+                ob_start();
+                $user;
+                include(__DIR__ . '/../views/components/post_card.php');
+                $postCardHtml = ob_get_clean();
+                $htmlString .= $postCardHtml;
+            }
+
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/new' => Route::create('form/new', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             // 文字が空かつ、メディアがない場合はアラートを出す
             if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
@@ -614,13 +621,11 @@ return [
         } catch (Exception $e) {
             error_log($e->getMessage());
 
-            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
+            return new JSONRenderer(["status" => "error", "message" => 'エラーが発生しました']);
         }
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['auth', 'verify']),
     'posts' => Route::create('posts', function (): HTTPRenderer {
         try {
-            // TODO: 厳格なバリデーション
-            // TODO: データベースにないURLのクエリだった場合は404を出す
             $required_fields = [
                 'url' => GeneralValueType::STRING,
             ];
@@ -631,160 +636,300 @@ return [
             $postDao = DAOFactory::getPostDAO();
             $post = $postDao->getByUrl($validatedData['url'], $user->getId());
 
+            if ($post === null) {
+                return new HTMLRenderer('page/404');
+            }
+
             return new HTMLRenderer('page/posts', ['post' => $post, 'user' => $user, 'path' => 'posts']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new RedirectRenderer('');
         } catch (Exception $e) {
             error_log($e->getMessage());
+            return new RedirectRenderer('');
         }
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['auth', 'verify']),
     'posts/comments' => Route::create('posts/comments', function (): HTTPRenderer {
-        $required_fields = [
-            'type_reply_to' => PostValueType::TYPE_REPLY_TO,
-            'post_id' => GeneralValueType::INT,
-            'offset' => GeneralValueType::INT
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
-
-        $user = Authenticate::getAuthenticatedUser();
-
-        $commentDao = DAOFactory::getCommentDAO();
-
-        if ($validatedData['type_reply_to'] === 'post') {
-            $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
-        } else if ($validatedData['type_reply_to'] === 'comment') {
-            $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
-        }
-
-
-        $htmlString = "";
-
-        foreach ($comments as $comment) {
-            ob_start();
-            $user;
-            include(__DIR__ . '/../views/components/comment.php');
-            $commentHtml = ob_get_clean();
-            $htmlString .= $commentHtml;
-        }
-
-        return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
-    })->setMiddleware(['auth']),
-    'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception(
-            'Invalid request method!'
-        );
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
-
-        $user = Authenticate::getAuthenticatedUser();
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $postDao = DAOFactory::getPostDAO();
-        $success = $postDao->delete($validatedData['post_id'], $user->getId());
-
-        if (!$success) throw new Exception('Failed to delete a comment!');
-
-        FlashData::setFlashData('success', "投稿を削除しました");
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/reply' => Route::create('form/reply', function (): HTTPRenderer {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        error_log(print_r($_POST, true));
-        error_log(print_r($_FILES, true));
-
-        // 文字が空かつ、メディアがない場合はアラートを出す
-        if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
-            return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
-        }
-
-        $user = Authenticate::getAuthenticatedUser();
-        //投稿のURLとメディアのファイル名の長さ 
-        $numberOfCharacters = 18;
-        $url = bin2hex(random_bytes($numberOfCharacters / 2));
-
-        $comment = new Comment(
-            url: $url,
-            userId: $user->getId()
-        );
-
-        if ($_POST['content'] !== "") {
-            $fields = [
-                'content' => PostValueType::CONTENT
+        try {
+            $required_fields = [
+                'type_reply_to' => PostValueType::TYPE_REPLY_TO,
+                'post_id' => GeneralValueType::INT,
+                'offset' => GeneralValueType::INT
             ];
-            $validatedData = ValidationHelper::validateFields($fields, $_POST);
-            $comment->setContent($validatedData['content']);
-        }
 
-        if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
-            $fields = [
-                'media' => PostValueType::MEDIA
-            ];
-            $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
-        }
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
+            $user = Authenticate::getAuthenticatedUser();
 
-        if (isset($validatedData['media'])) {
-            $tmpPath = $validatedData['media'];
-            $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $mime = $finfo->file($tmpPath);
-            $extension = explode('/', $mime)[1] === "quicktime" ? '.mov' : '.' . explode('/', $mime)[1];
-            $basename = bin2hex(random_bytes($numberOfCharacters / 2));
-            $filename = $basename . $extension;
-            $uploadDir =  __DIR__ .  "/../../public/uploads/";
-            $subdirectory = substr($filename, 0, 2) . "/";
-            $mediaPath = $uploadDir .  $subdirectory . $filename;
+            $commentDao = DAOFactory::getCommentDAO();
 
-            $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
-            if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
-
-            // インスタンスに保存
-            $comment->setMediaPath($basename);
-            $comment->setExtension($extension);
-
-            if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
-                $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
-
-                $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, "720x720");
-
-                if (!$success) throw new Exception("エラーが発生しました");
-            } else if (str_starts_with($mime, 'video/')) {
-                $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
-                if (!$success) throw new Exception("エラーが発生しました");
-
-                // 動画はすべてmp4形式
-                $comment->setExtension(".mp4");
+            if ($validatedData['type_reply_to'] === 'post') {
+                $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
+            } else if ($validatedData['type_reply_to'] === 'comment') {
+                $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
             }
+
+
+            $htmlString = "";
+
+            foreach ($comments as $comment) {
+                ob_start();
+                $user;
+                include(__DIR__ . '/../views/components/comment.php');
+                $commentHtml = ob_get_clean();
+                $htmlString .= $commentHtml;
+            }
+
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
+    })->setMiddleware(['auth', 'verify']),
+    'delete/post' => Route::create('delete/post', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception(
+                '無効なリクエストメソッド'
+            );
 
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-            'type_reply_to' => PostValueType::TYPE_REPLY_TO
-        ];
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-
-        $commentDao = DAOFactory::getCommentDAO();
-
-        // 投稿への返信の場合
-        if ($validatedData['type_reply_to'] === 'post') {
-            $comment->setPostId($validatedData['post_id']);
-            $success = $commentDao->create($comment);
-
-            if (!$success) throw new Exception('Failed to create a comment!');
-
-            // 自分の投稿に対して自分がコメントしていない場合は通知する
+            $user = Authenticate::getAuthenticatedUser();
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
             $postDao = DAOFactory::getPostDAO();
-            $currentPost = $postDao->getById($validatedData['post_id']);
+            $success = $postDao->delete($validatedData['post_id'], $user->getId());
 
-            if ($currentPost->getUserId() !== $user->getId()) {
+            if (!$success) throw new Exception('コメントの削除に失敗しました');
+
+            FlashData::setFlashData('success', "投稿を削除しました");
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/reply' => Route::create('form/reply', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエスト');
+
+            // 文字が空かつ、メディアがない場合はアラートを出す
+            if ($_POST['content'] === "" && $_FILES['media']['error'] !== UPLOAD_ERR_OK) {
+                return new JSONRenderer(['status' => 'error', "message" => "投稿にはテキスト、あるいはメディアのどちらかが必要です"]);
+            }
+
+            $user = Authenticate::getAuthenticatedUser();
+            //投稿のURLとメディアのファイル名の長さ 
+            $numberOfCharacters = 18;
+            $url = bin2hex(random_bytes($numberOfCharacters / 2));
+
+            $comment = new Comment(
+                url: $url,
+                userId: $user->getId()
+            );
+
+            if ($_POST['content'] !== "") {
+                $fields = [
+                    'content' => PostValueType::CONTENT
+                ];
+                $validatedData = ValidationHelper::validateFields($fields, $_POST);
+                $comment->setContent($validatedData['content']);
+            }
+
+            if ($_FILES['media']['error'] === UPLOAD_ERR_OK) {
+                $fields = [
+                    'media' => PostValueType::MEDIA
+                ];
+                $validatedData = ValidationHelper::validateFields($fields, ['media' => $_FILES['media']['tmp_name']]);
+            }
+
+
+            if (isset($validatedData['media'])) {
+                $tmpPath = $validatedData['media'];
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($tmpPath);
+                $extension = explode('/', $mime)[1] === "quicktime" ? '.mov' : '.' . explode('/', $mime)[1];
+                $basename = bin2hex(random_bytes($numberOfCharacters / 2));
+                $filename = $basename . $extension;
+                $uploadDir =  __DIR__ .  "/../../public/uploads/";
+                $subdirectory = substr($filename, 0, 2) . "/";
+                $mediaPath = $uploadDir .  $subdirectory . $filename;
+
+                $uploadSuccess = MediaHelper::uploadMedia($mediaPath, $tmpPath);
+                if (!$uploadSuccess) throw new Exception("メディアのアップロードに失敗しました。");
+
+                // インスタンスに保存
+                $comment->setMediaPath($basename);
+                $comment->setExtension($extension);
+
+                if (str_starts_with($mime, 'image/') && $extension !== ".gif") {
+                    $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
+
+                    $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, "720x720");
+
+                    if (!$success) throw new Exception("エラーが発生しました");
+                } else if (str_starts_with($mime, 'video/')) {
+                    $success = MediaHelper::convertAndCompressToMp4Video($mediaPath);
+                    if (!$success) throw new Exception("エラーが発生しました");
+
+                    // 動画はすべてmp4形式
+                    $comment->setExtension(".mp4");
+                }
+            }
+
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+                'type_reply_to' => PostValueType::TYPE_REPLY_TO
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+
+            $commentDao = DAOFactory::getCommentDAO();
+
+            // 投稿への返信の場合
+            if ($validatedData['type_reply_to'] === 'post') {
+                $comment->setPostId($validatedData['post_id']);
+                $success = $commentDao->create($comment);
+
+                if (!$success) throw new Exception('Failed to create a comment!');
+
+                // 自分の投稿に対して自分がコメントしていない場合は通知する
+                $postDao = DAOFactory::getPostDAO();
+                $currentPost = $postDao->getById($validatedData['post_id']);
+
+                if ($currentPost->getUserId() !== $user->getId()) {
+                    $notification = new Notification(
+                        userId: $currentPost->getUserId(),
+                        sourceId: $user->getId(),
+                        notificationType: NotificationType::COMMENT->value,
+                        commentId: $comment->getId()
+                    );
+
+                    $notificationDao = DAOFactory::getNotificationDAO();
+                    $success = $notificationDao->create($notification);
+
+                    if (!$success) throw new Exception('Failed to create a notification!');
+                }
+            } else {
+                // コメントへの返信の場合
+                $comment->setParentCommentId($validatedData['post_id']);
+                $success = $commentDao->create($comment);
+                if (!$success) throw new Exception('Failed to create a comment!');
+
+                // TODO: 余裕があったらコメントに対する返信の通知を作成
+
+            }
+
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
+        } catch (\LengthException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status" => "error", "message" => $e->getMessage()]);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(["status" => "error", "message" => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'comments' => Route::create('comments', function (): HTTPRenderer {
+        try {
+            $required_fields = [
+                'url' => GeneralValueType::STRING
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $user = Authenticate::getAuthenticatedUser();
+
+            $commentDao = DAOFactory::getCommentDAO();
+            $parentComment = $commentDao->getByUrl($validatedData['url'], $user->getId());
+
+            if ($parentComment === null) {
+                http_response_code(404);
+                return new HTMLRenderer('page/404');
+            }
+
+            return new HTMLRenderer('page/posts', ['post' => $parentComment, 'user' => $user, 'path' => 'comments']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new RedirectRenderer('');
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
+
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $commentDao = DAOFactory::getCommentDAO();
+
+            $user = Authenticate::getAuthenticatedUser();
+            $success = $commentDao->delete($validatedData['post_id'], $user->getId());
+            if (!$success) throw new Exception('コメントの削除に失敗しました');
+
+            FlashData::setFlashData('success', "コメントを削除しました");
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
+
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
+
+            $postLike = new PostLike(
+                userId: $user->getId(),
+                postId: $validatedData['post_id'],
+            );
+
+            $postLikeDao = DAOFactory::getPostLikeDAO();
+            $success = $postLikeDao->create($postLike);
+
+            if (!$success) throw new Exception('Failed to create a post-like!');
+
+            $postDao = DAOFactory::getPostDAO();
+            $post = $postDao->getById($validatedData['post_id']);
+
+            // 自分が投稿したポストじゃない場合はnotificationを作成する
+            if ($post->getUserId() !== $user->getId()) {
                 $notification = new Notification(
-                    userId: $currentPost->getUserId(),
+                    userId: $post->getUserId(),
                     sourceId: $user->getId(),
-                    notificationType: NotificationType::COMMENT->value,
-                    commentId: $comment->getId()
+                    notificationType: NotificationType::POST_LIKE->value,
+                    postId: $validatedData['post_id']
                 );
 
                 $notificationDao = DAOFactory::getNotificationDAO();
@@ -792,381 +937,394 @@ return [
 
                 if (!$success) throw new Exception('Failed to create a notification!');
             }
-        } else {
-            // コメントへの返信の場合
-            $comment->setParentCommentId($validatedData['post_id']);
-            $success = $commentDao->create($comment);
-            if (!$success) throw new Exception('Failed to create a comment!');
 
-            // TODO: 余裕があったらコメントに対する返信の通知を作成
-
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
+    })->setMiddleware(['auth', 'verify']),
+    'form/delete-like-post' => Route::create('form/delete-like-post', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'comments' => Route::create('comments', function (): HTTPRenderer {
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'url' => GeneralValueType::STRING
-        ];
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
-        $user = Authenticate::getAuthenticatedUser();
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
 
-        $commentDao = DAOFactory::getCommentDAO();
-        $parentComment = $commentDao->getByUrl($validatedData['url'], $user->getId());
+            $postLikeDao = DAOFactory::getPostLikeDAO();
+            $success = $postLikeDao->delete($user->getId(), $validatedData['post_id']);
 
-        return new HTMLRenderer('page/posts', ['post' => $parentComment, 'user' => $user, 'path' => 'comments']);
-    })->setMiddleware(['auth']),
-    'delete/comment' => Route::create('delete/comment', function (): HTTPRenderer {
-        // TODO: 投稿者だけが削除できるようにする
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            if (!$success) throw new Exception('いいねの削除に失敗しました');
 
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
+            $postDao = DAOFactory::getPostDAO();
+            $post = $postDao->getById($validatedData['post_id']);
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $commentDao = DAOFactory::getCommentDAO();
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $success = $notificationDao->delete($post->getUserId(), NotificationType::POST_LIKE->value, $user->getId(), $validatedData['post_id'], null, null);
 
-        $user = Authenticate::getAuthenticatedUser();
-        $success = $commentDao->delete($validatedData['post_id'], $user->getId());
-        if (!$success) throw new Exception('Failed to delete a comment!');
+            if (!$success) throw new Exception('通知の削除に失敗しました');
 
-        FlashData::setFlashData('success', "コメントを削除しました");
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/like-post' => Route::create('form/like-post', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/like-comment' => Route::create('form/like-comment', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
 
-        $postLike = new PostLike(
-            userId: $user->getId(),
-            postId: $validatedData['post_id'],
-        );
+            $commentLike = new CommentLike(
+                userId: $user->getId(),
+                commentId: $validatedData['post_id'],
+            );
 
-        $postLikeDao = DAOFactory::getPostLikeDAO();
-        $success = $postLikeDao->create($postLike);
+            $commentLikeDao = DAOFactory::getCommentLikeDAO();
+            $success = $commentLikeDao->create($commentLike);
 
-        if (!$success) throw new Exception('Failed to create a post-like!');
+            if (!$success) throw new Exception('コメントのいいね作成に失敗しました');
 
-        $postDao = DAOFactory::getPostDAO();
-        $post = $postDao->getById($validatedData['post_id']);
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/delete-like-comment' => Route::create('form/delete-like-comment', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
-        // 自分が投稿したポストじゃない場合はnotificationを作成する
-        if ($post->getUserId() !== $user->getId()) {
+            $required_fields = [
+                'post_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
+
+            $commentLikeDao = DAOFactory::getCommentLikeDAO();
+            $success = $commentLikeDao->delete($user->getId(), $validatedData['post_id']);
+
+            if (!$success) throw new Exception('コメントのいいね削除に失敗しました');
+
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'form/follow' => Route::create('form/follow', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
+
+            $required_fields = [
+                'follower_user_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
+
+            $follow = new Follow(
+                followingUserId: $user->getId(),
+                followerUserId: $validatedData['follower_user_id']
+            );
+
+            $followDao = DAOFactory::getFollowDAO();
+            $success = $followDao->create($follow);
+
+            if (!$success) throw new Exception('フォローの作成に失敗しました');
+
             $notification = new Notification(
-                userId: $post->getUserId(),
+                userId: $validatedData['follower_user_id'],
                 sourceId: $user->getId(),
-                notificationType: NotificationType::POST_LIKE->value,
-                postId: $validatedData['post_id']
+                notificationType: NotificationType::FOLLOW->value,
             );
 
             $notificationDao = DAOFactory::getNotificationDAO();
             $success = $notificationDao->create($notification);
 
-            if (!$success) throw new Exception('Failed to create a notification!');
+            if (!$success) throw new Exception('通知の作成に失敗しました');
+
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/delete-like-post' => Route::create('form/delete-like-post', function (): HTTPRenderer {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
-
-        $postLikeDao = DAOFactory::getPostLikeDAO();
-        $success = $postLikeDao->delete($user->getId(), $validatedData['post_id']);
-
-        if (!$success) throw new Exception('Failed to delete a post-like!');
-
-        $postDao = DAOFactory::getPostDAO();
-        $post = $postDao->getById($validatedData['post_id']);
-
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->delete($post->getUserId(), NotificationType::POST_LIKE->value, $user->getId(), $validatedData['post_id'], null, null);
-
-        if (!$success) throw new Exception('Failed to delete a notification!');
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/like-comment' => Route::create('form/like-comment', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
-
-        $commentLike = new CommentLike(
-            userId: $user->getId(),
-            commentId: $validatedData['post_id'],
-        );
-
-        $commentLikeDao = DAOFactory::getCommentLikeDAO();
-        $success = $commentLikeDao->create($commentLike);
-
-        if (!$success) throw new Exception('Failed to create a comment-like!');
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/delete-like-comment' => Route::create('form/delete-like-comment', function (): HTTPRenderer {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'post_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
-
-        $commentLikeDao = DAOFactory::getCommentLikeDAO();
-        $success = $commentLikeDao->delete($user->getId(), $validatedData['post_id']);
-
-        if (!$success) throw new Exception('Failed to delete a comment-like!');
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'form/follow' => Route::create('form/follow', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'follower_user_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
-
-        $follow = new Follow(
-            followingUserId: $user->getId(),
-            followerUserId: $validatedData['follower_user_id']
-        );
-
-        $followDao = DAOFactory::getFollowDAO();
-        $success = $followDao->create($follow);
-
-        if (!$success) throw new Exception('Failed to create a follow!');
-
-        $notification = new Notification(
-            userId: $validatedData['follower_user_id'],
-            sourceId: $user->getId(),
-            notificationType: NotificationType::FOLLOW->value,
-        );
-
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->create($notification);
-
-        if (!$success) throw new Exception('Failed to create a notification!');
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['auth', 'verify']),
     'form/unFollow' => Route::create('form/unFollow', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'follower_user_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-        $user = Authenticate::getAuthenticatedUser();
-
-        $followDao = DAOFactory::getFollowDAO();
-        $success = $followDao->delete($user->getId(), $validatedData['follower_user_id']);
-
-        if (!$success) throw new Exception('Failed to delete a follow!');
-
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->delete($validatedData['follower_user_id'], NotificationType::FOLLOW->value, $user->getId(), null, null, null);
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'direct' => Route::create('direct', function (): HTTPRenderer {
-
-        // TODO: Authenticateでも良いかも
-        $query = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
-        parse_str($query, $output);
-        $url = $output['url'];
-
-        $user = Authenticate::getAuthenticatedUser();
-        $dmThreadDao = DAOFactory::getDmThreadDAO();
-        $dmThread = $dmThreadDao->getByUserIdAndUrl($user->getId(), $url);
-
-        // TODO: try-catch
-        if ($dmThread === null) throw new Exception('Invalid URL!');
-
-        $receiverUserId = $dmThread->getUserId1() === $user->getId() ? $dmThread->getUserId2() : $dmThread->getUserId1();
-        $userDao = DAOFactory::getUserDAO();
-        $receiverUser = $userDao->getById($receiverUserId);
-
-        $dmMessageDao = DAOFactory::getDmMessageDAO();
-        $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
-
-        return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages' => $messages]);
-    })->setMiddleware(['auth']),
-    'notifications' => Route::create('notifications', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
-
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $notifications = $notificationDao->getNotificationList($user->getId());
-
-        return new HTMLRenderer('page/notifications', ['notifications' => $notifications, 'user' => $user]);
-    })->setMiddleware(['auth']),
-    'update-isRead' => Route::create('update-isRead', function (): HTTPRenderer {
-        // TODO: try-catch文を書く
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
-
-        // TODO: 厳格なバリデーション
-        $required_fields = [
-            'notification_id' => GeneralValueType::INT,
-        ];
-
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
-
-
-        $notificationDao = DAOFactory::getNotificationDAO();
-        $success = $notificationDao->updateReadStatus($validatedData['notification_id']);
-
-        if (!$success) throw new Exception('Failed to update a notification!');
-
-        return new JSONRenderer(['status' => 'success']);
-    })->setMiddleware(['auth']),
-    'messages' => Route::create('messages', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
-
-        $messageDao = DAOFactory::getDmMessageDAO();
-        $messageList = $messageDao->getMessageList($user->getId());
-
-        return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user' => $user]);
-    })->setMiddleware(['auth']),
-    'search/user' => Route::create('search/user', function (): HTTPRenderer {
-
-        if (isset($_GET['keyword']) && strlen($_GET['keyword']) !== 0) {
-            // TODO: 厳格なバリデーション
             $required_fields = [
-                'keyword' => GeneralValueType::STRING,
+                'follower_user_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $user = Authenticate::getAuthenticatedUser();
+
+            $followDao = DAOFactory::getFollowDAO();
+            $success = $followDao->delete($user->getId(), $validatedData['follower_user_id']);
+
+            if (!$success) throw new Exception('フォローの削除に失敗しました');
+
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $success = $notificationDao->delete($validatedData['follower_user_id'], NotificationType::FOLLOW->value, $user->getId(), null, null, null);
+
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'direct' => Route::create('direct', function (): HTTPRenderer {
+        try {
+            $required_fields = [
+                'url' => GeneralValueType::STRING,
             ];
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
+            $user = Authenticate::getAuthenticatedUser();
+            $dmThreadDao = DAOFactory::getDmThreadDAO();
+            $dmThread = $dmThreadDao->getByUserIdAndUrl($user->getId(), $validatedData['url']);
+
+            if ($dmThread === null) throw new Exception('無効なURL');
+
+            $receiverUserId = $dmThread->getUserId1() === $user->getId() ? $dmThread->getUserId2() : $dmThread->getUserId1();
             $userDao = DAOFactory::getUserDAO();
-            $users = $userDao->getUserListForSearch($validatedData['keyword']);
+            $receiverUser = $userDao->getById($receiverUserId);
+
+            $dmMessageDao = DAOFactory::getDmMessageDAO();
+            $messages = $dmMessageDao->getOneHundredByDmThreadId($dmThread->getId());
+
+            return new HTMLRenderer('page/direct', ['user' => $user, 'receiverUser' => $receiverUser, 'dmThread' => $dmThread, 'messages' => $messages]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', $e->getMessage());
+            return new RedirectRenderer('');
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'notifications' => Route::create('notifications', function (): HTTPRenderer {
+        try {
+            $user = Authenticate::getAuthenticatedUser();
+
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $notifications = $notificationDao->getNotificationList($user->getId());
+
+            return new HTMLRenderer('page/notifications', ['notifications' => $notifications, 'user' => $user]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'update-isRead' => Route::create('update-isRead', function (): HTTPRenderer {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
+
+            $required_fields = [
+                'notification_id' => GeneralValueType::INT,
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+
+            $notificationDao = DAOFactory::getNotificationDAO();
+            $success = $notificationDao->updateReadStatus($validatedData['notification_id']);
+
+            if (!$success) throw new Exception('通知の更新に失敗しました');
+
+            return new JSONRenderer(['status' => 'success']);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'messages' => Route::create('messages', function (): HTTPRenderer {
+        try {
+            $user = Authenticate::getAuthenticatedUser();
+
+            $messageDao = DAOFactory::getDmMessageDAO();
+            $messageList = $messageDao->getMessageList($user->getId());
+
+            return new HTMLRenderer('page/messages', ['messageList' => $messageList, 'user' => $user]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['auth', 'verify']),
+    'search/user' => Route::create('search/user', function (): HTTPRenderer {
+        try {
+            if (isset($_GET['keyword']) && strlen($_GET['keyword']) !== 0) {
+                $required_fields = [
+                    'keyword' => GeneralValueType::STRING,
+                ];
+
+                $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+
+                $userDao = DAOFactory::getUserDAO();
+                $users = $userDao->getUserListForSearch($validatedData['keyword']);
+
+                return new HTMLRenderer('page/search_user', ['users' => $users]);
+            }
+
+            // デフォルトではフォロワーが多いユーザーを表示する
+            $userDao = DAOFactory::getUserDAO();
+            $users = $userDao->getTopFollowedUsers();
 
             return new HTMLRenderer('page/search_user', ['users' => $users]);
+        } catch (\InvalidArgumentException $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', $e->getMessage());
+            return new RedirectRenderer('');
+        }catch(\Exception $e){
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
         }
-
-        // デフォルトではフォロワーが多いユーザーを表示する
-        $userDao = DAOFactory::getUserDAO();
-        $users = $userDao->getTopFollowedUsers();
-
-        return new HTMLRenderer('page/search_user', ['users' => $users]);
-    })->setMiddleware(['auth']),
+    })->setMiddleware(['auth', 'verify']),
     'scheduled_posts' => Route::create('scheduled_post', function (): HTTPRenderer {
-        $user = Authenticate::getAuthenticatedUser();
+        try{
+            $user = Authenticate::getAuthenticatedUser();
 
-        $postDao = DAOFactory::getPostDAO();
-        $scheduledPosts = $postDao->getScheduledPosts($user->getId());
+            $postDao = DAOFactory::getPostDAO();
+            $scheduledPosts = $postDao->getScheduledPosts($user->getId());
 
-        return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts]);
-    })->setMiddleware(['auth']),
+            return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts, 'user'=> $user]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('');
+        }
+    })->setMiddleware(['auth', 'verify']),
     'forgot_password' => Route::create('forgot_password', function (): HTTPRenderer {
-
         return new HTMLRenderer('page/forgot_password');
     })->setMiddleware(['guest']),
     'form/forgot_password' => Route::create('form/forgot_password', function (): HTTPRenderer {
-        // TODO: try-catch
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
-        $required_fields = [
-            'email' => UserValueType::EMAIL,
-        ];
+            $required_fields = [
+                'email' => UserValueType::EMAIL,
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
-        $userDao = DAOFactory::getUserDAO();
-        $user = $userDao->getByEmail($validatedData['email']);
+            $userDao = DAOFactory::getUserDAO();
+            $user = $userDao->getByEmail($validatedData['email']);
 
-        // データベースにEメールが存在しない場合
-        if ($user === null) {
-            FlashData::setFlashData('error', '登録されていないEメールです');
-            return new RedirectRenderer('forgot_password');
-        }
+            // データベースにEメールが存在しない場合
+            if ($user === null) {
+                FlashData::setFlashData('error', '登録されていないEメールです');
+                return new RedirectRenderer('forgot_password');
+            }
 
-        // Eメールが認証されていない場合
-        if (!$user->getEmailVerified()) {
-            FlashData::setFlashData('error', '認証されていないEメールです');
+            // Eメールが認証されていない場合
+            if (!$user->getEmailVerified()) {
+                FlashData::setFlashData('error', '認証されていないEメールです');
+                return new RedirectRenderer('login');
+            }
+
+            // 期限を30分に設定
+            $lasts = 1 * 60 * 30;
+            $param = [
+                'expiration' => time() + $lasts
+            ];
+
+            // 存在する場合はパスワードリセット用のEメールを送信する
+            $route =  Route::create('verify/forgot_password', function () {
+            });
+            $signedUrl = $route->getSignedURL($param);
+            Authenticate::sendForgotPasswordEmail($user, $signedUrl);
+
+            // テーブルにトークンとユーザーを保存する
+            $signature = $route->getSignature($signedUrl);
+            $passwordResetToken = new PasswordResetToken(
+                userId: $user->getId(),
+                token: pack('H*', $signature) //バイナリーに変換
+            );
+
+            $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+            $success = $passwordResetTokenDao->create($passwordResetToken);
+
+            if (!$success) {
+                throw new Exception("パスワードリセットトークンの作成に失敗しました");
+            }
+
+            FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
+            return new RedirectRenderer('login');
+        }catch(\InvalidArgumentException $e){
+            error_log($e->getMessage());
+            FlashData::setFlashData('error', $e->getMessage());
+            return new RedirectRenderer('login');
+        }catch(\Exception $e){
+            error_log($e->getMessage());
+            FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('login');
         }
-
-        // 期限を30分に設定
-        $lasts = 1 * 60 * 30;
-        $param = [
-            'expiration' => time() + $lasts
-        ];
-
-        // 存在する場合はパスワードリセット用のEメールを送信する
-        $route =  Route::create('verify/forgot_password', function () {
-        });
-        $signedUrl = $route->getSignedURL($param);
-        Authenticate::sendForgotPasswordEmail($user, $signedUrl);
-
-        // テーブルにトークンとユーザーを保存する
-        $signature = $route->getSignature($signedUrl);
-        $passwordResetToken = new PasswordResetToken(
-            userId: $user->getId(),
-            token: pack('H*', $signature) //バイナリーに変換
-        );
-
-        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
-        $success = $passwordResetTokenDao->create($passwordResetToken);
-
-        if (!$success) {
-            throw new Exception("パスワードリセットトークンの作成に失敗しました");
-        }
-
-        FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
-        return new RedirectRenderer('login');
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
-        $required_fields = [
-            'signature' => GeneralValueType::STRING
-        ];
+        try{
+            $required_fields = [
+                'signature' => GeneralValueType::STRING
+            ];
 
-        $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
-        $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
-        $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
+            $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
+            $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
 
+            return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
+        }catch(\Exception $e){
+            error_log($e->getMessage());
 
-        return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
+            FlashData::setFlashData('error', 'エラーが発生しました');
+            return new RedirectRenderer('login');
+        }
     })->setMiddleware(['signature']),
     'form/verify/forgot_password' => Route::create('form/verify/forgot_password', function (): HTTPRenderer {
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Invalid request method!');
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             $required_fields = [
                 'user_id' => GeneralValueType::INT,
@@ -1199,8 +1357,13 @@ return [
 
             FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
             return new JSONRenderer(['status' => 'success']);
-        } catch (Exception $e) {
+        }catch(\InvalidArgumentException $e){
             error_log($e->getMessage());
+
+            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
+        }catch (Exception $e) {
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
     })->setMiddleware(['guest']),
 ];
