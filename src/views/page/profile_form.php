@@ -1,5 +1,5 @@
 <!-- form -->
-<div class="flex justify-center items-center p-6 container mb-6">
+<div class="container mx-auto mb-14 flex items-center justify-center p-4">
     <section class="bg-gray-100 text-gray-900 w-full sm:w-4/5 md:w-3/5">
         <div class="py-8 px-4 mx-auto max-w-2xl lg:py-16">
             <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">プロフィール</h2>
