@@ -1,5 +1,6 @@
 <?php
-    use Carbon\Carbon;
+
+use Carbon\Carbon;
 ?>
 <!-- message list -->
 <div class="container mx-auto mb-14 flex items-center justify-center p-4">
@@ -12,7 +13,7 @@
                 <a href="direct?url=<?= $message->getUrl() ?>" data-message-id="<?= $message->getId() ?>" class="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 hover:cursor-pointer">
                     <div class="flex w-full items-center">
                         <div class="mr-2">
-                            <img class="rounded-full w-16" src="<?= $message->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($message->getProfileImagePath(), 0, 2) . '/' .  $message->getProfileImagePath() . $message->getProfileImageExtension() ?>" alt="user avatar" />
+                            <img class="rounded-full w-16 h-16 object-cover" src="<?= $message->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($message->getProfileImagePath(), 0, 2) . '/' .  $message->getProfileImagePath() . $message->getProfileImageExtension() ?>" alt="user avatar" />
                         </div>
                         <div class="w-3/4">
                             <div class="flex h-full flex-col justify-center">
