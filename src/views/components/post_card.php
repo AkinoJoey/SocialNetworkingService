@@ -46,7 +46,7 @@ use Carbon\Carbon;
             <video autoplay muted class="mt-4 w-full object-cover dark:bg-gray-500" controls with="720">
                 <source src="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" type="video/mp4">
             </video>
-        <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png') : ?>
+        <?php elseif ($post->getExtension() === '.gif' || $post->getExtension() === '.jpg' || $post->getExtension() === '.jpeg' || $post->getExtension() === '.png' || $post->getExtension() === '.webp') : ?>
             <a class="z-20 relative" href="/uploads/<?= substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>">
                 <?php
                 if ($post->getExtension() === '.gif') {
