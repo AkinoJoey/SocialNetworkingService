@@ -71,7 +71,7 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
             $postDao = DAOFactory::getPostDAO();
-            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), $validatedData['offset'], 3);
+            $postsByFollowedUsers = $postDao->getPostsByFollowedUsers($followingUserIdList, $user->getId(), $validatedData['offset'], 20);
 
             $htmlString = "";
 
@@ -103,7 +103,7 @@ return [
 
             $user = Authenticate::getAuthenticatedUser();
             $postDao = DAOFactory::getPostDAO();
-            $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 3);
+            $trendPosts = $postDao->getTrendPosts($user->getId(), $validatedData['offset'], 20);
 
             $htmlString = "";
             foreach ($trendPosts as $post) {
@@ -132,7 +132,7 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
             $postDao = DAOFactory::getPostDAO();
-            $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 3); //TODO: 20にする
+            $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 20); 
 
             $htmlString = "";
             foreach ($posts as $post) {
@@ -363,7 +363,7 @@ return [
                 $profile->setExtension($extension);
             }
 
-            $profileDao->update($profile);
+            $success = $profileDao->update($profile);
             if (!$success) throw new Exception('Database update failed!');
 
             $userDao = DAOFactory::getUserDAO();
@@ -1215,7 +1215,7 @@ return [
 
             FlashData::setFlashData('error', $e->getMessage());
             return new RedirectRenderer('');
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             error_log($e->getMessage());
 
             FlashData::setFlashData('error', 'エラーが発生しました');
@@ -1223,13 +1223,13 @@ return [
         }
     })->setMiddleware(['auth', 'verify']),
     'scheduled_posts' => Route::create('scheduled_post', function (): HTTPRenderer {
-        try{
+        try {
             $user = Authenticate::getAuthenticatedUser();
 
             $postDao = DAOFactory::getPostDAO();
             $scheduledPosts = $postDao->getScheduledPosts($user->getId());
 
-            return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts, 'user'=> $user]);
+            return new HTMLRenderer('page/scheduled_posts', ['scheduledPosts' => $scheduledPosts, 'user' => $user]);
         } catch (\Exception $e) {
             error_log($e->getMessage());
 
@@ -1241,7 +1241,7 @@ return [
         return new HTMLRenderer('page/forgot_password');
     })->setMiddleware(['guest']),
     'form/forgot_password' => Route::create('form/forgot_password', function (): HTTPRenderer {
-        try{
+        try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
 
             $required_fields = [
@@ -1293,18 +1293,18 @@ return [
 
             FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
             return new RedirectRenderer('login');
-        }catch(\InvalidArgumentException $e){
+        } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
             FlashData::setFlashData('error', $e->getMessage());
             return new RedirectRenderer('login');
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             FlashData::setFlashData('error', 'エラーが発生しました');
             return new RedirectRenderer('login');
         }
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
-        try{
+        try {
             $required_fields = [
                 'signature' => GeneralValueType::STRING
             ];
@@ -1315,7 +1315,7 @@ return [
             $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
 
             return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             error_log($e->getMessage());
 
             FlashData::setFlashData('error', 'エラーが発生しました');
@@ -1357,11 +1357,11 @@ return [
 
             FlashData::setFlashData('success', 'パスワードをリセットしました。新しいパスワードでログインしてください');
             return new JSONRenderer(['status' => 'success']);
-        }catch(\InvalidArgumentException $e){
+        } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
-        }catch (Exception $e) {
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
+        } catch (Exception $e) {
             error_log($e->getMessage());
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
