@@ -19,4 +19,5 @@ interface PostDAO
     public function getTrendPostsForGuest(int $offset, int $limit = 20) : array;
     public function getScheduledPosts(int $userId) : array;
     public function countScheduledPosts(int $userId) : ?int;
+    public function getPostsByUsername(string $username, int $userId, int $offset, int $limit = 20) : array;
 }
