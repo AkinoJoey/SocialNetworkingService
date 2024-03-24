@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 	async function fetchPost() {
 		try {
 			const response = await fetch(
-				`/profile/posts?offset=${offsetCounter}&user_id=${userId}`,
+				`/profile/posts?offset=${offsetCounter}&username=${username}`,
 				{
 					method: "GET",
 				},
