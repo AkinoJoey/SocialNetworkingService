@@ -1,22 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
-	let searchForm = document.getElementById("search-form");
 	const inputKeyword = document.getElementById("keyword");
 	inputKeyword.focus();
+	search("");
 
-	inputKeyword.addEventListener("keydown", function (e) {
-		if (e.key === "Enter") {
-			e.preventDefault();
-			search();
-		}
+	inputKeyword.addEventListener("input", function (e) {
+		// if (e.key === "Enter") {
+		// 	e.preventDefault();
+		// 	search();
+		// }
+
+		let keyword = e.target.value;
+		search(keyword);
 	});
 
-	searchForm.addEventListener("submit", function (e) {
-		e.preventDefault();
-		search();
-	});
+	let usersContainer = document.getElementById("users_container");
 
-	function search() {
-		const formData = new FormData(searchForm);
-		window.location.href = `/search/user?keyword=${formData.get("keyword")}`;
+	function search(keyword) {
+		fetch(`/search/user-list?keyword=${keyword}`, {
+			method: "GET",
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.status === "success") {
+					usersContainer.innerHTML = data.htmlString;
+				} else if (data.status === "error") {
+					alert(data.message);
+				}
+			})
+			.catch((error) => {
+				alert("エラーが発生しました。更新してみてください");
+			});
 	}
 });
