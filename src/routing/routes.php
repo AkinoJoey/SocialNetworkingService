@@ -132,7 +132,7 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
 
             $postDao = DAOFactory::getPostDAO();
-            $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 20); 
+            $posts = $postDao->getTrendPostsForGuest($validatedData['offset'], 20);
 
             $htmlString = "";
             foreach ($posts as $post) {
@@ -492,16 +492,16 @@ return [
     'profile/posts' => Route::create('profile/posts', function (): HTTPRenderer {
         try {
             $required_fields = [
-                'user_id' => GeneralValueType::INT,
+                'username' => UserValueType::USERNAME,
                 'offset' => GeneralValueType::INT
             ];
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
+            $user = Authenticate::getAuthenticatedUser();
 
             $postDao = DAOFactory::getPostDAO();
-            $posts = $postDao->getPostsByFollowedUsers([], $validatedData['user_id'], $validatedData['offset'], 3); //TODO: 20に変更する
+            $posts = $postDao->getPostsByUsername($validatedData['username'], $user->getId(), $validatedData['offset']);
 
-            $user = Authenticate::getAuthenticatedUser();
             $htmlString = "";
 
             foreach ($posts as $post) {
