@@ -1191,35 +1191,42 @@ return [
         }
     })->setMiddleware(['auth', 'verify']),
     'search/user' => Route::create('search/user', function (): HTTPRenderer {
+        return new HTMLRenderer('page/search_user');
+    })->setMiddleware(['auth', 'verify']),
+    'search/user-list' => Route::create('search-user-list', function (): HTTPRenderer {
         try {
+            $userDao = DAOFactory::getUserDAO();
+
             if (isset($_GET['keyword']) && strlen($_GET['keyword']) !== 0) {
                 $required_fields = [
                     'keyword' => GeneralValueType::STRING,
                 ];
 
                 $validatedData = ValidationHelper::validateFields($required_fields, $_GET);
-
-                $userDao = DAOFactory::getUserDAO();
                 $users = $userDao->getUserListForSearch($validatedData['keyword']);
-
-                return new HTMLRenderer('page/search_user', ['users' => $users]);
+            } else {
+                // デフォルトではフォロワーが多いユーザーを表示する
+                $userDao = DAOFactory::getUserDAO();
+                $users = $userDao->getTopFollowedUsers();
             }
 
-            // デフォルトではフォロワーが多いユーザーを表示する
-            $userDao = DAOFactory::getUserDAO();
-            $users = $userDao->getTopFollowedUsers();
+            $htmlString = "";
 
-            return new HTMLRenderer('page/search_user', ['users' => $users]);
+            foreach ($users as $user) {
+                ob_start();
+                $user;
+                include(__DIR__ . '/../views/components/item_in_search_user.php');
+                $postCardHtml = ob_get_clean();
+                $htmlString .= $postCardHtml;
+            }
+
+            return new JSONRenderer(['status' => 'success', 'htmlString' => $htmlString]);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
-
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('');
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (\Exception $e) {
             error_log($e->getMessage());
-
-            FlashData::setFlashData('error', 'エラーが発生しました');
-            return new RedirectRenderer('');
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
     })->setMiddleware(['auth', 'verify']),
     'scheduled_posts' => Route::create('scheduled_post', function (): HTTPRenderer {
