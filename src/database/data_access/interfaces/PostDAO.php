@@ -7,6 +7,7 @@ use src\models\Post;
 interface PostDAO
 {
     public function create(Post $post): bool;
+    public function createForDummy(Post $post): bool;
     public function getById(int $id): ?Post;
     public function getByUserId(int $userId): ?Post;
     public function delete(int $id, int $userId): bool;
