@@ -158,8 +158,12 @@ class UserDAOImpl implements UserDAO
     public function getUserListForSearch(string $keyword, int $limit = 100): array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-
-        $query = "SELECT * FROM users u WHERE u.account_name LIKE ? or u.username LIKE ? LIMIT ?;";
+        
+        $query = 
+            "SELECT u.*, pr.profile_image_path, pr.extension
+                FROM users u
+                LEFT JOIN profiles pr ON u.id = pr.user_id
+                WHERE u.account_name LIKE ? OR u.username LIKE ? LIMIT ?";
 
         $param = "%" . $keyword . "%";
         $results = $mysqli->prepareAndFetchAll($query, 'ssi', [$param, $param, $limit]) ?? null;
