@@ -38,6 +38,37 @@ class PostDAOImpl implements PostDAO
 
         return true;
     }
+
+    // ダミーでは日付をランダムにしたいから、created_atを追加
+    public function createForDummy(Post $post): bool
+    {
+        if ($post->getId() !== null) throw new \Exception('Cannot create a post with an existing ID. id: ' . $post->getId());
+
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "INSERT INTO posts (status, content, url ,media_path, extension, user_id, scheduled_at, created_at) VALUES (?, ?, ?,  ? ,?, ?, ?, ?)";
+
+        $result = $mysqli->prepareAndExecute(
+            $query,
+            'sssssiss',
+            [
+                $post->getStatus(),
+                $post->getContent(),
+                $post->getUrl(),
+                $post->getMediaPath(),
+                $post->getExtension(),
+                $post->getUserId(),
+                $post->getScheduledAt() ? $post->getScheduledAt()->format('Y-m-d H:i:s') : null,
+                $post->getTimeStamp()->getCreatedAt()
+            ]
+        );
+
+        if (!$result) return false;
+
+        $post->setId($mysqli->insert_id);
+
+        return true;
+    }
     private function getRawById(int $id): ?array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
