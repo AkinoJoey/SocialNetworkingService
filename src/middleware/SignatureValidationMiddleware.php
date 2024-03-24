@@ -31,16 +31,16 @@ class SignatureValidationMiddleware implements Middleware
                 // サインアップ後に期限切れの場合はログアウトさせて、データベースからユーザーを削除
                 if ($pathWithoutQuery === '/verify/email') {
                     $user = Authenticate::getAuthenticatedUser();
-                    if($user !== null){
+                    if ($user !== null) {
                         Authenticate::logoutUser();
+                        $userDao->delete($user->getId());
                     }
-                    $userDao->delete($user->getId());
                 }
 
-                if($pathWithoutQuery === '/verify/forgot_password'){
+                if ($pathWithoutQuery === '/verify/forgot_password') {
                     $userDao->deleteExpiredEmailVerificationUsers();
                 }
-                
+
                 FlashData::setFlashData('error', "URLの期限が切れています");
                 return new RedirectRenderer('login');
             }
