@@ -81,8 +81,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 				);
 
 				// offsetを更新
-				// TODO: 値を20にする
-				offsetCounterMap.set(currentTab, offsetCounterMap.get(currentTab) + 3);
+				offsetCounterMap.set(currentTab, offsetCounterMap.get(currentTab) + 20);
 			} else if (data.status === "error") {
 				console.error(data.message);
 			}
