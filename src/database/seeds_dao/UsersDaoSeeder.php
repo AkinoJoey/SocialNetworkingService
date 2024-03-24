@@ -5,7 +5,7 @@ namespace src\database\seeds_dao;
 use src\database\data_access\DAOFactory;
 use src\models\User;
 
-class UserDaoSeeder
+class UsersDaoSeeder implements Seeder
 {
     public function seed(): void
     {
