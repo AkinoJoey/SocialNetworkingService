@@ -80,6 +80,6 @@
 
 <script>
 	let csrfToken = "<?= src\helpers\CrossSiteForgeryProtection::getToken() ?>"
-	let userId = "<?= $user->getId() ?>"
+	let username = "<?= $user->getUsername() ?>"
 </script>
 <script src="/profile.bundle.js"></script>
