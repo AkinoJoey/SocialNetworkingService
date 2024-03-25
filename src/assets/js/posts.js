@@ -138,8 +138,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 				);
 
 				// offsetを更新
-				// TODO: 値を20にする
-				offsetCounter += 3;
+				offsetCounter += 20;
 			} else if (data.status === "error") {
 				console.error(data.message);
 			}
