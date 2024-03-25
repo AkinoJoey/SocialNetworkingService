@@ -13,7 +13,8 @@ module.exports = {
 		profileEdit: "./src/assets/js/profileEdit.js",
 		scheduledPosts: "./src/assets/js/scheduledPosts.js",
 		guest: "./src/assets/js/guest.js",
-		verifyForgotPassword: "./src/assets/js/verifyForgotPassword.js"
+		verifyForgotPassword: "./src/assets/js/verifyForgotPassword.js",
+		signup: './src/assets/js/signup.js'
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
