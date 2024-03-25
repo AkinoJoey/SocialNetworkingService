@@ -175,7 +175,7 @@ class ValidationHelper
 
         $maxLen = 30;
 
-        if(mb_strlen($location) > $maxLen){
+        if (mb_strlen($location) > $maxLen) {
             throw new \LengthException("場所に入力できる文字数は30文字までです");
         }
 
@@ -228,9 +228,9 @@ class ValidationHelper
         $mime = $finfo->file($path);
         $byteSize = filesize($path);
 
-        if($type === 'post'){
+        if ($type === 'post') {
             $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg',  'image/gif', 'image/webp'];
-        }else if($type === 'avatar'){
+        } else if ($type === 'avatar') {
             $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         }
         $maxImageSize =  5 * 1024 * 1024;
@@ -289,5 +289,17 @@ class ValidationHelper
         }
 
         return $type;
+    }
+
+    public static function chatType(string $type): string
+    {
+        $allowedMimeTypes = ['join', 'message'];
+
+        if (!in_array($type, $allowedMimeTypes)) {
+            throw new \InvalidArgumentException("無効なタイプが入力されました。");
+        }
+
+        return $type;
+
     }
 }
