@@ -217,7 +217,7 @@ return [
             Authenticate::sendVerificationEmail($user, $signedUrl);
 
             FlashData::setFlashData('success', 'アカウントを作成しました。Eメールを確認してください');
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status'=> 'success']);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
@@ -294,6 +294,20 @@ return [
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
+            $userDao = DAOFactory::getUserDAO();
+            $user = Authenticate::getAuthenticatedUser();
+
+            // ユーザー名を変更している場合は重複していないかどうかチェック
+            if ($user->getUsername() !== $validatedData['username']) {
+                $result = $userDao->checkUsernameExists($validatedData['username']);
+                if ($result) {
+                    throw new \InvalidArgumentException('既に存在するユーザー名には変更できません');
+                }else{
+                    $user->setUsername($validatedData['username']);
+                }
+            }
+
+
             $profileDao = DAOFactory::getProfileDAO();
             $profile = $profileDao->getById($validatedData['id']);
 
@@ -359,16 +373,13 @@ return [
             $success = $profileDao->update($profile);
             if (!$success) throw new Exception('データベースの更新に失敗しました');
 
-            $userDao = DAOFactory::getUserDAO();
-            $user = Authenticate::getAuthenticatedUser();
-            $user->setUsername($validatedData['username']);
 
             $updatedSuccess = $userDao->update($user);
 
             if (!$updatedSuccess) throw new Exception('ユーザーの更新に失敗しました');
 
             FlashData::setFlashData('success', 'プロフィールを更新しました');
-            return new JSONRenderer(['status' => 'success']);
+            return new JSONRenderer(['status' => 'success', 'newUsername' => $validatedData['username']]);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
             return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
