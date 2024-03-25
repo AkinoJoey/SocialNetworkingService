@@ -54,6 +54,3 @@
 
 
 <script src="/profileEdit.bundle.js"></script>
-<script>
-    let username = "<?= $user->getUsername() ?>";
-</script>
