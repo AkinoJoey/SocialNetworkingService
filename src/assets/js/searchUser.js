@@ -3,12 +3,13 @@ document.addEventListener("DOMContentLoaded", function () {
 	inputKeyword.focus();
 	search("");
 
-	inputKeyword.addEventListener("input", function (e) {
-		// if (e.key === "Enter") {
-		// 	e.preventDefault();
-		// 	search();
-		// }
+	let searchDeleteBtn = document.getElementById("search_delete");
+	searchDeleteBtn.addEventListener("click", function (e) {
+		inputKeyword.value = "";
+		search("");
+	});
 
+	inputKeyword.addEventListener("input", function (e) {
 		let keyword = e.target.value;
 		search(keyword);
 	});
