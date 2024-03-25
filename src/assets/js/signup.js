@@ -1,13 +1,16 @@
+import { switchButtonVisibility } from "./changeLoadingBtn";
+
 document.addEventListener("DOMContentLoaded", function () {
 	let signupForm = document.getElementById("signup_form");
+	let submitBtn = document.getElementById("submit_btn");
+	let loadingBtn = document.getElementById("loading_btn");
 
 	signupForm.addEventListener("submit", function (e) {
 		e.preventDefault();
 		let formData = new FormData(signupForm);
 		console.log("test");
 
-		document.getElementById("submit_btn").classList.add("hidden");
-		document.getElementById("loading_btn").classList.remove("hidden");
+		switchButtonVisibility(submitBtn, loadingBtn);
 
 		fetch("/form/signup", {
 			method: "POST",
@@ -15,16 +18,18 @@ document.addEventListener("DOMContentLoaded", function () {
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				if (data.status === 'success') {
-					// バックエンド側でリダイレクト
-				} else if (data.status === 'error') {
-					document.getElementById("submit_btn").classList.remove("hidden");
-					document.getElementById("loading_btn").classList.add("hidden");
+				if (data.status === "success") {
+					window.location.href = "/login";
+				} else if (data.status === "error") {
+					switchButtonVisibility(submitBtn, loadingBtn);
+
 					alert(data.message);
 				}
 			})
-			.catch(error => {
-				alert('エラーが発生しました');
+			.catch((error) => {
+				switchButtonVisibility(submitBtn, loadingBtn);
+
+				alert("エラーが発生しました");
 			});
 	});
 });
