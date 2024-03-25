@@ -202,14 +202,12 @@ return [
                 $profile = new Profile($user->getId());
                 $profileDao->create($profile);
             } else {
-                throw new Exception('Failed to create new user!');
+                throw new Exception('ユーザーの作成に失敗しました');
             }
             // ユーザーログイン
             Authenticate::loginAsUser($user);
 
-            // TODO: 期限を30分に設定
-            // $lasts = 1 * 60 * 30;
-            $lasts = 1 * 60;
+            $lasts = 1 * 60 * 30;
             $param = [
                 'id' => $user->getId(),
                 'user' => hash('sha256', $user->getEmail()),
@@ -364,7 +362,7 @@ return [
             }
 
             $success = $profileDao->update($profile);
-            if (!$success) throw new Exception('Database update failed!');
+            if (!$success) throw new Exception('データベースの更新に失敗しました');
 
             $userDao = DAOFactory::getUserDAO();
             $user = Authenticate::getAuthenticatedUser();
@@ -372,7 +370,7 @@ return [
 
             $updatedSuccess = $userDao->update($user);
 
-            if (!$updatedSuccess) throw new Exception('Failed to update user!');
+            if (!$updatedSuccess) throw new Exception('ユーザーの更新に失敗しました');
 
             FlashData::setFlashData('success', 'プロフィールを更新しました');
             return new JSONRenderer(['status' => 'success']);
@@ -467,7 +465,7 @@ return [
                     );
 
                     $success = $dmThreadDao->create($dmThread);
-                    if (!$success) throw new Exception('Failed to create a dm thread!');
+                    if (!$success) throw new Exception('スレッドの作成に失敗しました');
                 }
 
                 $isFollow = $followDao->isFollow($authenticatedUser->getId(), $user->getId());
@@ -607,7 +605,7 @@ return [
 
             $success = $postDao->create($post);
 
-            if (!$success) throw new Exception('Failed to create a post!');
+            if (!$success) throw new Exception('投稿の作成に失敗しました');
 
             return new JSONRenderer(['status' => 'success']);
         } catch (\InvalidArgumentException $e) {
@@ -802,7 +800,7 @@ return [
                 $comment->setPostId($validatedData['post_id']);
                 $success = $commentDao->create($comment);
 
-                if (!$success) throw new Exception('Failed to create a comment!');
+                if (!$success) throw new Exception('コメントの作成に失敗しました');
 
                 // 自分の投稿に対して自分がコメントしていない場合は通知する
                 $postDao = DAOFactory::getPostDAO();
@@ -819,13 +817,13 @@ return [
                     $notificationDao = DAOFactory::getNotificationDAO();
                     $success = $notificationDao->create($notification);
 
-                    if (!$success) throw new Exception('Failed to create a notification!');
+                    if (!$success) throw new Exception('通知の作成に失敗しました');
                 }
             } else {
                 // コメントへの返信の場合
                 $comment->setParentCommentId($validatedData['post_id']);
                 $success = $commentDao->create($comment);
-                if (!$success) throw new Exception('Failed to create a comment!');
+                if (!$success) throw new Exception('コメントの作成に失敗しました');
 
                 // TODO: 余裕があったらコメントに対する返信の通知を作成
 
@@ -918,7 +916,7 @@ return [
             $postLikeDao = DAOFactory::getPostLikeDAO();
             $success = $postLikeDao->create($postLike);
 
-            if (!$success) throw new Exception('Failed to create a post-like!');
+            if (!$success) throw new Exception('いいねの作成に失敗しました');
 
             $postDao = DAOFactory::getPostDAO();
             $post = $postDao->getById($validatedData['post_id']);
@@ -935,7 +933,7 @@ return [
                 $notificationDao = DAOFactory::getNotificationDAO();
                 $success = $notificationDao->create($notification);
 
-                if (!$success) throw new Exception('Failed to create a notification!');
+                if (!$success) throw new Exception('通知の作成に失敗しました');
             }
 
             return new JSONRenderer(['status' => 'success']);
