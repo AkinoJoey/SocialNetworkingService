@@ -34,17 +34,24 @@ class Chat implements MessageComponentInterface
 
     public function onMessage(ConnectionInterface $from, $msg)
     {
-        $data = json_decode($msg, true);
+        try{
+            $data = json_decode($msg, true);
+            $validatedType = ValidationHelper::chatType($data['type']);
 
-        // TODO: typeのサニタイズ
-        switch ($data['type']) {
-            case 'join':
-                $this->join($from, $data);
-                break;
+            switch ($validatedType) {
+                case 'join':
+                    $this->join($from, $data);
+                    break;
 
-            case 'message':
-                $this->sendMessage($data);
-                break;
+                case 'message':
+                    $this->sendMessage($data);
+                    break;
+            }
+        } catch (\InvalidArgumentException $e) {
+            $from->send(json_encode(['error' => $e->getMessage()]));
+        } catch (Exception $e) {
+            $from->send(json_encode(['error' => 'エラーが発生しました']));
+            error_log('エラーが発生しました: ' . $e->getMessage());
         }
     }
 
