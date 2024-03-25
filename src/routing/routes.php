@@ -175,14 +175,12 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
-                FlashData::setFlashData('error', 'パスワードが一致しません');
-                return new RedirectRenderer('signup');
+                return new JSONRenderer(['status'=>'error', 'message'=> 'パスワードが一致していません']);
             }
 
             // Eメールは一意でなければならないので、Eメールがすでに使用されていないか確認します
             if ($userDao->getByEmail($validatedData['email'])) {
-                FlashData::setFlashData('error', '既に登録済みのEメールです');
-                return new RedirectRenderer('signup');
+                return new JSONRenderer(['status'=>'error', 'message'=> '既に登録済みのEメールです']);
             }
 
             // 新しいUserオブジェクトを作成します
@@ -223,18 +221,15 @@ return [
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('signup');
+            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
         } catch (\LengthException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('signup');
+            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
         } catch (Exception $e) {
             error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
 
-            FlashData::setFlashData('error', 'An error occurred.');
-            return new RedirectRenderer('signup');
         }
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
