@@ -158,8 +158,8 @@ class UserDAOImpl implements UserDAO
     public function getUserListForSearch(string $keyword, int $limit = 100): array
     {
         $mysqli = DatabaseManager::getMysqliConnection();
-        
-        $query = 
+
+        $query =
             "SELECT u.*, pr.profile_image_path, pr.extension
                 FROM users u
                 LEFT JOIN profiles pr ON u.id = pr.user_id
@@ -221,5 +221,14 @@ class UserDAOImpl implements UserDAO
         $result = $mysqli->prepareAndExecute($query, '', []);
 
         return $result;
+    }
+
+    public function checkUsernameExists(string $username): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "SELECT 1 FROM users where username = ?";
+        $result = $mysqli->prepareAndFetchAll($query, 's', [$username])[0] ?? null;
+
+        return $result !== null ? true: false;
     }
 }
