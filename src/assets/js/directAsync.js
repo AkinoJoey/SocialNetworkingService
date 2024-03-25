@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     };
 
+    conn.onerror = function () {
+        alert('エラーが発生しました');
+    }
+
 
     document.getElementById('submit_btn').addEventListener('click', function(e) {
         e.preventDefault();
