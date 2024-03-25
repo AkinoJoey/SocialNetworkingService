@@ -175,12 +175,12 @@ return [
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
 
             if ($validatedData['confirm_password'] !== $validatedData['password']) {
-                return new JSONRenderer(['status'=>'error', 'message'=> 'パスワードが一致していません']);
+                return new JSONRenderer(['status' => 'error', 'message' => 'パスワードが一致していません']);
             }
 
             // Eメールは一意でなければならないので、Eメールがすでに使用されていないか確認します
             if ($userDao->getByEmail($validatedData['email'])) {
-                return new JSONRenderer(['status'=>'error', 'message'=> '既に登録済みのEメールです']);
+                return new JSONRenderer(['status' => 'error', 'message' => '既に登録済みのEメールです']);
             }
 
             // 新しいUserオブジェクトを作成します
@@ -217,19 +217,18 @@ return [
             Authenticate::sendVerificationEmail($user, $signedUrl);
 
             FlashData::setFlashData('success', 'アカウントを作成しました。Eメールを確認してください');
-            return new JSONRenderer(['status'=> 'success']);
+            return new JSONRenderer(['status' => 'success']);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (\LengthException $e) {
             error_log($e->getMessage());
 
-            return new JSONRenderer(['status'=>'error', 'message'=>$e->getMessage()]);
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (Exception $e) {
             error_log($e->getMessage());
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
-
         }
     })->setMiddleware(['guest']),
     'verify/email' => Route::create('verify/email', function (): HTTPRenderer {
@@ -302,7 +301,7 @@ return [
                 $result = $userDao->checkUsernameExists($validatedData['username']);
                 if ($result) {
                     throw new \InvalidArgumentException('既に存在するユーザー名には変更できません');
-                }else{
+                } else {
                     $user->setUsername($validatedData['username']);
                 }
             }
@@ -442,6 +441,12 @@ return [
             $userDao = DAOFactory::getUserDAO();
             $user = $userDao->getByUsername($validatedData['username']);
             $authenticatedUser = Authenticate::getAuthenticatedUser();
+
+            // userが存在しない場合は自分のプロフィールページにリダイレクト
+            if (!isset($user)) {
+                FlashData::setFlashData('error', '存在しないユーザー名です');
+                return new RedirectRenderer(sprintf('profile?username=%s', $authenticatedUser->getUsername()));
+            }
 
             $profileDao = DAOFactory::getProfileDAO();
             $profile = $profileDao->getByUserId($user->getId());
@@ -668,9 +673,9 @@ return [
             $commentDao = DAOFactory::getCommentDAO();
 
             if ($validatedData['type_reply_to'] === 'post') {
-                $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
+                $comments = $commentDao->getCommentsToPost($validatedData['post_id'], $user->getId(), $validatedData['offset'], 20);
             } else if ($validatedData['type_reply_to'] === 'comment') {
-                $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 3); //TODO: 20にする
+                $comments = $commentDao->getChildComments($validatedData['post_id'], $user->getId(), $validatedData['offset'], 20);
             }
 
 
