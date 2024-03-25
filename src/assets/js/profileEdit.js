@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.status === "success") {
-					window.location.href = `/profile?username=${username}`;
+					window.location.href = `/profile?username=${data.newUsername}`;
 				} else if (data.status === "error") {
 					alert(data.message);
 				}
