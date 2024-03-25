@@ -23,7 +23,8 @@ class SeedDao extends AbstractCommand
     {
         $directoryPath = __DIR__ . '/../../database/seeds_dao';
 
-        $files = ['CommentsDaoSeeder.php'];
+        // $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php', 'PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php', 'CommentLikesDaoSeeder.php'];
+        $files = ['FollowsDaoSeeder.php'];
 
         foreach ($files as $file) {
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
