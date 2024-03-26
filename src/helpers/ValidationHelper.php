@@ -199,6 +199,10 @@ class ValidationHelper
     {
         self::unicodeString($content);
 
+        if(ctype_space($content)){
+            throw new \InvalidArgumentException("空白のみの投稿はできません");
+        }
+
         $maxContentSize = 140;
 
         if (mb_strlen($content, "UTF-8") > $maxContentSize) {
