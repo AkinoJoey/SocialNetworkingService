@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	signupForm.addEventListener("submit", function (e) {
 		e.preventDefault();
 		let formData = new FormData(signupForm);
-		console.log("test");
 
 		switchButtonVisibility(submitBtn, loadingBtn);
 
