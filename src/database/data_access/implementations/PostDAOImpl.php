@@ -23,7 +23,7 @@ class PostDAOImpl implements PostDAO
             'sssssis',
             [
                 $post->getStatus(),
-                preg_replace("/(\R{3,})/", "\n\n", $post->getContent()), //3行以上の改行は2行にする
+                $post->getContent() !== null? preg_replace("/(\R{3,})/", "\n\n", $post->getContent()): null, //3行以上の改行は2行にする
                 $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getExtension(),
