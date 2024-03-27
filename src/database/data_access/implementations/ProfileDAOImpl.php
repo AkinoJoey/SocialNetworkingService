@@ -23,7 +23,7 @@ class ProfileDAOImpl implements ProfileDAO
             [
                 $profile->getAge(),
                 $profile->getLocation(),
-                preg_replace("/(\R{3,})/", "\n\n", $profile->getDescription()),//3行以上の改行は2行にする
+                $profile->getDescription() !== null? preg_replace("/(\R{3,})/", "\n\n", $profile->getDescription()): null,//3行以上の改行は2行にする
                 $profile->getProfileImagePath(),
                 $profile->getExtension(),
                 $profile->getUserId()
