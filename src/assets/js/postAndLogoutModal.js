@@ -1,6 +1,7 @@
 import flatpickr from "flatpickr";
 import { Japanese } from "flatpickr/dist/l10n/ja.js";
 import "flatpickr/dist/flatpickr.min.css";
+import { switchButtonVisibility } from "./changeLoadingBtn";
 
 document.addEventListener("DOMContentLoaded", function () {
 	const fileInputIcon = document.getElementById("file-input-icon");
@@ -109,6 +110,9 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		});
 
+	let submitBtn = document.getElementById("post-submit");
+	let loadingBtn = document.getElementById("post-loading-btn");
+
 	// 新しい投稿をしたとき
 	createPostForm.addEventListener("submit", function (e) {
 		e.preventDefault();
@@ -120,8 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			formData.append("scheduled_at", scheduledAt);
 		}
 
-		console.log(...formData.entries());
-
+		switchButtonVisibility(submitBtn, loadingBtn);
 
 		fetch("/form/new", {
 			method: "POST",
@@ -130,13 +133,21 @@ document.addEventListener("DOMContentLoaded", function () {
 			.then((response) => response.json())
 			.then((data) => {
 				if (data.status === "success") {
-					location.reload();
+					if (scheduledAtContainer.textContent.trim() !== "") {
+						window.location.href = "/scheduled_posts";
+					} else {
+						location.reload();
+					}
 				} else if (data.status === "error") {
+					switchButtonVisibility(submitBtn, loadingBtn);
+
 					alert(data.message);
 				}
 			})
 			.catch((error) => {
-				alert("An error occurred. Please try again.");
+				switchButtonVisibility(submitBtn, loadingBtn);
+
+				alert("エラーが発生しました");
 			});
 	});
 
@@ -146,8 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	//　投稿フォームの画像が1文字以上もしくはメディアをアップロードしている時以外は投稿ボタンをdisabledにする
 	function checkForm() {
-		let submitBtn = document.getElementById("post-submit");
-
 		if (textInput.value.length > 0 || fileInput.value) {
 			submitBtn.classList.remove("btn", "btn-disabled");
 		} else {

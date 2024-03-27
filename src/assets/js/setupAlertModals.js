@@ -1,15 +1,22 @@
 import { Modal } from "flowbite";
+import { switchButtonVisibility } from "./changeLoadingBtn";
 
 function setupAlertModals(deleteMenuButtons) {
-    const alertModalEl = document.getElementById("alert_modal");
+	const alertModalEl = document.getElementById("alert_modal");
 	const alertModal = new Modal(alertModalEl);
 
 	const deleteExecuteBtn = document.getElementById("delete-execute-btn");
+	const loadingBtn = document.getElementById("loading-delete-execute-btn");
 
 	deleteMenuButtons.forEach(function (deleteMenuBtn) {
-		deleteMenuBtnClickListener(deleteMenuBtn, deleteExecuteBtn, alertModal);
-    });
-    
+		deleteMenuBtnClickListener(
+			deleteMenuBtn,
+			deleteExecuteBtn,
+			loadingBtn,
+			alertModal,
+		);
+	});
+
 	let alertModalHideButtons = document.querySelectorAll(".alert-modal-hide");
 
 	// アラートモーダル
@@ -20,7 +27,12 @@ function setupAlertModals(deleteMenuButtons) {
 	});
 }
 
-function deleteMenuBtnClickListener(deleteMenuBtn, deleteExecuteBtn, alertModal) {
+function deleteMenuBtnClickListener(
+	deleteMenuBtn,
+	deleteExecuteBtn,
+	loadingBtn,
+	alertModal,
+) {
 	deleteMenuBtn.addEventListener("click", function () {
 		alertModal.show();
 
@@ -33,6 +45,8 @@ function deleteMenuBtnClickListener(deleteMenuBtn, deleteExecuteBtn, alertModal)
 			let postType = deleteMenuBtn.getAttribute("data-post-type").toLowerCase();
 			let requestUrl = `/delete/${postType}`;
 
+			switchButtonVisibility(deleteExecuteBtn, loadingBtn);
+
 			fetch(requestUrl, {
 				method: "POST",
 				body: formData,
@@ -42,15 +56,16 @@ function deleteMenuBtnClickListener(deleteMenuBtn, deleteExecuteBtn, alertModal)
 					if (data.status === "success") {
 						location.reload();
 					} else if (data.status === "error") {
-						console.error(data.message);
+						switchButtonVisibility(deleteExecuteBtn, loadingBtn);
+						alert(data.message);
 					}
 				})
 				.catch((error) => {
-					alert("An error occurred. Please try again.");
+					switchButtonVisibility(deleteExecuteBtn, loadingBtn);
+					alert("エラーが発生しました");
 				});
 		});
 	});
 }
-
 
 export { setupAlertModals };

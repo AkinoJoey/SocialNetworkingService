@@ -1,3 +1,5 @@
+import { switchButtonVisibility } from "./changeLoadingBtn";
+
 document.addEventListener("DOMContentLoaded", function () {
 	let fileInput = document.getElementById("file-input");
 	let userPortrait = document.getElementById("user_portrait");
@@ -21,6 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		reader.readAsDataURL(selectedFile);
 	});
 
+	let submitBtn = document.getElementById("profile-update");
+	let loadingBtn = document.getElementById("loading-profile-update");
+
 	let profileForm = document.getElementById("profile_form");
 	profileForm.addEventListener("submit", function (e) {
 		e.preventDefault();
@@ -30,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			formData.append("media", fileInput.files[0]);
 		}
 
-		console.log(...formData.entries());
+		switchButtonVisibility(submitBtn, loadingBtn);
 
 		fetch("/form/profile/edit", {
 			method: "POST",
@@ -41,11 +46,15 @@ document.addEventListener("DOMContentLoaded", function () {
 				if (data.status === "success") {
 					window.location.href = `/profile?username=${data.newUsername}`;
 				} else if (data.status === "error") {
+					switchButtonVisibility(submitBtn, loadingBtn);
+
 					alert(data.message);
 				}
 			})
 			.catch((error) => {
-				alert("An error occurred. Please try again.");
+				switchButtonVisibility(submitBtn, loadingBtn);
+
+				alert("エラーが発生しました");
 			});
 	});
 });

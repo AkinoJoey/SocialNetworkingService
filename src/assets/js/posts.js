@@ -1,3 +1,4 @@
+import { switchButtonVisibility } from "./changeLoadingBtn";
 import { likePost, deleteLikePost } from "./likeButton";
 import { showFilePreview, checkForm } from "./newPost";
 import { setupAlertModals } from "./setupAlertModals";
@@ -75,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 	});
 
 	let replyForm = document.getElementById("reply-form");
-
+	let loadingBtn = document.getElementById("reply-loading-btn");
 	// リプライを送信したとき
 	replyForm.addEventListener("submit", function (e) {
 		e.preventDefault();
@@ -83,6 +84,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 		let type = location.pathname === "/posts" ? "post" : "comment";
 		formData.append("type_reply_to", type);
 		formData.append("media", fileInput.files[0]);
+
+		switchButtonVisibility(submitBtn, loadingBtn);
 
 		fetch("/form/reply", {
 			method: "POST",
@@ -93,11 +96,15 @@ document.addEventListener("DOMContentLoaded", async function () {
 				if (data.status === "success") {
 					location.reload();
 				} else if (data.status === "error") {
+					switchButtonVisibility(submitBtn, loadingBtn);
+
 					alert(data.message);
 				}
 			})
 			.catch((error) => {
-				alert("An error occurred. Please try again.");
+				switchButtonVisibility(submitBtn, loadingBtn);
+
+				alert("エラーが発生しました");
 			});
 	});
 
