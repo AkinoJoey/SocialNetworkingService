@@ -23,7 +23,7 @@ class PostDAOImpl implements PostDAO
             'sssssis',
             [
                 $post->getStatus(),
-                $post->getContent(),
+                preg_replace("/(\R{3,})/", "\n\n", $post->getContent()), //3行以上の改行は2行にする
                 $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getExtension(),
@@ -53,7 +53,7 @@ class PostDAOImpl implements PostDAO
             'sssssiss',
             [
                 $post->getStatus(),
-                $post->getContent(),
+                preg_replace("/(\R{3,})/", "\n\n", $post->getContent()),
                 $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getExtension(),

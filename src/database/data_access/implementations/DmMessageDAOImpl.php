@@ -23,7 +23,7 @@ class DmMessageDAOImpl implements DmMessageDAO
             $query,
             'ssiii',
             [
-                $dmMessage->getMessage(),
+                preg_replace("/(\R{3,})/", "\n\n", $dmMessage->getMessage()),
                 $dmMessage->getIv(),
                 $dmMessage->getSenderUserId(),
                 $dmMessage->getReceiverUserId(),

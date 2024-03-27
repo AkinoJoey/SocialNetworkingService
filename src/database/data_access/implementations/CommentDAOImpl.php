@@ -21,7 +21,7 @@ class CommentDAOImpl implements CommentDAO
             $query,
             'ssssiii',
             [
-                $comment->getContent(),
+                preg_replace("/(\R{3,})/", "\n\n", $comment->getContent()),
                 $comment->getUrl(),
                 $comment->getMediaPath(),
                 $comment->getExtension(),
