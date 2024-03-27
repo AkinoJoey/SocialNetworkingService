@@ -11,7 +11,8 @@ class ChatHelper
 {
     public static function createMessage(string $message, int $senderUserId, int $receiverUserId, int $dmThreadId): void
     {
-        $encryptedData = CipherHelper::encryptMessage($message);
+        // 3行以上の改行は2行にする
+        $encryptedData = CipherHelper::encryptMessage(preg_replace("/(\R{3,})/", "\n\n", $message));
 
         $messageDao = DAOFactory::getDmMessageDAO();
         $dmMessage = new DmMessage(
