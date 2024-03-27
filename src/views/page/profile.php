@@ -20,7 +20,7 @@
 			</div>
 
 			<div class="flex flex-col">
-				<h4 class="text-lg font-semibold">
+				<h4 class="text-lg font-semibold mt-1">
 					<?= htmlspecialchars($user->getAccountName()) ?>
 				</h4>
 				<h4 class="text-sm text-gray-500 dark:text-gray-400">
