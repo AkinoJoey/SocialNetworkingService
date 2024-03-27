@@ -8,7 +8,7 @@ use Carbon\Carbon;
         <a href="/comments?url=<?= $comment->getUrl() ?>" class="absolute h-full w-full top-0 left-0"></a>
         <footer class="mb-2 flex items-center justify-between">
             <div class="flex space-x-4">
-                <a href="/profile?username=<?= htmlspecialchars($comment->getUsername()) ?>" class="z-30">
+                <a href="/profile?username=<?= htmlspecialchars($comment->getUsername()) ?>" class="z-30 min-w-12">
                     <img alt="" src="<?= $comment->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($comment->getProfileImagePath(), 0, 2) . '/' .  $comment->getProfileImagePath() . $comment->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
                 </a>
                 <div class="flex flex-col space-y-1">
@@ -29,7 +29,7 @@ use Carbon\Carbon;
             <?php endif; ?>
         </footer>
         <p class="text-gray-500 dark:text-gray-400">
-            <?= nl2br(htmlentities($comment->getContent())) ?>
+            <?= $comment->getContent() !== null ? nl2br(htmlentities($comment->getContent())) : null ?>
         </p>
         <!-- media -->
         <?php if ($comment->getExtension() === '.mov' || $comment->getExtension() === '.mp4') : ?>
