@@ -40,7 +40,7 @@ use Carbon\Carbon;
         </div>
         <div>
             <p class="mb-4 text-sm dark:text-gray-400">
-                <?= $post->getContent() ?>
+                <?= nl2br(htmlspecialchars($post->getContent())) ?>
             </p>
             <!-- media -->
             <?php if ($post->getExtension() === '.mov' || $post->getExtension() === '.mp4') : ?>

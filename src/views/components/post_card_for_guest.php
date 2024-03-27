@@ -29,7 +29,7 @@ use Carbon\Carbon;
 
     <div class="mt-6">
         <p class="text-sm dark:text-gray-400">
-            <?= htmlspecialchars($post->getContent()) ?>
+            <?= nl2br(htmlspecialchars($post->getContent())) ?>
         </p>
 
         <!-- media -->

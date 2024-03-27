@@ -18,7 +18,7 @@
                     <div class="chat-header">
                         <?= $user->getAccountName() ?>
                     </div>
-                    <div class="chat-bubble text-white bg-blue-400"><?= $message->getMessage() ?></div>
+                    <div class="chat-bubble text-white bg-blue-400"><?= nl2br(htmlentities($message->getMessage())) ?></div>
                     <div class="chat-footer opacity-50"><?= $message->getCreatedAt()->format('H:i') ?></div>
                 </div>
             <?php else : ?>
@@ -31,7 +31,7 @@
                     <div class="chat-header">
                         <?= $receiverUser->getAccountName() ?>
                     </div>
-                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700"><?= $message->getMessage() ?></div>
+                    <div class="chat-bubble text-black bg-gray-300 dark:bg-gray-700"><?= nl2br(htmlentities($message->getMessage())) ?></div>
                     <div class="chat-footer opacity-50"><?= $message->getCreatedAt()->format('H:i') ?></div>
                 </div>
             <?php endif; ?>

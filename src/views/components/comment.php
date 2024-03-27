@@ -29,7 +29,7 @@ use Carbon\Carbon;
             <?php endif; ?>
         </footer>
         <p class="text-gray-500 dark:text-gray-400">
-            <?= $comment->getContent() ?>
+            <?= nl2br(htmlentities($comment->getContent())) ?>
         </p>
         <!-- media -->
         <?php if ($comment->getExtension() === '.mov' || $comment->getExtension() === '.mp4') : ?>
