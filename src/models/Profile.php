@@ -46,7 +46,7 @@ class Profile implements Model
         return $this->age;
     }
 
-    public function setAge(int $age): void
+    public function setAge(?int $age): void
     {
         $this->age = $age;
     }
