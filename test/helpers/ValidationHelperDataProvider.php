@@ -358,4 +358,22 @@ class ValidationHelperDataProvider
             ['comments']
         ];
     }
+
+    public static function validChatTypeProvider(): array
+    {
+        return [
+            ["join"],
+            ["message"]
+        ];
+    }
+
+    public static function invalidChatTypeProvider(): array
+    {
+        return [
+            [""],
+            ["joins"],
+            ["messages"],
+            [' '],
+        ];
+    }
 }

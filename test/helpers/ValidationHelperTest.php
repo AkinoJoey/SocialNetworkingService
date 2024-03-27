@@ -246,4 +246,17 @@ class ValidationHelperTest extends TestCase
         $this->expectExceptionMessage("無効なタイプが入力されました。");
         ValidationHelper::postType($type);
     }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'validChatTypeProvider')]
+    public function testValidChatType(String $type) : void {
+        $this->assertSame($type, ValidationHelper::ChatType($type));
+    }
+
+    #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidChatTypeProvider')]
+    public function testInvalidChatType(string $type): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("無効なタイプが入力されました。");
+        ValidationHelper::ChatType($type);
+    }
 }
