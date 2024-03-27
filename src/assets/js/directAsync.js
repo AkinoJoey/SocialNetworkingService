@@ -77,6 +77,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 			conn.send(JSON.stringify(data));
 
+			let message = reduceMultipleNewLines(chatTextArea.value);
+			let sanitizedInput = escapeHtml(message);
+			let result = nl2br(sanitizedInput);
+
 			chatContainer.innerHTML += `
             <div class="chat chat-end">
                 <div class="avatar chat-image">
@@ -87,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="chat-header">
                     ${senderUserAccountName}
                 </div>
-                <div class="chat-bubble text-white bg-blue-400">${chatTextArea.value}</div>
+                <div class="chat-bubble text-white bg-blue-400">${result}</div>
                 <div class="chat-footer opacity-50">${new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
             </div>
             `;
@@ -95,4 +99,25 @@ document.addEventListener("DOMContentLoaded", function () {
 			window.scrollTo(0, document.body.scrollHeight);
 		}
 	}
+	
+	function escapeHtml(str) {
+		return str.replace(/[&<>'"]/g, function (match) {
+			return {
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				"'": "&#39;",
+				'"': "&quot;",
+			}[match];
+		});
+	}
+
+	function nl2br(str) {
+		return str.replace(/(?:\r\n|\r|\n)/g, "<br>");
+	}
+
+	function reduceMultipleNewLines(str) {
+		return str.replace(/(\r\n|\r|\n){3,}/g, "\n\n");
+	}
+
 });
