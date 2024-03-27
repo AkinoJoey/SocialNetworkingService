@@ -14,7 +14,9 @@ module.exports = {
 		scheduledPosts: "./src/assets/js/scheduledPosts.js",
 		guest: "./src/assets/js/guest.js",
 		verifyForgotPassword: "./src/assets/js/verifyForgotPassword.js",
-		signup: './src/assets/js/signup.js'
+		signup: './src/assets/js/signup.js',
+		login: './src/assets/js/login.js',
+		forgotPassword: "./src/assets/js/forgotPassword.js"
 	},
 	output: {
 		path: path.resolve(__dirname, "public"),
