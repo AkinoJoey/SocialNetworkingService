@@ -18,7 +18,7 @@
                     <div class="chat-header">
                         <?= $user->getAccountName() ?>
                     </div>
-                    <div class="chat-bubble text-white bg-blue-400"><?= nl2br(htmlentities($message->getMessage())) ?></div>
+                    <div class="chat-bubble text-white bg-blue-400 break-all"><?= nl2br(htmlentities($message->getMessage())) ?></div>
                     <div class="chat-footer opacity-50"><?= $message->getCreatedAt()->format('H:i') ?></div>
                 </div>
             <?php else : ?>
