@@ -306,21 +306,20 @@ return [
                 }
             }
 
-
             $profileDao = DAOFactory::getProfileDAO();
             $profile = $profileDao->getById($validatedData['id']);
 
-            if (isset($_POST['age']) && $_POST['age'] !== '') {
-                $age = ValidationHelper::age($_POST['age']);
+            if (isset($_POST['age'])) {
+                $age = $_POST['age'] === '' ? null : ValidationHelper::age($_POST['age']);
                 $profile->setAge($age);
             }
 
-            if (isset($_POST['location']) && $_POST['location'] !== '') {
+            if (isset($_POST['location'])) {
                 $location = ValidationHelper::location($_POST['location']);
                 $profile->setLocation($location);
             }
 
-            if (isset($_POST['description']) && $_POST['description'] !== '') {
+            if (isset($_POST['description'])) {
                 $description = ValidationHelper::description($_POST['description']);
                 $profile->setDescription($description);
             }
@@ -329,7 +328,6 @@ return [
                 $media = ValidationHelper::image($_FILES['media']['tmp_name'], 'avatar');
                 $validatedData['media'] = $media;
             }
-
 
             if (isset($validatedData['media'])) {
                 $tmpPath = $validatedData['media'];
@@ -372,7 +370,6 @@ return [
             $success = $profileDao->update($profile);
             if (!$success) throw new Exception('データベースの更新に失敗しました');
 
-
             $updatedSuccess = $userDao->update($user);
 
             if (!$updatedSuccess) throw new Exception('ユーザーの更新に失敗しました');
@@ -406,23 +403,19 @@ return [
 
             Authenticate::authenticate($validatedData['email'], $validatedData['password']);
 
-            FlashData::setFlashData('success', 'ログインしました');
-            return new RedirectRenderer('');
+            return new JSONRenderer(['status' => 'success']);
         } catch (AuthenticationFailureException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'error', 'message' =>  $e->getMessage()]);
         } catch (Exception $e) {
             error_log($e->getMessage());
 
-            FlashData::setFlashData('error', 'エラーが発生しました');
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'error', 'エラーが発生しました']);
         }
     })->setMiddleware(['guest']),
     'logout' => Route::create('logout', function (): HTTPRenderer {
@@ -1271,14 +1264,12 @@ return [
 
             // データベースにEメールが存在しない場合
             if ($user === null) {
-                FlashData::setFlashData('error', '登録されていないEメールです');
-                return new RedirectRenderer('forgot_password');
+                return new JSONRenderer(['status' => 'error', 'message' =>  '登録されていないEメールです']);
             }
 
             // Eメールが認証されていない場合
             if (!$user->getEmailVerified()) {
-                FlashData::setFlashData('error', '認証されていないEメールです');
-                return new RedirectRenderer('login');
+                return new JSONRenderer(['status' => 'error', 'message' =>  '登録されていないEメールです']);
             }
 
             // 期限を30分に設定
@@ -1308,15 +1299,13 @@ return [
             }
 
             FlashData::setFlashData('success', 'Eメールを送信しました。パスワードリセットのためにメールを確認してください');
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'success']);
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
-            FlashData::setFlashData('error', $e->getMessage());
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'error', 'message' => $e->getMessage()]);
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            FlashData::setFlashData('error', 'エラーが発生しました');
-            return new RedirectRenderer('login');
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
     })->setMiddleware(['guest']),
     'verify/forgot_password' => Route::create('verify/forgot_password', function (): HTTPRenderer {
@@ -1329,6 +1318,11 @@ return [
 
             $passwordResetTokenDao = DAOFactory::getPasswordResetTokenDAO();
             $passwordResetToken = $passwordResetTokenDao->getByToken(pack('H*', $validatedData['signature']));
+
+            if($passwordResetToken === null){
+                FlashData::setFlashData('error', '無効なURLです。');
+                return new RedirectRenderer('login');
+            }
 
             return new HTMLRenderer('page/verify_forgot_password', ['userId' => $passwordResetToken->getUserId()]);
         } catch (\Exception $e) {
