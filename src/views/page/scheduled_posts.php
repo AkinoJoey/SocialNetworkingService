@@ -14,7 +14,7 @@ use Carbon\Carbon;
                     <div class="w-3/4 ml-4 hover:cursor-pointer scheduled-post">
                         <div class="flex h-full flex-col justify-center">
                             <div class="mb-1.5 text-sm">
-                                <p class="scheduled-post-content text-sm mt-1 text-gray-600 dark:text-gray-400"><?= $post->getContent() ?></p>
+                                <p class="scheduled-post-content text-sm mt-1 text-gray-600 dark:text-gray-400"><?= htmlspecialchars($post->getContent()) ?></p>
                                 <div class="media-item" data-media-path="<?= $post->getMediaPath() === null ? null : '/uploads/' . substr($post->getMediaPath(), 0, 2) . '/' . $post->getMediaPath() . $post->getExtension() ?>" data-media-extension="<?= $post->getExtension() ?? null?>"></div>
                             </div>
                             <div class="text-xs text-blue-600 dark:text-blue-500">

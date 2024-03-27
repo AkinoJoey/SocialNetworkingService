@@ -21,13 +21,13 @@
 
 			<div class="flex flex-col">
 				<h4 class="text-lg font-semibold">
-					<?= $user->getAccountName() ?>
+					<?= htmlspecialchars($user->getAccountName()) ?>
 				</h4>
 				<h4 class="text-sm text-gray-500 dark:text-gray-400">
-					<?= "@" . $user->getUsername() ?>
+					<?= "@" . htmlspecialchars($user->getUsername()) ?>
 				</h4>
 				<p class="dark:text-gray-400">
-					<?= $profile->getDescription() ?>
+					<?= nl2br(htmlspecialchars($profile->getDescription())) ?>
 				</p>
 			</div>
 		</div>

@@ -18,9 +18,9 @@ use Carbon\Carbon;
                         <div class="w-3/4">
                             <div class="flex h-full flex-col justify-center">
                                 <div class="mb-1.5 text-sm">
-                                    <span class="font-semibold text-gray-900 dark:text-white"><?= $message->getFromUserAccountName() ?></span>
+                                    <span class="font-semibold text-gray-900 dark:text-white"><?= htmlspecialchars($message->getFromUserAccountName()) ?></span>
                                     さんとのメッセージ
-                                    <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><?= ($message->getSenderUserId() == $user->getId()) ? 'You' : $message->getFromUserAccountName() ?>: <?= $message->getMessage() ?></p>
+                                    <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><?= ($message->getSenderUserId() == $user->getId()) ? 'You' : htmlspecialchars($message->getFromUserAccountName()) ?>: <?= htmlspecialchars($message->getMessage()) ?></p>
                                 </div>
                                 <div class="text-xs text-blue-600 dark:text-blue-500">
                                     <?= Carbon::parse($message->getCreatedAt())->diffForHumans() ?>

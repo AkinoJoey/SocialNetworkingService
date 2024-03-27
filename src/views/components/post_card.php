@@ -8,13 +8,13 @@ use Carbon\Carbon;
     <a href="/posts?url=<?= $post->getUrl() ?>" class="absolute h-full w-full top-0 left-0 z-0"></a>
     <div class="flex justify-between items-center ">
         <div class="flex space-x-4">
-            <a href="/profile?username=<?= $post->getUsername() ?>" class="z-30">
+            <a href="/profile?username=<?= htmlspecialchars($post->getUsername()) ?>" class="z-30">
                 <img alt="" src="<?= $post->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($post->getProfileImagePath(), 0, 2) . '/' .  $post->getProfileImagePath() . $post->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
             </a>
             <div class="flex flex-col space-y-1">
                 <div class="flex">
-                    <a href="/profile?username=<?= $post->getUsername() ?>" class="text-sm font-semibold z-30 hover:underline"><?= $post->getAccountName() ?></a>
-                    <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
+                    <a href="/profile?username=<?= htmlspecialchars($post->getUsername()) ?>" class="text-sm font-semibold z-30 hover:underline"><?= htmlspecialchars($post->getAccountName()) ?></a>
+                    <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . htmlspecialchars($post->getUsername()) ?></span>
                 </div>
                 <!-- 予約投稿じゃない場合 -->
                 <?php if ($post->getScheduledAt() === null) : ?>

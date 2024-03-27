@@ -13,8 +13,8 @@ use Carbon\Carbon;
             </a>
             <div class="flex flex-col space-y-1">
                 <div class="flex">
-                    <a href="/login" class="text-sm font-semibold z-30 hover:underline"><?= $post->getAccountName() ?></a>
-                    <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $post->getUsername() ?></span>
+                    <a href="/login" class="text-sm font-semibold z-30 hover:underline"><?= htmlspecialchars($post->getAccountName()) ?></a>
+                    <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . htmlspecialchars($post->getUsername()) ?></span>
                 </div>
                 <!-- 予約投稿じゃない場合 -->
                 <?php if ($post->getScheduledAt() === null) : ?>
@@ -29,7 +29,7 @@ use Carbon\Carbon;
 
     <div class="mt-6">
         <p class="text-sm dark:text-gray-400">
-            <?= $post->getContent() ?>
+            <?= htmlspecialchars($post->getContent()) ?>
         </p>
 
         <!-- media -->

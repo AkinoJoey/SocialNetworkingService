@@ -8,13 +8,13 @@ use Carbon\Carbon;
         <a href="/comments?url=<?= $comment->getUrl() ?>" class="absolute h-full w-full top-0 left-0"></a>
         <footer class="mb-2 flex items-center justify-between">
             <div class="flex space-x-4">
-                <a href="/profile?username=<?= $comment->getUsername() ?>" class="z-30">
+                <a href="/profile?username=<?= htmlspecialchars($comment->getUsername()) ?>" class="z-30">
                     <img alt="" src="<?= $comment->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($comment->getProfileImagePath(), 0, 2) . '/' .  $comment->getProfileImagePath() . $comment->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
                 </a>
                 <div class="flex flex-col space-y-1">
                     <div class="flex">
-                        <a href="/profile?username=<?= $comment->getUsername() ?>" class="text-sm font-semibold z-30 hover:underline"><?= $comment->getAccountName() ?></a>
-                        <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . $comment->getUsername() ?></span>
+                        <a href="/profile?username=<?= htmlspecialchars($comment->getUsername()) ?>" class="text-sm font-semibold z-30 hover:underline"><?= htmlspecialchars($comment->getAccountName()) ?></a>
+                        <span class="text-xs text-gray-500 leading-5 ml-1"><?= '@' . htmlspecialchars($comment->getUsername()) ?></span>
                     </div>
                     <span class="text-xs dark:text-gray-400"><?= Carbon::parse($comment->getTimeStamp()->getCreatedAt())->diffForHumans() ?></span>
                 </div>

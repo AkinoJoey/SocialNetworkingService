@@ -47,7 +47,7 @@ use Carbon\Carbon;
                             <div class="w-3/4">
                                 <div class="flex h-full flex-col justify-center">
                                     <div class="mb-1.5 text-sm <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-gray-950 dark:text-gray-400'  ?>">
-                                        <span class="font-semibold   <?php echo ($notification->getIsRead()) ? 'text-gray-600 dark:text-white' : 'text-gray-900 dark:text-white' ?> "><?= $notification->getAccountName() ?></span>
+                                        <span class="font-semibold   <?php echo ($notification->getIsRead()) ? 'text-gray-600 dark:text-white' : 'text-gray-900 dark:text-white' ?> "><?= htmlspecialchars($notification->getAccountName()) ?></span>
                                         <?= $notificationMessage ?>
                                     </div>
                                     <div class="text-xs <?php echo ($notification->getIsRead()) ? 'text-gray-500 dark:text-gray-400' : 'text-blue-600 dark:text-blue-500' ?>">
