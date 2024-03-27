@@ -147,11 +147,16 @@ class ValidationHelper
 
         self::unicodeString($username);
 
-        $minAccountName = 5;
-        $maxAccountName = 50;
+        $minAccountName = 4;
+        $maxAccountName = 15;
 
         if (mb_strlen($username, "UTF-8") > $maxAccountName || mb_strlen($username, "UTF-8") < $minAccountName) {
-            throw new \LengthException("ユーザー名の有効な文字数は5文字以上、15文字以内です");
+            throw new \LengthException("ユーザー名の有効な文字数は4文字以上、15文字以内です");
+        }
+
+        // 半角英数字とアンダースコア以外の文字が含まれているかチェック
+        if (!preg_match('/^[\w]+$/', $username)) {
+            throw new \InvalidArgumentException("ユーザー名は半角英数字とアンダースコアのみを含む必要があります");
         }
 
         return $username;
