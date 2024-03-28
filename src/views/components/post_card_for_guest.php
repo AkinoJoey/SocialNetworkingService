@@ -3,12 +3,11 @@
 use Carbon\Carbon;
 
 ?>
-<!-- TODO: htmlspecialchars -->
 <div class="w-full min-w-80 sm:w-[512px] mt-4 flex flex-col overflow-hidden rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 relative hover:bg-gray-100 dark:hover:bg-gray-700">
     <a href="/login" class="absolute h-full w-full top-0 left-0 z-0"></a>
     <div class="flex justify-between items-center ">
         <div class="flex space-x-4">
-            <a href="/login" class="z-30">
+            <a href="/login" class="z-30 min-w-12">
                 <img alt="" src="<?= $post->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($post->getProfileImagePath(), 0, 2) . '/' .  $post->getProfileImagePath() . $post->getProfileImageExtension() ?>" class="h-12 w-12 rounded-full object-cover shadow dark:bg-gray-500 hover:opacity-50" />
             </a>
             <div class="flex flex-col space-y-1">
@@ -29,7 +28,7 @@ use Carbon\Carbon;
 
     <div class="mt-6">
         <p class="text-sm dark:text-gray-400">
-            <?= nl2br(htmlspecialchars($post->getContent())) ?>
+            <?= $post->getContent() !== null ? nl2br(htmlspecialchars($post->getContent())) : null ?>
         </p>
 
         <!-- media -->
