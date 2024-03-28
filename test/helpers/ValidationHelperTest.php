@@ -130,10 +130,10 @@ class ValidationHelperTest extends TestCase
     }
 
     #[DataProviderExternal(ValidationHelperDataProvider::class, 'invalidUsernameProvider')]
-    public function testInvalidUsername(string $username): void
+    public function testInvalidUsername(string $username, string $expectedException,  string $expectedExceptionMessage): void
     {
-        $this->expectException(\LengthException::class);
-        $this->expectExceptionMessage("ユーザー名の有効な文字数は5文字以上、15文字以内です");
+        $this->expectException($expectedException);
+        $this->expectExceptionMessage($expectedExceptionMessage);
         ValidationHelper::username($username);
     }
 
