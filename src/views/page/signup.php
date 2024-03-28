@@ -1,4 +1,4 @@
-<div class="container mx-auto flex items-center justify-center mt-24">
+<div class="container mx-auto flex items-center justify-center px-4 my-24">
 	<div class="flex flex-col w-96 rounded-md bg-gray-50 p-6 text-gray-800">
 		<div class="text-center">
 			<h1 class="my-3 text-4xl font-bold">アカウントを作成</h1>
@@ -42,7 +42,5 @@
 	</div>
 </div>
 </div>
-
-<!-- TODO: submit後にloadingを行う -->
 
 <script src="/signup.bundle.js"></script>
