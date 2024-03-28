@@ -3,7 +3,6 @@
 use Carbon\Carbon;
 
 ?>
-<!-- TODO: htmlspecialchars -->
 <div class="w-full min-w-80 sm:w-[512px] mt-4 flex flex-col overflow-hidden rounded-lg p-6 shadow-md dark:bg-gray-900 dark:text-gray-100 relative hover:bg-gray-100 dark:hover:bg-gray-700">
     <a href="/posts?url=<?= $post->getUrl() ?>" class="absolute h-full w-full top-0 left-0 z-0"></a>
     <div class="flex justify-between items-center ">
