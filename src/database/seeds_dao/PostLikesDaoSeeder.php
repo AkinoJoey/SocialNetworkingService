@@ -18,15 +18,12 @@ class PostLikesDaoSeeder implements Seeder
     {
         $data = [];
         $faker = \Faker\Factory::create();
-
-        $numberOfDummyPostLikes = 500;
-
         $generatedPairs = [];
 
-        for ($i = 0; $i < $numberOfDummyPostLikes; $i++) {
+        for ($i = 0; $i < SeedCount::POST_LIKES; $i++) {
             do {
-                $userId = $faker->numberBetween(1, 20);
-                $postId = $faker->numberBetween(1, 100);
+                $userId = $faker->numberBetween(1, SeedCount::USERS);
+                $postId = $faker->numberBetween(1, SeedCount::POSTS);
                 $pair = $userId . '_' . $postId;
             } while (isset($generatedPairs[$pair])); // すでに生成されたペアかどうかをチェック
 

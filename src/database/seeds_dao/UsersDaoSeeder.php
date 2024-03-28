@@ -19,9 +19,8 @@ class UsersDaoSeeder implements Seeder
 
         $faker = \Faker\Factory::create();
         $data = [];
-        $numberOfDummyUsers  = 20;
 
-        for ($i = 0; $i < $numberOfDummyUsers; $i++) {
+        for ($i = 0; $i < SeedCount::USERS; $i++) {
             $user = new User(
                 accountName: $faker->name(),
                 email: $faker->email(),

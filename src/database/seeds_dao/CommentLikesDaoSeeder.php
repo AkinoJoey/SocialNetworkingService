@@ -18,15 +18,12 @@ class CommentLikesDaoSeeder implements Seeder
     {
         $data = [];
         $faker = \Faker\Factory::create();
-
-        $numberOfDummyCommentLikes = 300;
-
         $generatedPairs = [];
 
-        for ($i = 0; $i < $numberOfDummyCommentLikes; $i++) {
+        for ($i = 0; $i < SeedCount::COMMENT_LIKES; $i++) {
             do {
-                $userId = $faker->numberBetween(1, 20);
-                $commentId = $faker->numberBetween(1, 100);
+                $userId = $faker->numberBetween(1, SeedCount::USERS);
+                $commentId = $faker->numberBetween(1, SeedCount::COMMENT_LIKES + SeedCount::CHILD_COMMENTS);
                 $pair = $userId . '_' . $commentId;
             } while (isset($generatedPairs[$pair])); // すでに生成されたペアかどうかをチェック
 

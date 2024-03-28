@@ -22,25 +22,20 @@ class PostsDaoSeeder implements Seeder
     {
         $data = [];
         $faker = \Faker\Factory::create();
-        $numberOfDummyPosts = 100;
         //投稿のURLとメディアのファイル名の長さ 
         $numberOfCharacters = 18;
 
-        for ($i = 0; $i < $numberOfDummyPosts; $i++) {
-            $mediaPath = '';
+        for ($i = 0; $i < SeedCount::POSTS; $i++) {
             // 10分の1の確率で画像を生成する
-            // if (rand(1, 10) === 1) {
-            //     $mediaPath = $this->getDummyPostMediaFileName();
-            // } else {
-            //     $mediaPath = null;
-            // }
-
-            $mediaPath = null;
-
+            if (rand(1, 10) === 1) {
+                $mediaPath = $this->getDummyPostMediaFileName();
+            } else {
+                $mediaPath = null;
+            }
 
             $post = new Post(
                 url: bin2hex(random_bytes($numberOfCharacters / 2)),
-                userId: $faker->numberBetween(1, 20),
+                userId: $faker->numberBetween(1, SeedCount::USERS),
                 content: $faker->realTextBetween(10, 140, 5),
                 timeStamp: new DataTimeStamp($faker->dateTimeBetween('-1 years')->format('Y-m-d H:i:s'), (new DateTime())->format("Y-m-d H:i:s")),
                 mediaPath: isset($mediaPath) ? pathinfo($mediaPath, PATHINFO_FILENAME) : null,
