@@ -131,6 +131,7 @@ class ValidationHelperDataProvider
             ['Password1!'], // 大文字、小文字、数字、特殊文字を含む8文字以上のパスワード
             ['MySecurePassword!123'], // さまざまな文字を含む12文字のパスワード
             ['SecurePass123!'], // 数字、大文字、小文字、特殊文字を含む10文字のパスワード
+            [str_repeat('1Aa@!', 6)] // 30文字のパスワード
         ];
     }
 
@@ -144,13 +145,14 @@ class ValidationHelperDataProvider
             ['Password'], // 数字が含まれていないパスワード
             ['Password!'], // 数字が含まれていないパスワード
             ['Password123'], // 特殊文字が含まれていないパスワード
+            [str_repeat('1Aa!', 8)] //30文字を越しているパスワード
         ];
     }
 
     public static function validAccountNameProvider(): array
     {
         return [
-            [str_repeat("a",50)], // 最大文字数（50文字以下）
+            [str_repeat("あ",50)], // 最大文字数（50文字以下）
             ['s'], // 最小文字数のアカウント名
             ["🌝"]
         ];
