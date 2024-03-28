@@ -829,8 +829,6 @@ return [
                 $success = $commentDao->create($comment);
                 if (!$success) throw new Exception('コメントの作成に失敗しました');
 
-                // TODO: 余裕があったらコメントに対する返信の通知を作成
-
             }
 
             return new JSONRenderer(['status' => 'success']);
@@ -1376,4 +1374,39 @@ return [
             return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
         }
     })->setMiddleware(['guest']),
+    'user/delete'=> Route::create('user/delete', function () : HTTPRenderer {
+        try{
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('無効なリクエストメソッド');
+
+            $required_fields = [
+                'user_id' => GeneralValueType::INT
+            ];
+
+            $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
+
+            $user = Authenticate::getAuthenticatedUser();
+
+            if ($user->getId() === $validatedData['user_id']) {
+                $userDao = DAOFactory::getUserDAO();
+                $success = $userDao->delete($user->getId());
+                if (!$success) {
+                    throw new \Exception('アカウントの削除に失敗しました');
+                }
+
+                // ログアウトさせる
+                Authenticate::logoutUser();
+            } else {
+                throw new \Exception('無効なリクエスト');
+            }
+
+            FlashData::setFlashData('success', 'アカウントを削除しました');
+            return new JSONRenderer(['status' => 'success']);
+        }catch(\InvalidArgumentException $e){
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message'=>$e->getMessage()]);
+        }catch(\Exception $e){
+            error_log($e->getMessage());
+            return new JSONRenderer(['status' => 'error', 'message' => 'エラーが発生しました']);
+        }
+    })->setMiddleware(['auth', 'verify']),
 ];

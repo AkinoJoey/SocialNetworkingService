@@ -1,6 +1,7 @@
 import { likePost, deleteLikePost } from "./likeButton";
 import { setupAlertModals } from "./setupAlertModals";
 import { setupDropDowns } from "./setupDropDowns";
+import { setupUserDelete } from "./userDelete";
 
 document.addEventListener("DOMContentLoaded", async function () {
 	function attachEventListeners(
@@ -156,4 +157,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 			fetchPost();
 		}
 	});
+
+	let userDeleteBtn = document.querySelector('.user-delete');
+	if (userDeleteBtn) {
+		setupUserDelete(userDeleteBtn);
+	}
 });

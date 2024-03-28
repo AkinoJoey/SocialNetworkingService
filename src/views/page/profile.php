@@ -6,7 +6,6 @@
 				<div class="w-1/3">
 					<img src="<?= $profile->getProfileImagePath() === null ? '/images/user_default_portrait.png' : '/uploads/' . substr($profile->getProfileImagePath(), 0, 2) . '/' .  $profile->getProfileImagePath() . $profile->getExtension() ?>" alt="user avatar" class="h-16 w-16 rounded-full object-cover shadow dark:bg-gray-500" width="75px" height="75px" />
 				</div>
-				<!-- TODO: 10Kみたいな表示にする -->
 				<div class="w-2/3 flex justify-around">
 					<div class="flex flex-col justify-around font-semibold">
 						<p>フォロー中</p>
@@ -27,19 +26,22 @@
 					<?= "@" . htmlspecialchars($user->getUsername()) ?>
 				</h4>
 				<p class="dark:text-gray-400">
-					<?= nl2br(htmlspecialchars($profile->getDescription())) ?>
+					<?= $profile->getDescription() !== null? nl2br(htmlspecialchars($profile->getDescription())): null ?>
 				</p>
 			</div>
 		</div>
 		<?php if ($user->getId() === $authenticatedUser->getId()) : ?>
-			<div class="align-center flex justify-center space-x-4 pt-4">
-				<a href="/profile/edit">
-					<button class="btn btn-active">
-						プロフィールを編集
+			<div class="flex justify-center space-x-4 pt-4">
+				<a class="flex" href="/profile/edit">
+					<button class="btn btn-xs btn-active">
+						プロフィール
 					</button>
 				</a>
-				<button data-modal-target="logout_modal" data-modal-show="logout_modal" type="button" class="logout-btn btn btn-active">
+				<button data-modal-target="logout_modal" data-modal-show="logout_modal" type="button" class="logout-btn btn btn-xs btn-active">
 					ログアウト
+				</button>
+				<button data-user-id="<?= $user->getId() ?>" data-modal-target="user_delete_modal" data-modal-show="user_delete_modal" type="button" class="user-delete btn btn-xs btn-error">
+					アカウントを削除
 				</button>
 			</div>
 		<?php else : ?>
@@ -65,6 +67,8 @@
 
 <?php include(__DIR__ . '/../components/alert_modal.php') ?>
 <?php include(__DIR__ . '/../components/speed_dial.php') ?>
+<?php include(__DIR__ . '/../components/user_delete_modal.php') ?>
+
 
 <?php if ($user->getId() !== $authenticatedUser->getId()) : ?>
 	<script>
