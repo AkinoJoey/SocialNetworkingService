@@ -188,10 +188,9 @@ class ValidationHelperDataProvider
     public static function validUsernameProvider(): array
     {
         return [
-            ['username'], // 最小文字数のユーザー名
-            ['user123'], // 有効なユーザー名
+            [str_repeat('a', 4)], // 最小文字数のユーザー名
+            ['1234'], // 有効なユーザー名
             ['user_name'], // 有効なユーザー名
-            ['12345'], // 最大文字数のユーザー名
             [str_repeat('a', 15)], // 最大文字数のユーザー名
         ];
     }
@@ -199,9 +198,10 @@ class ValidationHelperDataProvider
     public static function invalidUsernameProvider(): array
     {
         return [
-            ["🌝"],
-            ['abcd'], // 最小文字数未満のユーザー名
-            [str_repeat('a', 16)], // 最大文字数を超えるユーザー名
+            ["🌝🌝🌝🌝🌝", \InvalidArgumentException::class ,"ユーザー名は半角英数字とアンダースコアのみを含む必要があります"],
+            ["あいうえお", \InvalidArgumentException::class ,"ユーザー名は半角英数字とアンダースコアのみを含む必要があります"],
+            ['123', \LengthException::class ,"ユーザー名の有効な文字数は4文字以上、15文字以内です"], // 最小文字数未満のユーザー名
+            [str_repeat('a', 16), \LengthException::class, "ユーザー名の有効な文字数は4文字以上、15文字以内です"], // 最大文字数を超えるユーザー名
         ];
     }
 
