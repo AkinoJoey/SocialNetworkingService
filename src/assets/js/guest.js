@@ -24,10 +24,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 				// offsetを更新
 				offsetCounter += 20;
 			} else if (data.status === "error") {
-				console.error(data.message);
+				alert(data.message);
 			}
 		} catch (error) {
-			alert("An error occurred. Please try again.");
+			alert("エラーが発生しました");
 		}
 	}
 

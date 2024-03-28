@@ -19,11 +19,10 @@ async function likePost(requestUrl,formData, likeBtn) {
 			goodIcon.classList.add("fill-blue-600");
 		} else if (data.status === "error") {
 			// ユーザーにエラーメッセージを表示します
-			console.error(data.message);
-			alert("Update failed: " + data.message);
+			alert(data.message);
 		}
 	} catch (error) {
-		alert("An error occurred. Please try again.");
+		alert("エラーが発生しました");
 	}
 }
 async function deleteLikePost(requestUrl, formData, likeBtn) {

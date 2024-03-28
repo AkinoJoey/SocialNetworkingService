@@ -71,12 +71,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 						followBtn.innerHTML = "フォロー中";
 					} else if (data.status === "error") {
 						// ユーザーにエラーメッセージを表示します
-						console.error(data.message);
-						alert("Update failed: " + data.message);
+						alert(data.message);
 					}
 				})
 				.catch((error) => {
-					alert("An error occurred. Please try again.");
+					alert("エラーが発生しました");
 				});
 		}
 

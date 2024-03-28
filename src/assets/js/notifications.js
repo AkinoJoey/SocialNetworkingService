@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
 						}
 					})
 					.catch((error) => {
-						alert("An error occurred. Please try again.");
+						alert("エラーが発生しました");
 					});
 			}
 		});
