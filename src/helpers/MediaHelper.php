@@ -16,7 +16,7 @@ class MediaHelper
     }
     public static function createThumbnail(string $imagePath, string $thumbnailPath, string $size): bool
     {
-        $command = "magick {$imagePath} -thumbnail {$size} {$thumbnailPath}";
+        $command = "convert {$imagePath} -thumbnail {$size} {$thumbnailPath}";
 
         exec($command, $output, $returnCode);
 
