@@ -1,7 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
 	window.scrollTo(0, document.body.scrollHeight);
 
-	let conn = new WebSocket("ws://localhost:8080");
+	let conn;
+	if (DEVELOPMENT) {
+		conn = new WebSocket("ws://localhost:8080");
+	} else {
+		conn = new WebSocket("wss://ten.yuki-gakiya.com/chat");
+	}
+
 	conn.onopen = function (e) {
 		let data = {
 			type: "join",
