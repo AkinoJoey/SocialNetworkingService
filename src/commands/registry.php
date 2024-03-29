@@ -7,4 +7,5 @@ return [
     src\commands\programs\PostScheduled::class,
     src\commands\programs\DeleteExpiredPasswordResetTokens::class,
     src\commands\programs\DeleteExpiredEmailVerificationUsers::class,
+    src\commands\programs\Deploy::class,
 ];
