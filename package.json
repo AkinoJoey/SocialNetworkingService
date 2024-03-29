@@ -1,12 +1,14 @@
 {
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "vendor/bin/phpunit test",
 		"dev": "npm-run-all --parallel php-server watch:webpack chat-server",
 		"php-server": "php -S localhost:8000 -t public",
-		"watch:webpack": "npx webpack --mode development --watch",
-		"chat-server": "php bin/chat_server.php"
+		"chat-server": "php bin/chat_server.php",
+		"watch:webpack": "cross-env NODE_ENV=\"development\" npx webpack --watch",
+		"build": "cross-env  NODE_ENV=\"production\" npx webpack build"
 	},
 	"devDependencies": {
+		"cross-env": "^7.0.3",
 		"css-loader": "^6.9.1",
 		"daisyui": "^4.6.0",
 		"npm-run-all": "^4.1.5",
