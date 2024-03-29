@@ -1,6 +1,11 @@
 <?php
 require_once '../vendor/autoload.php';
-$DEBUG = true;
+
+if(src\helpers\Settings::env('ENVIRONMENT') === 'production'){
+    $DEBUG = false;
+}else{
+    $DEBUG = true;
+}
 
 date_default_timezone_set('Asia/Tokyo');
 
