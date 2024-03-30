@@ -7,6 +7,7 @@ use src\commands\AbstractCommand;
 class SeedDao extends AbstractCommand
 {
     protected static ?string $alias = 'seed-dao';
+    protected static bool $requiredCommandValue = true;
 
     public static function getArguments(): array
     {
@@ -15,15 +16,36 @@ class SeedDao extends AbstractCommand
 
     public function execute(): int
     {
-        $this->runAllSeeds();
+        $seedType = $this->getCommandValue();
+
+        if ($seedType === 'init') {
+            $this->seedsForInit();
+        } elseif ($seedType === 'proto') {
+            $this->seedsForPrototype();
+        }  elseif($seedType === 'deleteEvents'){
+            $this->deleteEventSeeds();
+        }else {
+            $this->log(sprintf("error: %s type does not exist.", $seedType));
+        }
         return 0;
     }
 
-    function runAllSeeds(): void
+    function seedsForInit(): void
     {
-        $directoryPath = __DIR__ . '/../../database/seeds_dao';
+        $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php'];
+        $this->runByType($files, 'init');
+    }
 
-        $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php', 'PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php', 'CommentLikesDaoSeeder.php', 'FollowsDaoSeeder.php'];
+    public function seedsForPrototype(): void
+    {
+        $files = ['PostLikesDaoSeeder.php'];
+        $this->runByType($files, 'proto');
+    }
+
+    private function runByType(array $files, String $seedType): void
+    {
+
+        $directoryPath = __DIR__ . '/../../database/seeds_dao';
 
         foreach ($files as $file) {
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
@@ -35,9 +57,24 @@ class SeedDao extends AbstractCommand
 
                 if (class_exists($className)) {
                     $seeder = new $className();
-                    $seeder->seed();
+                    if ($seedType === 'init') {
+                        $seeder->seed();
+                    } else if ($seedType === 'proto') {
+                        $seeder->seedForProto();
+                    }else if($seedType === 'delete'){
+                        $seeder->deleteAllEvents();
+                    } else {
+                        throw new \Exception("$seedType does not exist.");
+                    }
                 } else throw new \Exception("$className does not exist.");
             }
         }
+    }
+
+    private function deleteEventSeeds(): void
+    {
+        $files = ['PostsDaoSeeder.php'];
+
+        $this->runByType($files, 'delete');
     }
 }
