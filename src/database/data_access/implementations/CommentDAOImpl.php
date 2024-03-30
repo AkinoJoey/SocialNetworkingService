@@ -21,7 +21,7 @@ class CommentDAOImpl implements CommentDAO
             $query,
             'ssssiii',
             [
-                $comment->getContent()!== null? preg_replace("/(\R{3,})/", "\n\n", $comment->getContent()): null,
+                $comment->getContent() !== null ? preg_replace("/(\R{3,})/", "\n\n", $comment->getContent()) : null,
                 $comment->getUrl(),
                 $comment->getMediaPath(),
                 $comment->getExtension(),
@@ -291,5 +291,41 @@ class CommentDAOImpl implements CommentDAO
         }
 
         return $userIds;
+    }
+
+    public function createForProto(int $counter, string $executeAt, Comment $comment): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $eventName = "random_comment_" . $counter;
+        $content = mysqli_escape_string($mysqli, $comment->getContent());
+        $url = mysqli_escape_string($mysqli, $comment->getUrl());
+        $userId = $comment->getUserId();
+        $postId = mysqli_escape_string($mysqli, $comment->getPostId());
+
+        $query = <<<SQL
+        CREATE EVENT IF NOT EXISTS $eventName
+        ON SCHEDULE AT '$executeAt'
+        DO
+            INSERT INTO comments (content, url , user_id, postId) values('$content', '$url', $userId, $postId);
+        SQL;
+
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception('イベントの作成に失敗しました');
+
+        return true;
+    }
+
+    public function deleteEvent(string $eventName): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "DROP EVENT IF EXISTS $eventName";
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception("イベントの削除に失敗しました");
+
+        return $result;
     }
 }

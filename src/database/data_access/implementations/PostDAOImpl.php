@@ -7,6 +7,7 @@ use src\database\DatabaseManager;
 use src\models\DataTimeStamp;
 use src\models\Post;
 use DateTime;
+use mysqli;
 
 class PostDAOImpl implements PostDAO
 {
@@ -23,7 +24,7 @@ class PostDAOImpl implements PostDAO
             'sssssis',
             [
                 $post->getStatus(),
-                $post->getContent() !== null? preg_replace("/(\R{3,})/", "\n\n", $post->getContent()): null, //3行以上の改行は2行にする
+                $post->getContent() !== null ? preg_replace("/(\R{3,})/", "\n\n", $post->getContent()) : null, //3行以上の改行は2行にする
                 $post->getUrl(),
                 $post->getMediaPath(),
                 $post->getExtension(),
@@ -456,5 +457,68 @@ class PostDAOImpl implements PostDAO
         $results = $mysqli->prepareAndFetchAll($query, "siii", [$username, $userId, $offset, $limit]);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
+    }
+
+    // プロトタイプ用の関数
+    public function createForProto(int $counter, string $executeAt, Post $post): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $eventName = "random_post_" . $counter;
+        $content = mysqli_escape_string($mysqli, $post->getContent());
+        $url = mysqli_escape_string($mysqli, $post->getUrl());
+        $userId = $post->getUserId();
+
+        $query = <<<SQL
+        CREATE EVENT IF NOT EXISTS $eventName
+        ON SCHEDULE AT '$executeAt'
+        DO
+            INSERT INTO posts (status, content, url , user_id) values('public', '$content', '$url', $userId);
+        SQL;
+
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception('イベントの作成に失敗しました');
+
+        return true;
+    }
+
+    public function deleteEvent(string $eventName): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "DROP EVENT IF EXISTS $eventName";
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception("イベントの削除に失敗しました");
+
+        return $result;
+    }
+
+    public function count(): int
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "SELECT COUNT(*) FROM posts";
+        $result = $mysqli->prepareAndFetchAll($query, "", [])[0];
+
+        return $result['COUNT(*)'];
+    }
+
+    public function getInfluencerPostIds(): array
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        // プロトタイプではuser_idが1から50がインフルエンサー
+        $query = "SELECT id FROM posts WHERE user_id BETWEEN 1 AND 50;";
+        
+        $results = $mysqli->prepareAndFetchAll($query, '', []);
+
+        $data = [];
+        foreach($results as $result){
+            $data[] = $result['id'];
+        }
+
+        return $data;
     }
 }

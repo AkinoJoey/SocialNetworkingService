@@ -20,4 +20,8 @@ interface PostDAO
     public function getScheduledPosts(int $userId) : array;
     public function countScheduledPosts(int $userId) : ?int;
     public function getPostsByUsername(string $username, int $userId, int $offset, int $limit = 20) : array;
+    public function createForProto(int $postCounter, string $executeAt, Post $post) : bool;
+    public function deleteEvent(string $eventName) : bool;
+    public function count() : int;
+    public function getInfluencerPostIds() : array;
 }

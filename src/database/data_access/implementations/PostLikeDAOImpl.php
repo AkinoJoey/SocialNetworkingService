@@ -75,4 +75,52 @@ class PostLikeDAOImpl implements PostLikeDAO
 
         return $result["COUNT(*)"];
     }
+
+    public function exists(int $userId, int $postId): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+        $query = "SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?";
+
+        $result = $mysqli->prepareAndFetchAll($query, 'ii', [$userId, $postId]);
+
+        if (count($result) === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function createForProto(int $counter, string $executeAt, PostLike $postLike): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $eventName = "random_post_like_" . $counter;
+        $userId  = $postLike->getUserId();
+        $postId = $postLike->getPostId();
+
+        $query = <<<SQL
+        CREATE EVENT IF NOT EXISTS $eventName
+        ON SCHEDULE AT '$executeAt'
+        DO
+            INSERT INTO post_likes (user_id, post_id) values($userId, $postId);
+        SQL;
+
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception('イベントの作成に失敗しました');
+
+        return true;
+    }
+
+    public function deleteEvent(string $eventName): bool
+    {
+        $mysqli = DatabaseManager::getMysqliConnection();
+
+        $query = "DROP EVENT IF EXISTS $eventName";
+        $result = $mysqli->query($query);
+
+        if (!$result) throw new \Exception("イベントの削除に失敗しました");
+
+        return $result;
+    }
 }
