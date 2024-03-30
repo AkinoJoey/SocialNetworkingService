@@ -34,4 +34,12 @@ class UsersDaoSeeder implements Seeder
 
         return $data;
     }
+    
+    public function seedForProto(): void
+    {
+    }
+
+    public function deleteAllEvents(): void{
+        
+    }
 }

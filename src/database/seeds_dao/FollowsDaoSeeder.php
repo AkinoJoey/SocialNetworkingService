@@ -27,7 +27,7 @@ class FollowsDaoSeeder implements Seeder
             $countFollowing = $faker->numberBetween(SeedCount::MIN_FOLLOW, SeedCount::MAX_FOLLOW);
 
             for ($j = 0; $j < $countFollowing; $j++) {
-                // 3分の1の確率で1から10のランダムな数字を選ぶ
+                // 3分の1の確率でインフルエンサーをフォローする
                 if (rand(1, 3) === 1) {
                     $followerUserId = $faker->numberBetween(1, SeedCount::INFLUENCERS);
                 } else {
@@ -49,5 +49,13 @@ class FollowsDaoSeeder implements Seeder
         }
 
         return $data;
+    }
+
+    public function seedForProto(): void
+    {
+    }
+
+    public function deleteAllEvents(): void
+    {
     }
 }

@@ -21,15 +21,15 @@ class ProfilesDaoSeeder implements Seeder
         $data = [];
 
         for ($i = 0; $i < SeedCount::USERS; $i++) {
-            $profileImagePath = $this->saveDummyProfileImage();
+            // $profileImagePath = $this->saveDummyProfileImage();
 
             $profile = new Profile(
                 userId: $i + 1,
                 age: $faker->numberBetween(20, 60),
                 location: $faker->country(),
                 description: $faker->realTextBetween(10, 140),
-                profileImagePath: pathinfo($profileImagePath, PATHINFO_FILENAME),
-                extension: '.' . pathinfo($profileImagePath,  PATHINFO_EXTENSION)
+                // profileImagePath: pathinfo($profileImagePath, PATHINFO_FILENAME),
+                // extension: '.' . pathinfo($profileImagePath,  PATHINFO_EXTENSION)
             );
 
             $data[] = $profile;
@@ -54,7 +54,7 @@ class ProfilesDaoSeeder implements Seeder
         //メディアのファイル名の長さ 
         $numberOfCharacters = 18;
         $basename = bin2hex(random_bytes($numberOfCharacters / 2));
-        $extension =  \Faker\Factory::create()->randomElement(['.jpg', '.png','.jpeg', '.webp']);
+        $extension =  \Faker\Factory::create()->randomElement(['.jpg', '.png', '.jpeg', '.webp']);
         $filename = $basename . $extension;
         $uploadDir = __DIR__ . "/../../../public/uploads/";
         $subdirectory = substr($filename, 0, 2) . "/";
@@ -70,5 +70,13 @@ class ProfilesDaoSeeder implements Seeder
             file_put_contents($mediaPath, $imageData);
             return $filename;
         }
+    }
+
+    public function seedForProto(): void
+    {
+    }
+
+    public function deleteAllEvents(): void
+    {
     }
 }

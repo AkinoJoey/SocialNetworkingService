@@ -18,7 +18,7 @@ class PostsDaoSeeder implements Seeder
     }
 
 
-    public function createDummyPosts(): array
+    private function createDummyPosts(): array
     {
         $data = [];
         $faker = \Faker\Factory::create();
@@ -26,8 +26,8 @@ class PostsDaoSeeder implements Seeder
         $numberOfCharacters = 18;
 
         for ($i = 0; $i < SeedCount::POSTS; $i++) {
-            // 10分の1の確率で画像を生成する
-            if (rand(1, 10) === 1) {
+            // 20分の1の確率で画像を生成する
+            if (rand(1, 20) === 1) {
                 $mediaPath = $this->getDummyPostMediaFileName();
             } else {
                 $mediaPath = null;
@@ -47,7 +47,7 @@ class PostsDaoSeeder implements Seeder
         return $data;
     }
 
-    public function getDummyPostMediaFileName(): string
+    private function getDummyPostMediaFileName(): string
     {
         $filename = $this->saveDummyImage();
         return $filename;
@@ -56,7 +56,7 @@ class PostsDaoSeeder implements Seeder
     /**
      * @return string $filename
      */
-    public function saveDummyImage(): string
+    private function saveDummyImage(): string
     {
         $unsplashUrl = "https://source.unsplash.com/700x700/?random";
 
@@ -80,12 +80,66 @@ class PostsDaoSeeder implements Seeder
 
             $thumbnailPath = $uploadDir .  $subdirectory . explode(".", $filename)[0] . "_thumb" . $extension;
 
-            $success = MediaHelper::createThumbnail($mediaPath, $thumbnailPath, 
-            '720x720');
+            $success = MediaHelper::createThumbnail(
+                $mediaPath,
+                $thumbnailPath,
+                '720x720'
+            );
 
-            if(!$success) throw new \Exception('サムネイルの作成に失敗しました');
-            
+            if (!$success) throw new \Exception('サムネイルの作成に失敗しました');
+
             return $filename;
+        }
+    }
+
+    public function seedForProto(): void
+    {
+        $postDao = DAOFactory::getPostDAO();
+        $posts = $this->createPostsForProto();
+        $faker = \Faker\Factory::create();
+        date_default_timezone_set('Asia/Tokyo');
+
+        $now = new DateTime();
+        $today = new DateTime('today');
+
+        for ($i = 0; $i < count($posts); $i++) {
+            $post = $posts[$i];
+            $executeAt = $faker->dateTimeBetween($now->format('Y-m-d H:i:s'), $today->format('Y-m-d 23:59:59'))->format('Y-m-d H:i:s');
+            $postDao->createForProto($i + 1, $executeAt, $post);
+        }
+    }
+
+    private function createPostsForProto(): array
+    {
+        $data = [];
+        $faker = \Faker\Factory::create();
+        //投稿のURLの長さ 
+        $numberOfCharacters = 18;
+
+        for ($i = 0; $i < SeedCount::USERS; $i++) {
+            $userId = $i + 1;
+
+            for ($j = 0; $j < SeedCount::POSTS_FOR_PROTO; $j++) {
+                $post = new Post(
+                    url: bin2hex(random_bytes($numberOfCharacters / 2)),
+                    userId: $userId,
+                    content: $faker->realTextBetween(10, 140, 5),
+                );
+                $data[] = $post;
+            }
+        }
+
+        return $data;
+    }
+
+
+    public function deleteAllEvents(): void
+    {
+        $postDao = DAOFactory::getPostDAO();
+
+        for ($i = 0; $i < SeedCount::USERS * SeedCount::POST_LIKES_FOR_PROTO; $i++) {
+            $eventName = 'random_post_' . ($i + 1);
+            $postDao->deleteEvent($eventName);
         }
     }
 }

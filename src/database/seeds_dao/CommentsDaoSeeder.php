@@ -60,6 +60,58 @@ class CommentsDaoSeeder implements Seeder
         }
 
         return $data;
-        
+    }
+
+    public function seedForProto(): void
+    {
+        $commentDao = DAOFactory::getCommentDAO();
+        $comments = $this->createCommentsForProto();
+        $faker = \Faker\Factory::create();
+        date_default_timezone_set('Asia/Tokyo');
+
+        $now = new DateTime();
+        $today = new DateTime('today');
+
+        for ($i = 0; $i < count($comments); $i++) {
+            $comment = $comments[$i];
+            $executeAt = $faker->dateTimeBetween($now->format('Y-m-d H:i:s'), $today->format('Y-m-d 23:59:59'))->format('Y-m-d H:i:s');
+            $commentDao->createForProto($i + 1, $executeAt, $comment);
+        }
+    }
+
+    private function createCommentsForProto(): array
+    {
+        $data = [];
+        $faker = \Faker\Factory::create();
+        //投稿のURLとメディアのファイル名の長さ 
+        $numberOfCharacters = 18;
+        $postDao = DAOFactory::getPostDAO();
+        $numberOfPosts = $postDao->count();
+
+        for ($i = 0; $i < SeedCount::USERS; $i++) {
+            $userId = $i + 1;
+
+            for ($j = 0; $j < SeedCount::COMMENTS_FOR_PROTO; $j++) {
+                $comment = new Comment(
+                    url: bin2hex(random_bytes($numberOfCharacters / 2)),
+                    userId: $userId,
+                    content: $faker->realTextBetween(10, 140, 5),
+                    postId: $faker->numberBetween(1, $numberOfPosts)
+                );
+                $data[] = $comment;
+            }
+        }
+
+        return $data;
+    }
+
+    public function deleteAllEvents(): void
+    {
+        $commentDao = DAOFactory::getCommentDAO();
+
+        for ($i = 0; $i < SeedCount::USERS * SeedCount::COMMENTS_FOR_PROTO; $i++) {
+            $eventName = 'random_comment_' . ($i + 1);
+            $commentDao->deleteEvent($eventName);
+        }
     }
 }
