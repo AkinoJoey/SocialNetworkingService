@@ -21,7 +21,14 @@ class SeedDao extends AbstractCommand
         if ($seedType === 'init') {
             $this->seedsForInit();
         } elseif ($seedType === 'proto') {
-            $this->seedsForPrototype();
+            $this->log("Seeding prototype data.....");
+            $result = $this->seedsForPrototype();
+            if($result){
+                $this->log('Seeding successful.');
+            }else{
+                $this->log('Error occurred.');
+            }
+
         }  elseif($seedType === 'deleteEvents'){
             $this->deleteEventSeeds();
         }else {
@@ -30,16 +37,19 @@ class SeedDao extends AbstractCommand
         return 0;
     }
 
-    function seedsForInit(): void
+    function seedsForInit(): bool
     {
         $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php', 'PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php', 'CommentLikesDaoSeeder.php', 'FollowsDaoSeeder.php'];
         $this->runByType($files, 'init');
+        return true;
     }
 
-    public function seedsForPrototype(): void
+    public function seedsForPrototype(): bool
     {
         $files = ['PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php'];
         $this->runByType($files, 'proto');
+
+        return true;
     }
 
     private function runByType(array $files, String $seedType): void
@@ -71,10 +81,12 @@ class SeedDao extends AbstractCommand
         }
     }
 
-    private function deleteEventSeeds(): void
+    private function deleteEventSeeds(): bool
     {
         $files = ['PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php'];
 
         $this->runByType($files, 'delete');
+
+        return true;
     }
 }
