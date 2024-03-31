@@ -45,23 +45,20 @@ class PostLikesDaoSeeder implements Seeder
     public function seedForProto(): void
     {
         $postLikeDao = DAOFactory::getPostLikeDAO();
-        $postDao = DAOFactory::getPostDAO();
-        $postIds = $postDao->getInfluencerPostIds();
+        // $randomPostLikes = $this->createPostLikesForProto();
+        $postLikes = $this->createPostLikesForInfluencers();
+        // $postLikes = array_merge($randomPostLikes, $postLikesForInfluencer);
+        $faker = \Faker\Factory::create();
+        date_default_timezone_set('Asia/Tokyo');
 
-        error_log(print_r($postIds, true));
+        $now = new DateTime();
+        $today = new DateTime('today');
 
-        // $postLikes = $this->createPostLikesForProto();
-        // $faker = \Faker\Factory::create();
-        // date_default_timezone_set('Asia/Tokyo');
-
-        // $now = new DateTime();
-        // $today = new DateTime('today');
-
-        // for ($i = 0; $i < count($postLikes); $i++) {
-        //     $postLike = $postLikes[$i];
-        //     $executeAt = $faker->dateTimeBetween($now->format('Y-m-d H:i:s'), $today->format('Y-m-d 23:59:59'))->format('Y-m-d H:i:s');
-        //     $postLikeDao->createForProto($i + 1, $executeAt, $postLike);
-        // }
+        for ($i = 0; $i < count($postLikes); $i++) {
+            $postLike = $postLikes[$i];
+            $executeAt = $faker->dateTimeBetween($now->format('Y-m-d H:i:s'), $today->format('Y-m-d 23:59:59'))->format('Y-m-d H:i:s');
+            $postLikeDao->createForProto($i + 1, $executeAt, $postLike);
+        }
     }
 
     private function createPostLikesForProto(): array
@@ -137,7 +134,7 @@ class PostLikesDaoSeeder implements Seeder
             for ($j = 0; $j < SeedCount::POST_LIKES_FOR_INFLUENCER; $j++) {
                 do {
                     $userId = $faker->numberBetween(1, SeedCount::USERS);
-                    $postId = $influencerPostsIds[$faker->numberBetween(0, count($influencerPostsIds))];
+                    $postId = $influencerPostsIds[$faker->numberBetween(0, count($influencerPostsIds)-1)];
                     $pair = $userId . '_' . $postId;
                 } while (isset($generatedPairs[$pair]) || $postLikeDao->exists($userId, $postId)); // すでに生成されたペアかどうかをチェック
 
