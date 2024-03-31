@@ -1,7 +1,7 @@
 <?php
-# TODO: cron, logディレクトリの作成、デイリー予定
+# デイリーで実行
 # cronでは作業ディレクトリがホームディレクトリになるから、作業ディレクトリをcronディレクトリに変更
-# chdir(__DIR__  . "/..");
+chdir(__DIR__  . "/..");
 
 $output = [];
 $result = exec("php console del-exp-users", $output);

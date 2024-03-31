@@ -1,7 +1,7 @@
 <?php
-# TODO: cron
+# 毎分実行
 # cronでは作業ディレクトリがホームディレクトリになるから、作業ディレクトリをcronディレクトリに変更
-# chdir(__DIR__  . "/..");
+chdir(__DIR__  . "/..");
 
 $output = [];
 $result = exec("php console po-sc", $output);
