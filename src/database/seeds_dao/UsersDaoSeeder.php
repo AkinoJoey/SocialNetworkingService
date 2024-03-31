@@ -23,8 +23,8 @@ class UsersDaoSeeder implements Seeder
         for ($i = 0; $i < SeedCount::USERS; $i++) {
             $user = new User(
                 accountName: $faker->name(),
-                email: $faker->email(),
-                username: uniqid(""),
+                email: $faker->unique()->email(),
+                username: uniqid(),
                 emailVerified: true,
             );
 
