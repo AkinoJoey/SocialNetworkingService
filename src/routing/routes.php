@@ -417,7 +417,7 @@ return [
 
             return new JSONRenderer(['status' => 'error', 'エラーが発生しました']);
         }
-    })->setMiddleware(['guest']),
+    })->setMiddleware(['register']),
     'logout' => Route::create('logout', function (): HTTPRenderer {
         Authenticate::logoutUser();
         FlashData::setFlashData('success', 'ログアウトしました');
