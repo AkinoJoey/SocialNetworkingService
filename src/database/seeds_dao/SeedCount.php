@@ -13,7 +13,7 @@ class SeedCount
     const CHILD_COMMENTS = 6000;
     const COMMENT_LIKES = 3000;
     const MIN_FOLLOW = 10;
-    const MAX_FOLLOW = 1000;
+    const MAX_FOLLOW = 100;
     const POSTS_FOR_PROTO = 3;
     const POST_LIKES_FOR_PROTO = 5;
     const POST_LIKES_FOR_INFLUENCER = 20;
