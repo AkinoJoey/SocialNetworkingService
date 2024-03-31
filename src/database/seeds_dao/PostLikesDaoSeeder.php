@@ -45,9 +45,7 @@ class PostLikesDaoSeeder implements Seeder
     public function seedForProto(): void
     {
         $postLikeDao = DAOFactory::getPostLikeDAO();
-        // $randomPostLikes = $this->createPostLikesForProto();
-        $postLikes = $this->createPostLikesForInfluencers();
-        // $postLikes = array_merge($randomPostLikes, $postLikesForInfluencer);
+        $postLikes = $this->createPostLikesForProto();
         $faker = \Faker\Factory::create();
         date_default_timezone_set('Asia/Tokyo');
 
@@ -65,8 +63,6 @@ class PostLikesDaoSeeder implements Seeder
     {
         $data = [];
         $faker = \Faker\Factory::create();
-        $generatedPairs = [];
-
         $postDao = DAOFactory::getPostDAO();
         $numberOfPosts = $postDao->count();
 
@@ -75,26 +71,21 @@ class PostLikesDaoSeeder implements Seeder
 
         for ($i = 0; $i < SeedCount::USERS; $i++) {
             $userId = $i + 1;
-
+            $likePostIds = [];
             for ($j = 0; $j < SeedCount::POST_LIKES_FOR_PROTO + SeedCount::POST_LIKES_FOR_INFLUENCER; $j++) {
                 // 他のユーザーから 5 つのランダムな投稿に「いいね」する
                 if ($j < SeedCount::POST_LIKES_FOR_PROTO) {
                     do {
-                        $userId = $faker->numberBetween(1, SeedCount::USERS);
                         $postId = $faker->numberBetween(1, $numberOfPosts);
-                        $pair = $userId . '_' . $postId;
-                    } while ($i === $userId || isset($generatedPairs[$pair]) || $postLikeDao->exists($userId, $postId)); // すでに生成されたペアかどうかをチェック
+                    } while (in_array($postId, $likePostIds) || $postLikeDao->exists($userId, $postId)); // すでに生成されたペアかどうかをチェック
                 }else{
                     //　 50 人の「インフルエンサー」アカウントの中から 20 の投稿に「いいね」をする
                     do {
-                        $userId = $faker->numberBetween(1, SeedCount::USERS);
                         $postId = $influencerPostsIds[$faker->numberBetween(0, count($influencerPostsIds)-1)];
-                        $pair = $userId . '_' . $postId;
-                    } while (isset($generatedPairs[$pair]) || $postLikeDao->exists($userId, $postId)); 
+                    } while (in_array($postId, $likePostIds)|| $postLikeDao->exists($userId, $postId)); 
                 }
-
                 // 生成されたペアをトラッキング
-                $generatedPairs[$pair] = true;
+                $likePostIds[] = $postId;
 
                 $postLike = new PostLike(
                     userId: $userId,
@@ -111,45 +102,10 @@ class PostLikesDaoSeeder implements Seeder
     public function deleteAllEvents(): void
     {
         $postLikesDao = DAOFactory::getPostLikeDAO();
-        for ($i = 0; $i < SeedCount::USERS * SeedCount::POST_LIKES_FOR_PROTO; $i++) {
+        for ($i = 0; $i < SeedCount::USERS * (SeedCount::POST_LIKES_FOR_PROTO + SeedCount::POST_LIKES_FOR_INFLUENCER); $i++) {
             $eventName = 'random_post_like_' . ($i + 1);
             $postLikesDao->deleteEvent($eventName);
         }
     }
 
-    public function createPostLikesForInfluencers(): array
-    {
-        $data = [];
-        $faker = \Faker\Factory::create();
-        $generatedPairs = [];
-
-        $postDao = DAOFactory::getPostDAO();
-        $influencerPostsIds = $postDao->getInfluencerPostIds();
-
-        $postLikeDao = DAOFactory::getPostLikeDAO();
-
-        for ($i = 0; $i < SeedCount::USERS; $i++) {
-            $userId = $i + 1;
-
-            for ($j = 0; $j < SeedCount::POST_LIKES_FOR_INFLUENCER; $j++) {
-                do {
-                    $userId = $faker->numberBetween(1, SeedCount::USERS);
-                    $postId = $influencerPostsIds[$faker->numberBetween(0, count($influencerPostsIds)-1)];
-                    $pair = $userId . '_' . $postId;
-                } while (isset($generatedPairs[$pair]) || $postLikeDao->exists($userId, $postId)); // すでに生成されたペアかどうかをチェック
-
-                // 生成されたペアをトラッキング
-                $generatedPairs[$pair] = true;
-
-                $postLike = new PostLike(
-                    userId: $userId,
-                    postId: $postId
-                );
-
-                $data[] = $postLike;
-            }
-        }
-
-        return $data;
-    }
 }
