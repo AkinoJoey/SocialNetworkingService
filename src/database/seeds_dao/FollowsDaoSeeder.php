@@ -19,30 +19,20 @@ class FollowsDaoSeeder implements Seeder
     {
         $data = [];
         $faker = \Faker\Factory::create();
-        $generatedPairs = [];
 
         for ($i = 1; $i <= SeedCount::USERS; $i++) {
 
-            // 1人あたりフォローするのは10~400でランダム
             $countFollowing = $faker->numberBetween(SeedCount::MIN_FOLLOW, SeedCount::MAX_FOLLOW);
+            $followingIds = [];
 
             for ($j = 0; $j < $countFollowing; $j++) {
                 // 3分の1の確率でインフルエンサーをフォローする
-                if (rand(1, 3) === 1) {
-                    $followerUserId = $faker->numberBetween(1, SeedCount::INFLUENCERS);
-                } else {
-                    $followerUserId = $faker->numberBetween(1, SeedCount::USERS);
-                }
+                $followInfluencer = $faker->numberBetween(1, 3) === 1;
+                do {
+                    $followerUserId = $followInfluencer ? $faker->numberBetween(1, SeedCount::INFLUENCERS) : $faker->numberBetween(1, SeedCount::USERS);
+                } while ($i === $followerUserId || in_array($followerUserId, $followingIds));
 
-                while ($i === $followerUserId || isset($generatedPairs[$i][$followerUserId])) {
-                    if (rand(1, 3) === 1) {
-                        $followerUserId = $faker->numberBetween(1, SeedCount::INFLUENCERS);
-                    } else {
-                        $followerUserId = $faker->numberBetween(1, SeedCount::USERS);
-                    }
-                }
-                $generatedPairs[$i][$followerUserId] = true;
-
+                $followingIds[] = $followerUserId;
                 $follow = new Follow($i, $followerUserId);
                 $data[] = $follow;
             }
