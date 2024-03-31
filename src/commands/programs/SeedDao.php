@@ -32,13 +32,13 @@ class SeedDao extends AbstractCommand
 
     function seedsForInit(): void
     {
-        $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php'];
+        $files = ['UsersDaoSeeder.php', 'ProfilesDaoSeeder.php', 'PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php', 'CommentLikesDaoSeeder.php', 'FollowsDaoSeeder.php'];
         $this->runByType($files, 'init');
     }
 
     public function seedsForPrototype(): void
     {
-        $files = ['PostLikesDaoSeeder.php'];
+        $files = ['PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php'];
         $this->runByType($files, 'proto');
     }
 
@@ -73,7 +73,7 @@ class SeedDao extends AbstractCommand
 
     private function deleteEventSeeds(): void
     {
-        $files = ['PostsDaoSeeder.php'];
+        $files = ['PostsDaoSeeder.php', 'PostLikesDaoSeeder.php', 'CommentsDaoSeeder.php'];
 
         $this->runByType($files, 'delete');
     }
