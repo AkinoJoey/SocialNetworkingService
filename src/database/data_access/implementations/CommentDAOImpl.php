@@ -307,7 +307,7 @@ class CommentDAOImpl implements CommentDAO
         CREATE EVENT IF NOT EXISTS $eventName
         ON SCHEDULE AT '$executeAt'
         DO
-            INSERT INTO comments (content, url , user_id, postId) values('$content', '$url', $userId, $postId);
+            INSERT INTO comments (content, url , user_id, post_id) values('$content', '$url', $userId, $postId);
         SQL;
 
         $result = $mysqli->query($query);
