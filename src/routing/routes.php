@@ -706,8 +706,13 @@ return [
             $user = Authenticate::getAuthenticatedUser();
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
             $postDao = DAOFactory::getPostDAO();
-            $success = $postDao->delete($validatedData['post_id'], $user->getId());
 
+            $post = $postDao->getById($validatedData['post_id']);
+            if($post->getMediaPath() !== null){
+                MediaHelper::deleteMedia($post->getMediaPath(), $post->getExtension(), 'post');
+            }
+
+            $success = $postDao->delete($validatedData['post_id'], $user->getId());
             if (!$success) throw new Exception('コメントの削除に失敗しました');
 
             FlashData::setFlashData('success', "投稿を削除しました");
