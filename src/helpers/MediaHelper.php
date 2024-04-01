@@ -4,8 +4,9 @@ namespace src\helpers;
 
 class MediaHelper
 {
-    
-    public static function uploadMedia(string $mediaPath, string $tmpPath): bool{
+
+    public static function uploadMedia(string $mediaPath, string $tmpPath): bool
+    {
         // アップロード先のディレクトリがない場合は作成
         if (!is_dir(dirname($mediaPath))) mkdir(dirname($mediaPath), 0755, true);
 
@@ -23,7 +24,8 @@ class MediaHelper
         return $returnCode === 0;
     }
 
-    public static function convertAndCompressToMp4Video(string $videoPath) : bool {
+    public static function convertAndCompressToMp4Video(string $videoPath): bool
+    {
         $path_parts = pathinfo($videoPath);
         $tmpFilename = $path_parts['filename'] . "_tmp.mp4";
         $tmpPathname = $path_parts['dirname'] . '/' . $tmpFilename;
@@ -36,12 +38,28 @@ class MediaHelper
             $newPathName = $path_parts['dirname'] . '/' . $path_parts['filename'] . ".mp4";
 
             // オリジナルの動画を削除
-            if(unlink($videoPath)){
+            if (unlink($videoPath)) {
                 // 名前を変更
                 return rename($tmpPathname, $newPathName);
             }
         } else {
             return false;
         }
+    }
+
+    public static function deleteMedia(string $filename, string $extension ,string $type): bool
+    {
+        $uploadDir = __DIR__ . '/../../public/uploads/';
+        $subdirectory =  substr($filename, 0, 2) . "/";
+        $mediaPath = $uploadDir . $subdirectory . $filename . $extension;
+
+        if($type === 'post'){
+            $thumbnailPath = $uploadDir . $subdirectory . $filename . '_thumb' . $extension;
+            unlink($thumbnailPath);    
+        }
+
+        unlink($mediaPath);
+
+        return true;
     }
 }
