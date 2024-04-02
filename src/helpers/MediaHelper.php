@@ -47,7 +47,7 @@ class MediaHelper
         }
     }
 
-    public static function deleteMedia(string $filename, string $extension ,string $type): bool
+    public static function deleteMedia(string $filename, string $extension ,?string $type = null): bool
     {
         $uploadDir = __DIR__ . '/../../public/uploads/';
         $subdirectory =  substr($filename, 0, 2) . "/";
