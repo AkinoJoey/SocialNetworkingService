@@ -354,10 +354,9 @@ return [
                         //　名前をオリジナルに変更
                         rename($thumbnailPath, $mediaPath);
 
-                        // 元のアバターを削除
-                        $oldAvatarPath = $profile->getProfileImagePath();
-                        if (isset($oldAvatarPath)) {
-                            unlink($uploadDir . substr($oldAvatarPath, 0, 2) . '/' .  $oldAvatarPath . $profile->getExtension());
+                        // 既存のプロフィール画像がある場合は削除する
+                        if ($profile->getProfileImagePath() !== null) {
+                            MediaHelper::deleteMedia($profile->getProfileImagePath(), $profile->getExtension());
                         }
                     }
                     if (!$success) throw new Exception("エラーが発生しました");
