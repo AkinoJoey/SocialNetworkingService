@@ -52,8 +52,9 @@ class MediaHelper
         $uploadDir = __DIR__ . '/../../public/uploads/';
         $subdirectory =  substr($filename, 0, 2) . "/";
         $mediaPath = $uploadDir . $subdirectory . $filename . $extension;
+        $hasThumbnail = ['.png', '.jpg', '.jpeg', '.webp'];
 
-        if($type === 'post'){
+        if($type === 'post' && in_array($extension, $hasThumbnail)){
             $thumbnailPath = $uploadDir . $subdirectory . $filename . '_thumb' . $extension;
             unlink($thumbnailPath);    
         }
@@ -62,4 +63,6 @@ class MediaHelper
 
         return true;
     }
+
+
 }
