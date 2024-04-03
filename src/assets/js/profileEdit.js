@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", function () {
 		let formData = new FormData(profileForm);
 
 		if (fileInput.files[0] != undefined) {
+			let success = validateMedia(fileInput.files[0]);
+			if (!success) return;
 			formData.append("media", fileInput.files[0]);
 		}
 
@@ -57,4 +59,21 @@ document.addEventListener("DOMContentLoaded", function () {
 				alert("エラーが発生しました");
 			});
 	});
+
+	function validateMedia(media) {
+		const allowedImageTypes = [
+			"image/png",
+			"image/jpeg",
+			"image/jpg",
+			"image/webp",
+		];
+		let maxImageSize = 5 * 1024 * 1024;
+
+		if (allowedImageTypes.includes(media.type) && maxImageSize > media.size) {
+			return true;
+		} else {
+			alert("メディアはjpg, png, webp形式のみ対応しています");
+			return false;
+		}
+	}
 });

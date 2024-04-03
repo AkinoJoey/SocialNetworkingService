@@ -117,7 +117,13 @@ document.addEventListener("DOMContentLoaded", function () {
 	createPostForm.addEventListener("submit", function (e) {
 		e.preventDefault();
 		let formData = new FormData(createPostForm);
-		formData.append("media", fileInput.files[0]);
+
+		if (fileInput.files[0] !== undefined) {
+			let success = validateMedia(fileInput.files[0]);
+			if (!success) return;
+			formData.append("media", fileInput.files[0]);
+		}
+
 
 		if (scheduledAtContainer.textContent.trim() !== "") {
 			let scheduledAt = scheduledAtContainer.textContent + ":00";
@@ -163,4 +169,39 @@ document.addEventListener("DOMContentLoaded", function () {
 			submitBtn.classList.add("btn", "btn-disabled");
 		}
 	}
+
+	function validateMedia(media) {
+		const allowedImageTypes = [
+			"image/png",
+			"image/gif",
+			"image/jpeg",
+			"image/jpg",
+			"image/webp",
+		];
+		const allowedVideoTypes = ["video/mp4", "video/quicktime"];
+
+		if (allowedImageTypes.includes(media.type)) {
+			let maxImageSize = 5 * 1024 * 1024;
+
+			if (maxImageSize < media.size) {
+				alert("画像は5MB以内かつ、jpg, png, gif, webp形式のみ対応しています");
+				return false;
+			}
+
+			return true;
+		} else if (allowedVideoTypes.includes(media.type)) {
+			let maxVideoSize = 40 * 1024 * 1024;
+
+			if (maxVideoSize < media.size) {
+				alert("動画は40MB以内かつ、mp4, movの拡張式のみ対応しています");
+				return false;
+			}
+
+			return true;
+		} else {
+			alert("メディアはjpg, png, gif, webp, mp4, mov形式のみ対応しています");
+			return false;
+		}
+	}
 });
+
