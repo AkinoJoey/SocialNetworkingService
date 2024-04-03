@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	let conn;
 	if (DEVELOPMENT) {
-		conn = new WebSocket("ws://localhost:8080");
+		conn = new WebSocket("ws://localhost:9696");
 	} else {
 		conn = new WebSocket("wss://ten.yuki-gakiya.com/chat");
 	}
