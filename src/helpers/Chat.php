@@ -59,12 +59,11 @@ class Chat implements MessageComponentInterface
             // threadからclientを削除
             $client = $this->clients[$conn->resourceId];
             $threadId = $client->getJoinedThreadId();
-            $thread = $this->threads[$threadId];
 
-            unset($thread[$client->getConn()->resourceId]);
+            unset($this->threads[$threadId][$client->getConn()->resourceId]);
 
             // threadが空の場合はthreadを削除
-            if (count($thread) < 1) unset($this->threads[$threadId]);
+            if (count($this->threads[$threadId]) < 1) unset($this->threads[$threadId]);
 
             // clientsから削除
             unset($this->clients[$conn->resourceId]);
@@ -119,20 +118,22 @@ class Chat implements MessageComponentInterface
             ChatHelper::createMessage($validatedData['message'], $validatedData['sender_user_id'], $validatedData['receiver_user_id'], $validatedData['dm_thread_id']);
 
             $thread = $this->threads[$validatedData['dm_thread_id']] ?? null;
-            //　スレッドが作成されている場合、receiver_user_idにだけメッセージを送る
+            //　スレッドが作成されていて、スレッド内に現在2人以上いる場合、receiver_user_idにだけメッセージを送る
             if (isset($thread)) {
-                foreach (array_values($thread) as $client) {
-                    if ($client->getUserId() === $validatedData['receiver_user_id']) {
+                if(count($thread) > 1){
+                    foreach (array_values($thread) as $client) {
+                        if ($client->getUserId() === $validatedData['receiver_user_id']) {
 
-                        $data = json_encode(['status' => 'success', 'message' => $validatedData['message']]);
-                        $client->getConn()->send($data);
-                    } else {
-
-                        // リアルタイム通信しない場合、DMの未読通知がない場合はNotificationを作成する。
-                        // 作成済みのNotificationが存在する場合はupdatedAtを更新する
-                        ChatHelper::createOrUpdateNotification($validatedData['receiver_user_id'], $validatedData['sender_user_id'], $validatedData['dm_thread_id']);
+                            $data = json_encode(['status' => 'success', 'message' => $validatedData['message']]);
+                            $client->getConn()->send($data);
+                        }
                     }
+                } else {
+                    // リアルタイム通信しない場合、DMの未読通知がない場合はNotificationを作成する。
+                    // 作成済みのNotificationが存在する場合はupdatedAtを更新する
+                    ChatHelper::createOrUpdateNotification($validatedData['receiver_user_id'], $validatedData['sender_user_id'], $validatedData['dm_thread_id']);
                 }
+                
             }
         } catch (\InvalidArgumentException $e) {
             error_log($e->getMessage());
