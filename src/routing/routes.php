@@ -886,7 +886,12 @@ return [
 
             $validatedData = ValidationHelper::validateFields($required_fields, $_POST);
             $commentDao = DAOFactory::getCommentDAO();
+            $comment = $commentDao->getById($validatedData['post_id']);
 
+            if($comment->getMediaPath() !== null){
+                MediaHelper::deleteMedia($comment->getMediaPath(), $comment->getExtension(), 'post');
+            }
+            
             $user = Authenticate::getAuthenticatedUser();
             $success = $commentDao->delete($validatedData['post_id'], $user->getId());
             if (!$success) throw new Exception('コメントの削除に失敗しました');
@@ -1392,6 +1397,13 @@ return [
 
             if ($user->getId() === $validatedData['user_id']) {
                 $userDao = DAOFactory::getUserDAO();
+                $profileDao = DAOFactory::getProfileDAO();
+                $profile = $profileDao->getByUserId($validatedData['user_id']);
+                
+                if($profile->getProfileImagePath() !== null){
+                    MediaHelper::deleteMedia($profile->getProfileImagePath(), $profile->getExtension());
+                }
+
                 $success = $userDao->delete($user->getId());
                 if (!$success) {
                     throw new \Exception('アカウントの削除に失敗しました');
