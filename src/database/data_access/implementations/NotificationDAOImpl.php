@@ -232,8 +232,6 @@ class NotificationDAOImpl implements NotificationDAO
 
         if ($results === null) return null;
 
-        error_log($results['id']);
-
         return $results['id'];
     }
 
