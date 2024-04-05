@@ -16,4 +16,11 @@ class DatabaseManager
         return static::$mysqliConnections[$connectionName];
     }
 
+    public static function reconnect(string $connectionName = 'default'): MySQLWrapper
+    {
+        $current = static::$mysqliConnections[$connectionName];
+        $current->close();
+        unset(static::$mysqliConnections[$connectionName]);
+        return static::getMysqliConnection();
+    }
 }

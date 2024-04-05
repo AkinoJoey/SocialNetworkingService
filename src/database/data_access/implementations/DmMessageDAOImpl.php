@@ -17,6 +17,18 @@ class DmMessageDAOImpl implements DmMessageDAO
 
         $mysqli = DatabaseManager::getMysqliConnection();
 
+
+        // supervisorで常に起動しているためwait_timeoutを過ぎた後は再接続が必要
+        try{
+            $mysqli->ping();
+
+        }catch(Exception){
+            $mysqli = DatabaseManager::reconnect();
+            if(!isset($mysqli)){
+                throw new Exception('mysqliの再接続に失敗しました');
+            }
+        }
+
         $query = "INSERT INTO dm_messages (message, iv, sender_user_id, receiver_user_id, dm_thread_id) VALUES (?, ?, ?, ?, ?)";
 
         $result = $mysqli->prepareAndExecute(
