@@ -118,28 +118,67 @@ URLの署名には、サーバーサイドのシークレットキーとHMAC SHA
 
 このフローを以下の図に示します。
 
-また、パスワードリセット機能も同様の署名付きURLを使用して実装しています。
+パスワードリセット機能も同様の署名付きURLを使用して実装しています。
 さらに、パスワードリセットの場合は、リクエストしたユーザーのIDとトークンを管理するためのパスワードリセットテーブルを使用しています。
 
 ### ミドルウェアによるアクセス制限
-各ページへのアクセスはミドルウェアによって制限を行っています。
+各ページへのアクセスはミドルウェアによって制限されています。ほとんどのページは、ログイン状態かつEメール認証済みのユーザーのみが閲覧可能です。
 
-多くのページはログイン状態でかつ、Eメール認証済みのユーザーしか見ることができません。
-例えばログインしていない状態で、ログインが必要なページ([https://ten.yuki-gakiya.com/messages](https://ten.yuki-gakiya.com/messages)など)に、アクセスすると下記の画像のように、アラートと共にログインページなどにリダイレクトされます。
-これは[AuthenticatedMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/AuthenticatedMiddleware.php)によって行われます。
-このように、ミドルウェアによってユーザーがログイン状態かどうか、Eメール認証済みかどうかなどを判断して、特定のページや機能へのアクセスを許可しています。
+例えば未ログインの状態で、ログインが必要なページ([https://ten.yuki-gakiya.com/messages](https://ten.yuki-gakiya.com/messages)など)に、アクセスすると下記の画像のように、アラートが表示されログインページにリダイレクトされます。
+これは[AuthenticatedMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/AuthenticatedMiddleware.php)によって実行されます。  
 
-ユーザー認証に関しては、セッションベースのユーザー認証を採用しました。
-ログインページで正しいEメールとパスワードが入力された場合、セッションデータにユーザーIDを添付してアクセスを許可します。
-セッションが有効な限り、ユーザーはログイン状態を維持します。
-各リクエストではクライアントにセッションデータが添付されているかどうかのみをチェックすればよく、サーバー側で毎回認証する必要はありません。
+このように、ミドルウェアはユーザーのログイン状態やEメール認証の有無などを判断し、特定のページや機能へのアクセスを許可します。
 
-CSRF攻撃への対策として、GETメソッド以外のリクエストにCSRFトークンを追加しました。
-サーバーはCSRFトークンが有効かどうかをチェックし、有効でない場合はリクエストがアプリケーションのロジックに入る前に拒否されます。
-CSRFトークンの生成とCSRFトークンの検証は[CSRFMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/CSRFMiddleware.php)で行っています。
+ユーザー認証にはセッションベースの方法を採用しています。ログインページで正しいEメールとパスワードが入力されると、セッションデータにユーザーIDが付与され、アクセスが許可されます。セッションが有効な限り、ユーザーはログイン状態を維持します。
 
+各リクエストでは、クライアントから送信されたセッションデータのみをチェックすればよく、サーバー側での認証は不要です。
+
+CSRF攻撃への対策として、ミドルウェアとCSRFトークンを利用しています。サーバーはCSRFトークンの有効性をチェックし、無効な場合はリクエストを拒否します。
+CSRFトークンの生成とCSRFトークンの検証は[CSRFMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/CSRFMiddleware.php)で行います。
+
+Eメール検証機能やパスワードリセット機能に使用する署名付きURLの確認にもミドルウェアを使用しています。
+[SignatureValidationMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/SignatureValidationMiddleware.php)ではURLの署名の有効性や有効期限のチェックを行います。
+
+
+### ユーザー入力の検証
+このSNSウェブアプリケーションでは、アカウント作成やログイン、プロフィール編集、投稿など、ユーザーが入力する機会が多くあります。ユーザーが入力した情報はすべて厳密なバリデーションが行われており、誤ったデータ入力によるバグを防止しています。
+
+バリデーション関数は[ValidationHelperクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/helpers/ValidationHelper.php)で管理しています。また、バリデーション関数が適切に機能していることを確認するために、PHPUnitを使用してテストを行っています。
+
+テストには[ValidationHelperTestクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/test/helpers/ValidationHelperTest.php)と[ValidationHelperDataProviderクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/test/helpers/ValidationHelperDataProvider.php)を使用しています。
+
+さらに、SQLやスクリプト、コマンドなどの注入攻撃に対する対策も実施しています。クエリの実行にはプリペアドステートメントを使用し、HTMLのレンダリング時にはhtmlspecialchars関数を使用してサニタイズを行っています。
+
+また、機密データを保護するために適切なタイミングでテキストの暗号化やハッシュ化を行っています。例えば、アカウント作成に使用されるパスワードは検証が必要であるため、password_hash関数を使用してハッシュ化しています。
+
+また、ダイレクトメッセージなど、元のメッセージに戻す必要がある場合は、openssl_encrypt関数を使用して暗号化を行っています。暗号化に関する関数は[CipherHelperクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/helpers/CipherHelper.php)で管理しています。
 
 ### cronによる定期スケジューリング
+このSNSウェブアプリケーションでは、定期的な処理を実行するためにcronを活用しています。
+
+まず、予約投稿機能を実現するために、[PostScheduled](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/commands/programs/PostScheduled.php)というコマンドを作成しました。このコマンドは、スケジュールされた投稿データの中で現在の時間を過ぎているデータのステータスをスケジューリング状態から公開状態に変更します。そして、このコマンドを実行するためのスクリプト[post_scheduled.php](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/cron/post_scheduled.php)をcronで毎分実行しています。
+
+また、データシーディングも定期的に行っています。このSNSウェブアプリケーションでは、実際の利用状況を模倣するために、数千人のユーザーがサービスを利用しているかのような状況を再現するためにデータシーディングを行っています。
+
+まず、本番環境にアップした際に以下のデータを生成しました。
+- 2000人のユーザー
+- 6000の投稿
+- 36000のいいね
+- 18000のコメント
+- 6000のコメントへの返信
+- 3000のコメントへのいいね
+- 1ユーザーあたり10 ~ 100のフォロー
+
+その中で、50人をインフルエンサーとして設定し、フォローデータ生成時には、3分の1の確率でインフルエンサーをフォローするようにしました。
+
+本番環境でアップ後は、実際のソーシャルメディアの動向を模倣するために、以下のデータ生成をランダムな時間でスケジューリングしています。
+- 各ユーザーは毎日ランダムな内容の投稿を3つ行う
+- 各ユーザーは毎日1つのランダムな投稿に返信を行う
+- 各ユーザーはインフルエンサーアカウントの中から20の投稿にいいねをする
+
+これらのデータ生成のスケジューリングにはMySQLのCREATE EVENTステートメントを使用しています。
+また、データシーディングを定期的に実行するために、[SeedDao](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/commands/programs/SeedDao.php)というコマンドを作成し、それをcronで実行するためのスクリプト[seed_prototype.php](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/cron/seed_prototype.php)を作成しました。
+
 
 ### Web Socketの活用
 
