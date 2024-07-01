@@ -181,5 +181,16 @@ Eメール検証機能やパスワードリセット機能に使用する署名�
 
 
 ### Web Socketの活用
+このSNSアプリケーションでは非同期によるダイレクトメッセージ機能を実装するためにWebSocketを導入しました。
 
+実装にあたって[Ratchet](https://github.com/ratchetphp/Ratchet)というライブラリを使用しています。
+Ratchetが提供している[MessageComponentInterface](https://github.com/ratchetphp/Ratchet/blob/master/src/Ratchet/MessageComponentInterface.php)を実装して、[Chatクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/helpers/Chat.php)を作成しました。
+
+チャットの全体像は以下の図のようになっています。
+
+
+また、安全なダイレクトメッセージを実現するために、NGINXのリバースプロキシ機能を使ってWSS化も行っています。
 ## これからの改善点、拡張案
+- 自分のコメントに返信された際の通知発行
+- 画像の複数枚アップロード
+- 投稿を検索する機能の実装
