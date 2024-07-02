@@ -104,15 +104,20 @@ MVC（Model-View-Controller）アーキテクチャを採用し、データベ�
 ゲストユーザーが使用できる機能、ログインユーザーが使用できる機能、システムの担当が必要な機能などを表しています。
 ユースケース図のコードは、[user_usecase.pu](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/diagrams/usecases/user_usecase.pu)で確認できます。
 
+![usercase](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/c5e84f2d-b277-497c-8b75-dee215c8ee36)
+
 ### ER図
 アジャイル開発を採用し、実装を進めながらソフトウェア設計を反復して、ER図を構築していきました。
 ER図のコードは、[er.pu](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/diagrams/er/er.pu)で確認できます。
+
+![er](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/6a01078b-5111-4e7e-a596-93f971f7df3a)
 
 ### シーケンス図
 機能のフローを把握するためにシーケンス図を作成しました。
 例えば以下はゲストユーザーがトレンドのタイムラインを表示する際の流れを表したシーケンス図です。
 作成したすべてのシーケンス図は[sequences](https://github.com/AkinoJoey/SocialNetworkingService/tree/main/diagrams/sequences)で確認できます。
 
+![sequence](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/460c8f28-70b6-47ec-bb69-3b9a9879d6d4)
 
 ## こだわった点
 ### セキュリティ対策
@@ -136,6 +141,9 @@ URLの署名には、サーバーサイドのシークレットキーとHMAC SHA
 署名が有効であることが確認されると、ユーザーのアカウント作成が成功し、ログインが可能になります。
 
 このフローを以下の図に示します。
+
+![signed_url](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/927a2da2-4d4a-404a-8f91-028b67699caf)
+
 
 パスワードリセット機能も同様の署名付きURLを使用して実装しています。
 さらに、パスワードリセットの場合は、リクエストしたユーザーのIDとトークンを管理するためのパスワードリセットテーブルを使用しています。
