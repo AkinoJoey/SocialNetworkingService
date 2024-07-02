@@ -1,0 +1,15 @@
+@startuml signed_url
+
+actor ユーザー as u
+participant サーバー as s
+
+u -->s: アカウント情報を入力
+s -->s: Eメールやパスワードを検証
+s -->s: 署名付きURLを作成
+s -->u: 署名付きURLををEメールに送る
+u -->s: 署名付きURLを開く
+s -->s: 署名の有効性を確認
+s -->s: アカウントのステータスを更新
+s -->u: ログイン作成完了
+
+@enduml
