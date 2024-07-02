@@ -1,10 +1,11 @@
 @startuml usecase
 left to right direction
 
-actor ユーザー as u 
+actor ゲストユーザー as guest
+actor ログインユーザー as loginUser
 actor Cron as c << System >>
 
-package "SNS System"{
+package "SNS System" as sns{
     (ログインする) as login
     (トレンドの投稿を閲覧する) as lookTrend
     (フォロワーの投稿を閲覧する) as lookFollower
@@ -21,20 +22,9 @@ package "SNS System"{
     (通知を見る) as notification
 }
 
-u --> login
-u --> lookTrend
-u --> lookFollower
-u --> profile
-u --> follow
-u --> unfollow
-u --> post
-u --> schedule
-u --> delete
-u --> good
-u --> ungood
-u --> reply
-u --> private
-u --> notification
+guest --> lookTrend
+guest --> loginUser
+loginUser --> sns
 
 schedule --> c
 
