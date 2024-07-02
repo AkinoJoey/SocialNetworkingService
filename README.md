@@ -95,6 +95,25 @@ MVC（Model-View-Controller）アーキテクチャを採用し、データベ�
 ## 期間
 2024年1月18日から約2か月半かけて開発しました。
 
+## ソフトウェア設計
+実装開発サイクルに入る前に、図を作成して要件を把握し、要件モデリングを行いました。
+これにより全体像が把握でき、スムーズに実装を進めることができました。
+
+### ユースケース図
+必要な機能を洗い出すためにユースケース図を作成しました。
+ゲストユーザーが使用できる機能、ログインユーザーが使用できる機能、システムの担当が必要な機能などを表しています。
+ユースケース図のコードは、[user_usecase.pu](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/diagrams/usecases/user_usecase.pu)で確認できます。
+
+### ER図
+アジャイル開発を採用し、実装を進めながらソフトウェア設計を反復して、ER図を構築していきました。
+ER図のコードは、[er.pu](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/diagrams/er/er.pu)で確認できます。
+
+### シーケンス図
+機能のフローを把握するためにシーケンス図を作成しました。
+例えば以下はゲストユーザーがトレンドのタイムラインを表示する際の流れを表したシーケンス図です。
+作成したすべてのシーケンス図は[sequences](https://github.com/AkinoJoey/SocialNetworkingService/tree/main/diagrams/sequences)で確認できます。
+
+
 ## こだわった点
 ### セキュリティ対策
 安全なアプリケーションを開発するために、大きく以下の3つのセキュリティ対策を実装しました。
@@ -185,8 +204,6 @@ Eメール検証機能やパスワードリセット機能に使用する署名�
 
 実装にあたって[Ratchet](https://github.com/ratchetphp/Ratchet)というライブラリを使用しています。
 Ratchetが提供している[MessageComponentInterface](https://github.com/ratchetphp/Ratchet/blob/master/src/Ratchet/MessageComponentInterface.php)を実装して、[Chatクラス](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/helpers/Chat.php)を作成しました。
-
-チャットの全体像は以下の図のようになっています。
 
 
 また、安全なダイレクトメッセージを実現するために、NGINXのリバースプロキシ機能を使ってWSS化も行っています。
