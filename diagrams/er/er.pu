@@ -1,6 +1,6 @@
 @startuml er
 
-Entity users{
+Entity user{
     + id: INT [PK]
     --
     username: String
@@ -20,11 +20,12 @@ Entity profile{
     location: String
     description: String
     profile_image_path: String
+    extension: string
     created_at: Datetime
     updated_at: Datetime
 }
 
-Entity posts{
+Entity post{
     + id: INT [PK]
     --
     # user_id: INT [FK]
@@ -36,7 +37,7 @@ Entity posts{
     updated_at: Datetime
 }
 
-Entity comments{
+Entity comment{
     + id: INT [PK]
     --
     # user_id: INT [FK]
@@ -46,41 +47,45 @@ Entity comments{
     url: String
     media_path: String
     created_at: Datetime
+    updated_at: Datetime
 }
 
-Entity post_likes{
+Entity post_like{
     + user_id: INT [PK-FK]
     + post_id: INT [PK-FK]
     --
     created_at: Datetime
 }
 
-Entity comment_likes{
+Entity comment_like{
     + user_id: INT [PK-FK]
     + comment_id: INT [PK-FK]
     --
     created_at: Datetime
 }
 
-Entity notifications{
+Entity notification{
     + id: INT [PK]
     --
     # user_id: INT [FK]
-    # related_at: INT: [FK]
+    # source_id: INT [FK]
+    # post_id: INT [FK]
+    # comment_id: INT [FK]
+    # dm_thread_id: INT [FK]
     notification_type: String
-    content: String
     is_read: bool
     created_at: Datetime
+    updated_at: Datetime
 }
 
-Entity follows{
+Entity follow{
     + following_user_id: INT [PK-FK]
     + follower_user_id: INT [PK-FK]
     --
     created_at: Datetime
 }
 
-Entity dm_threads{
+Entity dm_thread{
     + id: INT [PK]
     --
     # user_id1: INT [FK]
@@ -88,40 +93,45 @@ Entity dm_threads{
     url: String
 }
 
-Entity private_messages{
+Entity dm_message{
     + id: INT [PK]
     --
-    # private_room_id: INT [FK]
+    # dm_thread_id: INT [FK]
     # sender_user_id: INT [FK]
     # receiver_user_id: INT [FK]
-    message: String
-    media_path: String
+    message: blob
+    iv: blob
     created_at: Datetime
 }
 
-Entity post_like_notifications{
+Entity password_reset_token{
     + id: INT [PK]
     --
     # user_id: INT [FK]
-    # post_id: INT [FK]
-    is_read: INT
+    token: String
     created_at: Datetime
 }
 
 
-users ||--o{ posts: writes
-users ||--o{ comments: comments
-posts ||--o{ comments: has
-posts ||--o{ post_likes: has
-comments ||--o{ comment_likes: has
-comments ||--o{ comments: has
-users ||--o{ follows: following
-users ||--o{ follows: be followed
-users ||--o{ notifications: notices
-users ||--o{ post_likes: likes
-users ||--o{ comment_likes: likes
-users ||--|| profile: has
-users }|--o{ dm_threads: has
-dm_threads ||--o{ private_messages: belongs to 
+user ||--o{ post: writes
+user ||--o{ comment: comment
+post ||--o{ comment: has
+post ||--o{ post_like: has
+comment ||--o{ comment_like: has
+comment ||--o{ comment: has
+user ||--o{ follow: following
+user ||--o{ follow: be followed
+user ||--o{ notification: notices
+notification ||--o{ post: belongs to
+notification ||--o{ comment: belongs to
+notification ||--o{ dm_thread: belongs to
+user ||--o{ post_like: likes
+user ||--o{ comment_like: likes
+user ||--|| profile: has
+user }|--o{ dm_thread: has
+dm_thread ||--o{ dm_message: has
+user ||--o{ password_reset_token: has
+user ||--o{ dm_message: send
+user ||--o{ dm_message: receive
 
 @enduml
