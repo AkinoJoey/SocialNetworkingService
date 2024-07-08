@@ -9,11 +9,15 @@
 
 ### 投稿機能
 #### テキストやメディアの投稿
+![create](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/69c879a1-3fa3-4352-a5ec-da8fe79a64ae)
+
 画面下部にある＋マークの青いボタンをクリック。  
 入力フォームに内容を入力し「投稿」ボタンを押すと、投稿できます。  
 また、画面左下にあるイメージアイコンをクリックし、画像や動画などのメディアを選択すると、テキストと一緒にメディアも投稿できます。
 
 #### 予約投稿
+![scheduled-post](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/0c297eec-40fa-499d-95cc-1d8103d9ce58)
+
 予約投稿の機能を利用すると、指定した日時に投稿できます。  
 投稿フォームで予約投稿したい内容を入力後、画面下側にあるカレンダーマークをクリック。  
 「日付を入力」をクリックし、投稿したい日付と日時を選択し、「決定」ボタンをクリックします。  
@@ -22,33 +26,49 @@
 また、投稿フォームの右上にある「予約投稿一覧」をクリックすると、予約済みの投稿を確認できます。
 
 #### 投稿の削除
+![delete](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/a1f984cd-21d4-47f4-8534-3873352753f4)
+
 自分の投稿の右側の「・・・」マークをクリックし、削除を選択。  
 アラートの画面で削除を選択すると投稿を削除できます。
 
 ### ユーザーとのコミュニケーション
 #### タイムラインの閲覧
+![timeline](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/7353a2b0-8085-43c7-b5fc-97a26038c771)
+
+
 [ホーム画面](https://ten.yuki-gakiya.com/)ではトレンドの投稿とフォーロー中のユーザーの投稿を閲覧できます。  
 画面上部にあるタブでタイムラインの切り替えが可能です。  
 トレンドのタイムラインは今日投稿された中でいいねが多い順で並んでいるため、人気の投稿を確認できます。  
 いいねの数が一緒の場合は、投稿された日付・時間が新しい順に表示されます。
 
 #### ユーザーの検索
+![search](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/b3c5ac33-b43e-4d35-bea1-e3dee70f5749)
+
 [検索ページ](https://ten.yuki-gakiya.com/search/user)ではユーザーの検索ができます。  
 検索欄に文字を入力すると、その文字がアカウント名もしくはユーザー名に含まれるユーザーが画面に表示されます。  
 検索欄に何も文字を入力していない場合は、フォロワーが多い順に上から100人のユーザーが表示されます。
 
 #### ユーザーのフォロー
+![follow](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/f1cd64fc-f16e-4ee7-8556-b403c675b1bd)
+
 フォローしたいユーザーのプロフィール画面にある「フォローする」ボタンを押すとユーザーをフォローできます。  
 各ユーザーのプロフィール画面は、ユーザーの検索画面や投稿のアカウント名から飛ぶことができます。
 
-#### 投稿にいいねをする
+#### 投稿にいいね、返信をする
+![good-n-comment](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/c4ca608a-652e-4388-a807-d93d2da40494)
+
 投稿の下部にあるグッドボタンのアイコンをクリックすると、投稿に対して「いいね」ができます。
+投稿をクリックして投稿の詳細画面のページに行くと、投稿に対して返信をしたり、他の人の返信を閲覧できます。
 
 #### ダイレクトメッセージ
+![dm](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/841c85ff-5c1f-41d5-a5cc-c70a3ec08ba6)
+
 ダイレクトメッセージを送りたいユーザーのプロフィール画面に行き、「メッセージ」ボタンを押すと、ダイレクトメッセージのやり取りができるページに行けます。
 ここでは2人だけのやり取りを楽しめます。
 
 ### 通知
+![notify](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/cdeec96d-7321-4e0b-bdb6-6dacd88d3ec8)
+
 [通知ページ](https://ten.yuki-gakiya.com/notifications)では通知の一覧を確認できます。  
 通知アイコン部分には未確認の通知の数が表示されます。  
 自分の投稿に対して返信あるいはいいねされた場合、自分がフォローされた場合、ダイレクトメッセージを受信した場合に通知が届きます。  
@@ -59,6 +79,7 @@
 このSNSウェブアプリケーションは、テキストや画像などの投稿、相互フォロー、プライベートチャットなど、さまざまな機能を楽しめます。  
 また、パソコンやタブレット、スマートフォンなど、どの端末でも使いやすいように、レスポンシブ対応のUIを採用しています。
 
+![responsive](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/6156c351-7b99-4bc9-b1d5-4016913bfff0)
 
 ## 機能一覧
 ### アカウント
@@ -200,6 +221,8 @@ URLの署名には、サーバーサイドのシークレットキーとHMAC SHA
 
 例えば未ログインの状態で、ログインが必要なページ([https://ten.yuki-gakiya.com/messages](https://ten.yuki-gakiya.com/messages)など)に、アクセスすると下記の画像のように、アラートが表示されログインページにリダイレクトされます。
 これは[AuthenticatedMiddleware](https://github.com/AkinoJoey/SocialNetworkingService/blob/main/src/middleware/AuthenticatedMiddleware.php)によって実行されます。  
+<img width="718" alt="login-auth" src="https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/e493d5cc-0429-496d-aa42-eb7faaff29c1">
+
 
 このように、ミドルウェアはユーザーのログイン状態やEメール認証の有無などを判断し、特定のページや機能へのアクセスを許可します。
 
