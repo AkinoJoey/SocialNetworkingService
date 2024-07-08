@@ -323,19 +323,18 @@ class PostDAOImpl implements PostDAO
         $mysqli = DatabaseManager::getMysqliConnection();
         $query =
             <<<SQL
-            with top_20_likes AS(
+            with post_data AS(
+                SELECT *
+                FROM posts p 
+                WHERE status = 'public' AND DATE(p.created_at) = CURDATE()
+                ORDER BY p.created_at DESC
+                LIMIT ?, ?
+            ),
+            number_of_likes AS(
                 SELECT pl.post_id, COUNT(*) AS number_of_likes
                 FROM post_likes pl 
+                WHERE pl.post_id IN (SELECT post_data.id FROM post_data)
                 GROUP BY pl.post_id
-                ORDER BY number_of_likes DESC
-                LIMIT ?, ?
-            ),post_data AS(
-                SELECT p.id, p.content,p.url,p.media_path,p.extension,p.scheduled_at,p.status,p.user_id,p.created_at,p.updated_at, COALESCE(number_of_likes, 0) AS number_of_likes
-                FROM posts p 
-                LEFT JOIN top_20_likes top ON p.id = top.post_id 
-                WHERE status = 'public' AND DATE(p.created_at) = CURDATE() 
-                ORDER BY number_of_likes DESC, p.created_at DESC
-                LIMIT ?
             ),
             comment_data AS(
                 SELECT c.post_id, COUNT(*) AS number_of_comments
@@ -356,20 +355,19 @@ class PostDAOImpl implements PostDAO
             user_likes AS (
                 SELECT pl.post_id, pl.user_id, 1 AS is_like
                 FROM post_likes pl
-                WHERE pl.user_id = ? AND pl.post_id IN (SELECT post_data.id FROM post_data)
+                WHERE pl.user_id = ? AND pl.post_id IN (SELECT id FROM post_data)
             )
-            SELECT pd.*, COALESCE(cd.number_of_comments,0) AS number_of_comments ,ud.account_name, ud.username, pr.profile_image_path, pr.extension AS profile_image_extension,
-                    COALESCE(ul.is_like, 0) AS is_like
+            SELECT pd.*, COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(cd.number_of_comments,0) AS number_of_comments,
+            ud.account_name, ud.username, pr.profile_image_path, pr.extension AS profile_image_extension, COALESCE(ul.is_like,0) AS is_like
             FROM post_data pd
+            LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
             LEFT JOIN comment_data cd ON pd.id = cd.post_id
             LEFT JOIN user_data ud ON pd.user_id = ud.id
             LEFT JOIN profile_data pr ON pd.user_id = pr.user_id
-            LEFT JOIN user_likes ul ON pd.id = ul.post_id
-            ORDER BY pd.number_of_likes DESC,
-            pd.created_at DESC;
+            LEFT JOIN user_likes ul ON pd.id = ul.post_id;
             SQL;
 
-        $results = $mysqli->prepareAndFetchAll($query, "iiii", [$offset, $limit, $limit,$userId]);
+        $results = $mysqli->prepareAndFetchAll($query, "iii", [$offset, $limit, $userId]);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
@@ -379,20 +377,18 @@ class PostDAOImpl implements PostDAO
         $mysqli = DatabaseManager::getMysqliConnection();
         $query =
             <<<SQL
-            with top_20_likes AS(
+            with post_data AS(
+                SELECT *
+                FROM posts p 
+                WHERE status = 'public' AND DATE(p.created_at) = CURDATE()
+                ORDER BY p.created_at DESC
+                LIMIT ?, ?
+            ),
+            number_of_likes AS(
                 SELECT pl.post_id, COUNT(*) AS number_of_likes
                 FROM post_likes pl 
+                WHERE pl.post_id IN (SELECT post_data.id FROM post_data)
                 GROUP BY pl.post_id
-                ORDER BY number_of_likes DESC
-                LIMIT ?, ?
-            ),post_data AS(
-                SELECT p.id, p.content,p.url,p.media_path,p.extension,p.scheduled_at,p.status,p.user_id,p.created_at,p.updated_at,
-                COALESCE(number_of_likes, 0) AS number_of_likes
-                FROM posts p 
-                LEFT JOIN top_20_likes top ON p.id = top.post_id 
-                WHERE status = 'public' AND DATE(p.created_at) = CURDATE() 
-                ORDER BY number_of_likes DESC, p.created_at DESC
-                LIMIT ?
             ),
             comment_data AS(
                 SELECT c.post_id, COUNT(*) AS number_of_comments
@@ -410,14 +406,16 @@ class PostDAOImpl implements PostDAO
                 FROM profiles pr
                 WHERE pr.user_id IN (SELECT post_data.user_id FROM post_data)
             )
-            SELECT pd.*, COALESCE(cd.number_of_comments,0) AS number_of_comments, ud.account_name, ud.username, pr.profile_image_path, pr.extension AS profile_image_extension
+            SELECT pd.*, COALESCE(nol.number_of_likes, 0) AS number_of_likes, COALESCE(cd.number_of_comments,0) AS number_of_comments,
+            ud.account_name, ud.username, pr.profile_image_path, pr.extension AS profile_image_extension
             FROM post_data pd
+            LEFT JOIN number_of_likes nol ON pd.id = nol.post_id
             LEFT JOIN comment_data cd ON pd.id = cd.post_id
             LEFT JOIN user_data ud ON pd.user_id = ud.id
             LEFT JOIN profile_data pr ON pd.user_id = pr.user_id;
             SQL;
 
-        $results = $mysqli->prepareAndFetchAll($query, "iii", [$offset, $limit, $limit]);
+        $results = $mysqli->prepareAndFetchAll($query, "ii", [$offset, $limit]);
 
         return $results === null ? [] : $this->rawDataToPosts($results);
     }
