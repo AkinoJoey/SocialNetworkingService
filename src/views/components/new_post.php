@@ -7,7 +7,7 @@
             </button>
 
             <a href="/scheduled_posts" class="inline cursor-pointer rounded-full px-4 py-3 font-bold hover:bg-blue-100">
-                予定投稿一覧
+                予約投稿一覧
             </a>
         </div>
         <form enctype="multipart/form-data" id="create-post-form">
