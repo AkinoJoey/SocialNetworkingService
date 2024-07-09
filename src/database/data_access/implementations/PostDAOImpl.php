@@ -251,7 +251,7 @@ class PostDAOImpl implements PostDAO
                 SELECT p.*
                 FROM posts p 
                 WHERE p.user_id IN($placeholders) AND p.status = 'public'
-                ORDER BY p.created_at DESC
+                ORDER BY COALESCE(scheduled_at, created_at)  DESC, created_at DESC
                 LIMIT ?, ?
             ),
             comment_counts AS (
@@ -327,7 +327,7 @@ class PostDAOImpl implements PostDAO
                 SELECT *
                 FROM posts p 
                 WHERE status = 'public' AND DATE(p.created_at) = CURDATE()
-                ORDER BY p.created_at DESC
+                ORDER BY COALESCE(scheduled_at, created_at)  DESC, created_at DESC
                 LIMIT ?, ?
             ),
             number_of_likes AS(
@@ -381,7 +381,7 @@ class PostDAOImpl implements PostDAO
                 SELECT *
                 FROM posts p 
                 WHERE status = 'public' AND DATE(p.created_at) = CURDATE()
-                ORDER BY p.created_at DESC
+                ORDER BY COALESCE(scheduled_at, created_at)  DESC, created_at DESC
                 LIMIT ?, ?
             ),
             number_of_likes AS(
@@ -454,7 +454,7 @@ class PostDAOImpl implements PostDAO
                     SELECT p.*
                     FROM posts p 
                     WHERE p.user_id IN (SELECT id FROM user_data) AND p.status = 'public'
-                    ORDER BY p.created_at DESC
+                    ORDER BY COALESCE(scheduled_at, created_at)  DESC, created_at DESC
                     LIMIT ?, ?
             ),
             comment_counts AS (
