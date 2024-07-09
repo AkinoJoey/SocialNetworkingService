@@ -33,13 +33,11 @@
 
 ### ユーザーとのコミュニケーション
 #### タイムラインの閲覧
-![timeline](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/7353a2b0-8085-43c7-b5fc-97a26038c771)
-
+![timeline](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/c3d503ec-78db-4b2b-964a-d63dc9fa367b)
 
 [ホーム画面](https://ten.yuki-gakiya.com/)ではトレンドの投稿とフォーロー中のユーザーの投稿を閲覧できます。  
 画面上部にあるタブでタイムラインの切り替えが可能です。  
-トレンドのタイムラインは今日投稿された中でいいねが多い順で並んでいるため、人気の投稿を確認できます。  
-いいねの数が一緒の場合は、投稿された日付・時間が新しい順に表示されます。
+トレンドのタイムラインは今日投稿された中で最も新しい投稿を閲覧できます。
 
 #### ユーザーの検索
 ![search](https://github.com/AkinoJoey/SocialNetworkingService/assets/124570638/b3c5ac33-b43e-4d35-bea1-e3dee70f5749)
